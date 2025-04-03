@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3 uid="uid://5cmm70ag4ylr"]
+
+[sub_resource type="Animation" id="Animation_sfmrp"]
+resource_name = "new_animation"
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_qroha"]
+_data = {
+&"new_animation": SubResource("Animation_sfmrp")
+}
+
+[node name="Player" type="Node2D"]
+scale = Vector2(167.492, 33.3746)
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
+
+[node name="Sprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D"]
+libraries = {
+&"": SubResource("AnimationLibrary_qroha")
+}
+
+[node name="GroundRayCast" type="RayCast2D" parent="CharacterBody2D"]
+
+[node name="Node2D" type="Node2D" parent="CharacterBody2D/GroundRayCast"]
