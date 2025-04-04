@@ -1,7 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://dltcxk8psuajk"]
+[gd_scene load_steps=7 format=3 uid="uid://dltcxk8psuajk"]
 
-[ext_resource type="Texture2D" uid="uid://upw8mw5end6a" path="res://asset/screen/black_screen.png" id="1_5bqp2"]
-[ext_resource type="Texture2D" uid="uid://fx4ctch5tvul" path="res://asset/screen/标题.png" id="2_rw854"]
+[ext_resource type="Script" uid="uid://cv64gpawtsed3" path="res://script/screen/splash/splash.gd" id="1_rw854"]
+[ext_resource type="Texture2D" uid="uid://fx4ctch5tvul" path="res://asset/screen/title.png" id="2_rw854"]
+[ext_resource type="Script" uid="uid://b42injdwvijwy" path="res://script/screen/splash/title.gd" id="4_0tfms"]
+[ext_resource type="Script" uid="uid://capq0iiw362rd" path="res://script/screen/splash/loading_label.gd" id="5_3bkdd"]
+[ext_resource type="Script" uid="uid://4nyrffeb7yw2" path="res://script/screen/splash/resource_preloader.gd" id="6_syb7o"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_0tfms"]
+font_size = 38
 
 [node name="Splash" type="Control"]
 layout_mode = 3
@@ -10,17 +16,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_rw854")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("1_5bqp2")
-expand_mode = 1
+color = Color(0, 0, 0, 1)
 
 [node name="Title" type="TextureRect" parent="."]
 layout_mode = 1
@@ -36,3 +41,27 @@ offset_bottom = 180.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_rw854")
+script = ExtResource("4_0tfms")
+
+[node name="LoadingLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = -78.0
+offset_right = -42.0
+offset_bottom = -25.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Loading..."
+label_settings = SubResource("LabelSettings_0tfms")
+script = ExtResource("5_3bkdd")
+
+[node name="ResourcePreloader" type="ResourcePreloader" parent="."]
+script = ExtResource("6_syb7o")
+
+[connection signal="fade_in_completed" from="Title" to="LoadingLabel" method="_on_title_fade_in_completed"]
+[connection signal="fade_in_completed" from="Title" to="ResourcePreloader" method="_on_title_fade_in_completed"]
