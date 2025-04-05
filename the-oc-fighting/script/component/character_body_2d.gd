@@ -66,6 +66,10 @@ func handle_combat_actions():
 		direction < 0 and $AnimatedSprite2D.flip_h):
 			state = STATE.PARRYING
 			$AnimatedSprite2D.play("parry")
+	if state == STATE.PARRYING and direction == 0:
+		state = STATE.DODGING
+		$AnimatedSprite2D.set_animation("dodge")
+		$AnimatedSprite2D.set_frame($AnimatedSprite2D.get_spirit_frames().get_frame_count("dodge")-1)
 
 func update_animation_state():
 	# 优先处理战斗动作动画
