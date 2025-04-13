@@ -58,7 +58,7 @@ func handle_movement_input() -> void:
 		
 	if state == STATE.LANDING:
 		var v = velocity.x * FRACTION
-		velocity.x = v if v >= MINIMUM_SPEED else 0
+		velocity.x = v
 	elif direction:
 		velocity.x = direction * SPEED
 		animated_sprite.flip_h = direction > 0
@@ -84,19 +84,22 @@ func handle_combat_input() -> void:
 	if Input.is_action_just_pressed("dodge") and is_on_floor():
 		start_dodge()
 	if state == STATE.DODGING:
-		try_parry()
+		handle_parry()
 
 func start_dodge() -> void:
 	state = STATE.DODGING
-	dodge_timer = DODGE_DURATION
 	velocity = Vector2.ZERO
 	animated_sprite.play("dodge")
 
-func try_parry() -> void:
-	var input_direction = Input.get_axis("ui_left", "ui_right")
-	if input_direction != 0 and sign(input_direction) != (1 if animated_sprite.flip_h else -1):
-		state = STATE.PARRYING
+func handle_parry() -> void:
+	var reverse_direction: StringName = "ui_left" if animated_sprite.flip_h else "ui_right"
+	print(reverse_direction)
+	if Input.is_action_just_pressed(reverse_direction):
 		animated_sprite.play("parry")
+		state = STATE.PARRYING
+	elif Input.is_action_just_released(reverse_direction):
+		state = STATE.DODGING
+	
 
 func handle_parrying_finish() -> void:
 	if Input.get_axis("ui_left", "ui_right") == 0:
@@ -136,10 +139,11 @@ func _on_animation_finished() -> void:
 				animated_sprite.play("floating")
 		"dodge":
 			animated_sprite.pause()
-		"parry":
-			state = STATE.DODGING
-		"backward":
+		"backward":  # TODO
 			if is_on_floor():
 				state = STATE.IDLE
 		"land":
-			state = STATE.IDLE
+			if Input.is_action_pressed("dodge"):
+				start_dodge()
+			else:
+				state = STATE.IDLE
