@@ -889,3 +889,10 @@ frame_progress = 1.0
 libraries = {
 &"": SubResource("AnimationLibrary_qroha")
 }
+
+[node name="Label" type="Label" parent="CharacterBody2D"]
+offset_left = -9.0
+offset_top = -63.0
+offset_right = 12.0
+offset_bottom = -40.0
+text = "1P"

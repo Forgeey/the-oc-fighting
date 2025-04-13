@@ -39,3 +39,14 @@ scroll_offset = Vector2(73, 41)
 
 [node name="Player" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(430, 227)
+
+[node name="Player2" parent="." instance=ExtResource("3_m1dhr")]
+
+[node name="CharacterBody2D" parent="Player2" index="0"]
+IS_1P = false
+
+[node name="Label" parent="Player2/CharacterBody2D" index="3"]
+text = "2P"
+
+[editable path="Player"]
+[editable path="Player2"]

@@ -7,6 +7,8 @@ extends CharacterBody2D
 @export var FRACTION = 0.95
 @export var MINIMUM_SPEED = 0.05
 
+@export var IS_1P: bool = true
+
 enum STATE {
 	IDLE,
 	MOVING,
@@ -54,7 +56,7 @@ func handle_landing() -> void:
 		state = STATE.LANDING
 
 func handle_movement_input() -> void:
-	var direction = Input.get_axis("ui_left", "ui_right")
+	var direction = Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right")
 		
 	if state == STATE.LANDING:
 		var v = velocity.x * FRACTION
@@ -72,16 +74,16 @@ func handle_movement_input() -> void:
 		state = STATE.MOVING if direction != 0 else STATE.IDLE
 
 func handle_jump_input() -> void:
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("jump" if IS_1P else "2p_jump") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-		var is_backjump = (Input.get_axis("ui_left", "ui_right") != 0) and \
+		var is_backjump = (Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right") != 0) and \
 						((velocity.x > 0 and not animated_sprite.flip_h) or \
 						(velocity.x < 0 and animated_sprite.flip_h))
 		animated_sprite.play("backjump" if is_backjump else "jump")
 		state = STATE.JUMPING
 
 func handle_combat_input() -> void:
-	if Input.is_action_just_pressed("dodge") and is_on_floor():
+	if Input.is_action_just_pressed("dodge" if IS_1P else "2p_dodge") and is_on_floor():
 		start_dodge()
 	if state == STATE.DODGING:
 		handle_parry()
@@ -92,7 +94,11 @@ func start_dodge() -> void:
 	animated_sprite.play("dodge")
 
 func handle_parry() -> void:
-	var reverse_direction: StringName = "ui_left" if animated_sprite.flip_h else "ui_right"
+	var reverse_direction: StringName
+	if IS_1P:
+		reverse_direction = "ui_left" if animated_sprite.flip_h else "ui_right"
+	else:
+		reverse_direction = "2p_left" if animated_sprite.flip_h else "2p_right"
 	print(reverse_direction)
 	if Input.is_action_just_pressed(reverse_direction):
 		animated_sprite.play("parry")
@@ -102,11 +108,11 @@ func handle_parry() -> void:
 	
 
 func handle_parrying_finish() -> void:
-	if Input.get_axis("ui_left", "ui_right") == 0:
+	if Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right") == 0:
 		state = STATE.DODGING
 
 func handle_dodge_finish() -> void:
-	if Input.is_action_just_released("dodge"):
+	if Input.is_action_just_released("dodge" if IS_1P else "2p_dodge"):
 		state = STATE.IDLE
 
 func handle_knockback(delta: float) -> void:
@@ -143,7 +149,7 @@ func _on_animation_finished() -> void:
 			if is_on_floor():
 				state = STATE.IDLE
 		"land":
-			if Input.is_action_pressed("dodge"):
+			if Input.is_action_pressed("dodge" if IS_1P else "2p_dodge"):
 				start_dodge()
 			else:
 				state = STATE.IDLE
