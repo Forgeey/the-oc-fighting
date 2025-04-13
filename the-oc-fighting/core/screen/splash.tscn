@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://dltcxk8psuajk"]
+[gd_scene load_steps=8 format=3 uid="uid://dltcxk8psuajk"]
 
 [ext_resource type="Script" uid="uid://cv64gpawtsed3" path="res://script/screen/splash/splash.gd" id="1_rw854"]
-[ext_resource type="Texture2D" uid="uid://fx4ctch5tvul" path="res://asset/screen/title.png" id="2_rw854"]
+[ext_resource type="Texture2D" uid="uid://fx4ctch5tvul" path="res://asset/element/title.png" id="2_rw854"]
 [ext_resource type="Script" uid="uid://b42injdwvijwy" path="res://script/screen/splash/title.gd" id="4_0tfms"]
-[ext_resource type="Script" uid="uid://capq0iiw362rd" path="res://script/screen/splash/loading_label.gd" id="5_3bkdd"]
+[ext_resource type="Script" uid="uid://capq0iiw362rd" path="res://script/screen/splash/loading.gd" id="5_3bkdd"]
+[ext_resource type="PackedScene" uid="uid://bm77kgjb6c8ri" path="res://core/ui/loading_animation.tscn" id="6_1y54c"]
 [ext_resource type="Script" uid="uid://4nyrffeb7yw2" path="res://script/screen/splash/resource_preloader.gd" id="6_syb7o"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_0tfms"]
@@ -43,25 +44,43 @@ grow_vertical = 2
 texture = ExtResource("2_rw854")
 script = ExtResource("4_0tfms")
 
-[node name="LoadingLabel" type="Label" parent="."]
+[node name="ResourcePreloader" type="ResourcePreloader" parent="."]
+script = ExtResource("6_syb7o")
+
+[node name="Loading" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -380.0
+offset_left = -400.0
+offset_top = -173.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("5_3bkdd")
+
+[node name="LoadingLabel" type="Label" parent="Loading"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -334.0
 offset_top = -78.0
-offset_right = -42.0
+offset_right = -21.0
 offset_bottom = -25.0
 grow_horizontal = 0
 grow_vertical = 0
-text = "Loading..."
+text = "Loading details"
 label_settings = SubResource("LabelSettings_0tfms")
-script = ExtResource("5_3bkdd")
 
-[node name="ResourcePreloader" type="ResourcePreloader" parent="."]
-script = ExtResource("6_syb7o")
+[node name="LoadingAnimation" parent="Loading" instance=ExtResource("6_1y54c")]
+position = Vector2(156, 52)
+scale = Vector2(1.86, 1.86)
+frame = 10
+frame_progress = 0.623966
 
-[connection signal="fade_in_completed" from="Title" to="LoadingLabel" method="_on_title_fade_in_completed"]
 [connection signal="fade_in_completed" from="Title" to="ResourcePreloader" method="_on_title_fade_in_completed"]
+[connection signal="fade_in_completed" from="Title" to="Loading" method="_on_title_fade_in_completed"]
