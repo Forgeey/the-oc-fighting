@@ -1,10 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://jsjfumasoe5f"]
+[gd_scene load_steps=6 format=3 uid="uid://jsjfumasoe5f"]
 
 [ext_resource type="Script" uid="uid://1gtn8bmwforf" path="res://script/screen/arena/arena.gd" id="1_2fpqi"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_2fpqi"]
 [ext_resource type="Texture2D" uid="uid://upw8mw5end6a" path="res://asset/screen/black_screen.png" id="2_m1dhr"]
 [ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="3_m1dhr"]
-[ext_resource type="Script" uid="uid://wupddw2on6ia" path="res://script/screen/camera_2d.gd" id="5_dyq4w"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_m1dhr"]
 
@@ -40,11 +39,3 @@ scroll_offset = Vector2(73, 41)
 
 [node name="Player" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(430, 227)
-
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(-430, -229.348)
-limit_bottom = 0
-limit_smoothed = true
-position_smoothing_enabled = true
-drag_horizontal_enabled = true
-script = ExtResource("5_dyq4w")
