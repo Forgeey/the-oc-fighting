@@ -15,6 +15,17 @@ _WIP_
 ## Roadmap
 _WIP_
 
+## Members
+
+| Member            | Role                     |
+|-------------------|--------------------------|
+| @Forgeey          | Project Lead & Art Director   |
+| @OakPlatinum      | Tech Lead & Developer    |
+| @12.1Ounce        | Scenario Designer        |
+| @瑞雯              | Narrative Designer       |
+
+> **Want to see your name?** Comment on the pinned **#team-recruitment** discussion!
+
 ## Bug Report / Suggestion
 We welcome community contributions and value your voice!
 
