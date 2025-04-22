@@ -3,7 +3,7 @@
 ![logo](./doc/title.png)
 ## The OC Fighting
 
-![Downloads](https://img.shields.io/github/downloads/Forgeey/the-oc-fighting/total) ![Stargazers](https://img.shields.io/github/stars/Forgeey/the-oc-fighting?style=social) ![Issues](https://img.shields.io/github/issues/Forgeey/the-oc-fighting) ![License](https://img.shields.io/github/license/Forgeey/the-oc-fighting)
+[![Downloads](https://img.shields.io/github/downloads/Forgeey/the-oc-fighting/total)](https://github.com/Forgeey/the-oc-fighting/releases) [![Stargazers](https://img.shields.io/github/stars/Forgeey/the-oc-fighting?style=social)](https://github.com/Forgeey/the-oc-fighting) [![Issues](https://img.shields.io/github/issues/Forgeey/the-oc-fighting)](https://github.com/Forgeey/the-oc-fighting/issues) ![License](https://img.shields.io/github/license/Forgeey/the-oc-fighting)
 </div>
 
 ## About This Project
@@ -19,8 +19,8 @@ _WIP_
 
 | Member            | Role                     |
 |-------------------|--------------------------|
-| @Forgeey          | Project Lead & Art Director   |
-| @OakPlatinum      | Tech Lead & Developer    |
+| [@Forgeey](https://b23.tv/1Mjs3qK)          | Project Lead & Art Director   |
+| [@OakPlatinum](https://github.com/OakPlatinum)      | Tech Lead & Developer    |
 | @12.1Ounce        | Scenario Designer        |
 | @瑞雯              | Narrative Designer       |
 
