@@ -872,6 +872,7 @@ _data = {
 [node name="Player" type="Node2D"]
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+position = Vector2(5, -1)
 script = ExtResource("1_mgke5")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
