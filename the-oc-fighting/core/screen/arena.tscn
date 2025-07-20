@@ -2,13 +2,16 @@
 
 [ext_resource type="Script" uid="uid://1gtn8bmwforf" path="res://script/screen/arena/arena.gd" id="1_2fpqi"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_2fpqi"]
-[ext_resource type="Texture2D" uid="uid://upw8mw5end6a" path="res://asset/screen/black_screen.png" id="2_m1dhr"]
 [ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="3_m1dhr"]
+[ext_resource type="Script" uid="uid://2u6j3qvykril" path="res://script/component/collision_manager.gd" id="6_collision_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_m1dhr"]
 
 [node name="Arena" type="Node2D"]
 script = ExtResource("1_2fpqi")
+
+[node name="CollisionManager" type="Node" parent="."]
+script = ExtResource("6_collision_manager")
 
 [node name="Background" type="Node2D" parent="."]
 
@@ -22,9 +25,10 @@ centered = false
 [node name="Ground" type="Sprite2D" parent="Background/Close"]
 position = Vector2(577.5, 620.25)
 scale = Vector2(0.600521, 0.0467592)
-texture = ExtResource("2_m1dhr")
+texture = ExtResource("2_2fpqi")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Background/Close/Ground"]
+collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Background/Close/Ground/StaticBody2D"]
 shape = SubResource("WorldBoundaryShape2D_m1dhr")
@@ -38,15 +42,9 @@ scroll_offset = Vector2(231, 384)
 scroll_offset = Vector2(73, 41)
 
 [node name="Player" parent="." instance=ExtResource("3_m1dhr")]
-position = Vector2(430, 227)
+position = Vector2(300, 520)
 
-[node name="Player2" parent="." instance=ExtResource("3_m1dhr")]
-
-[node name="CharacterBody2D" parent="Player2" index="0"]
-IS_1P = false
-
-[node name="Label" parent="Player2/CharacterBody2D" index="3"]
-text = "2P"
+[node name="Label" parent="Player/CharacterBody2D" index="3"]
+metadata/_edit_use_anchors_ = true
 
 [editable path="Player"]
-[editable path="Player2"]

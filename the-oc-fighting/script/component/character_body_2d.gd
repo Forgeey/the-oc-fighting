@@ -1,155 +1,113 @@
 extends CharacterBody2D
 
-@export var SPEED = 300.0
-@export var JUMP_VELOCITY = -600.0
-@export var DODGE_DURATION = 0.5
-@export var KNOCKBACK_FORCE = 500.0
-@export var FRACTION = 0.95
-@export var MINIMUM_SPEED = 0.05
+## 预加载状态脚本资源
+const IdleState = preload("res://script/state_script/idle_script.gd")
+const ForwardState = preload("res://script/state_script/forward_script.gd")
+const BackwardState = preload("res://script/state_script/backward_script.gd")
+const DodgeState = preload("res://script/state_script/dodge_script.gd")
+const JumpState = preload("res://script/state_script/jump_script.gd")
+const ForwardJumpState = preload("res://script/state_script/forward_jump_script.gd")
+const BackwardJumpState = preload("res://script/state_script/backward_jump_script.gd")
+const FloatState = preload("res://script/state_script/float_script.gd")
 
-@export var IS_1P: bool = true
-
-enum STATE {
-	IDLE,
-	MOVING,
-	JUMPING,
-	DODGING,
-	PARRYING,
-	KNOCKBACK,
-	LANDING
-}
-
-var state := STATE.IDLE
-var knockback_direction := Vector2.ZERO
-var dodge_timer := 0.0
-
-@onready var animated_sprite := $AnimatedSprite2D
+@onready var state_machine: FrayStateMachine = $FrayStateMachine
+@onready var advancer = $FrayStateMachine/FrayBufferedInputAdvancer
 
 func _ready() -> void:
-	animated_sprite.animation_finished.connect(_on_animation_finished)
+	# 映射输入
+	FrayInputMap.add_bind_action("forward", "right")
+	FrayInputMap.add_bind_action("backward", "left")
+	FrayInputMap.add_bind_action("jump", "jump")
+	FrayInputMap.add_bind_action("dodge", "dodge")
+	init_combine_actions()
+	
+	# 将FrayInputMap信号传给函数处理
+	FrayInput.input_detected.connect(_on_FrayInput_input_dected)
+
+	# 初始化状态机
+	# 第一个参数是状态数据
+	state_machine.initialize({
+			actor = self,
+			sprite = $AnimatedSprite2D,
+			state_machine = state_machine
+		},
+		FrayCompoundState.builder()
+		# 初始状态
+		.start_at("idle_state")
+		# 添加状态
+		.add_state("idle_state", IdleState.new())
+		.add_state("forward_state", ForwardState.new())
+		.add_state("backward_state", BackwardState.new())
+		.add_state("dodge_state", DodgeState.new())
+		.add_state("jump_state", JumpState.new())
+		.add_state("forward_jump_state", ForwardJumpState.new())
+		.add_state("backward_jump_state", BackwardJumpState.new())
+		.add_state("float_state", FloatState.new())
+		
+		# 打标签
+		.tag_multi(["idle_state", "forward_state", "backward_state", "dodge_state"], ["stand_on_ground"])
+		.tag_multi(["jump_state", "float_state", "forward_jump_state", "backward_jump_state"], ["in_air"])
+		
+		# 注册条件
+		.register_conditions({ "is_on_ground": _is_on_ground})
+		
+		# 定义状态转换
+		.transition_press("idle_state", "forward_state", {"input": "forward"})
+		.transition_press("forward_state", "idle_state", {"input": "idle"})
+		.transition_press("idle_state", "backward_state", {"input": "backward"})
+		.transition_press("backward_state", "idle_state", {"input": "idle"})
+		.transition_press("idle_state", "dodge_state", {"input": "dodge"})
+		.transition_press("dodge_state", "idle_state", {"input": "idle"})
+		.transition_press("idle_state", "jump_state", {"input": "jump"})
+		.transition_press("forward_state", "forward_jump_state", {"input": "forward_jump"})
+		.transition_press("backward_state", "backward_jump_state", {"input": "backward_jump"})
+		.transition("float_state", "idle_state", {
+			"advance_conditions": ["is_on_ground"],
+			"auto_advance": true
+		})
+		.build()
+	)
+	
+	# 角色1在左边，面朝右。动画精灵默认朝向为朝左，后期进行调整。
+
+# 构建运动招式表
+func init_combine_actions() -> void:
+	# 设计前跳，由前和跳按键组合而成
+	FrayInputMap.add_composite_input("forward_jump", FrayCombinationInput.builder()
+		.add_component_simple("forward")
+		.add_component_simple("jump")
+		.mode_async()
+		.build()
+	)
+	# 设计后跳，由后和跳按键组合而成
+	FrayInputMap.add_composite_input("backward_jump", FrayCombinationInput.builder()
+		.add_component_simple("backward")
+		.add_component_simple("jump")
+		.mode_async()
+		.build()
+	)
+
+func _process(delta: float) -> void:
+	if FrayInput.is_pressed("forward"):
+		advancer.buffer_press("forward")
+	elif FrayInput.is_pressed("backward"):
+		advancer.buffer_press("backward")
+	elif FrayInput.is_pressed("dodge"):
+		advancer.buffer_press("dodge")
+	elif FrayInput.is_just_pressed("jump"):
+		advancer.buffer_press("jump")
+	else:
+		advancer.buffer_press("idle")
 
 func _physics_process(delta: float) -> void:
-	if not is_on_floor():
-		velocity.y += get_gravity().y * delta
+	pass
 	
-	match state:
-		STATE.KNOCKBACK:
-			handle_knockback(delta)
-		STATE.PARRYING:
-			handle_parrying_finish()
-		STATE.DODGING:
-			handle_dodge_finish()
-		_:
-			handle_landing()
-			handle_movement_input()
-			handle_jump_input()
-			handle_combat_input()
+# 检查是否在地面上
+func _is_on_ground() -> bool:
+	return is_on_floor()
 	
-	update_animation_state()
-	if state != STATE.IDLE:
-		print(state)
-	move_and_slide()
-
-func handle_landing() -> void:
-	if state == STATE.JUMPING and is_on_floor():
-		animated_sprite.play("land")
-		state = STATE.LANDING
-
-func handle_movement_input() -> void:
-	var direction = Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right")
-		
-	if state == STATE.LANDING:
-		var v = velocity.x * FRACTION
-		velocity.x = v
-	elif direction:
-		velocity.x = direction * SPEED
-		animated_sprite.flip_h = direction > 0
-	else:
-		if is_on_floor():
-			velocity.x = move_toward(velocity.x, 0, SPEED)
-		else:
-			velocity.x *= FRACTION
-	
-	if state not in [STATE.JUMPING, STATE.LANDING]:
-		state = STATE.MOVING if direction != 0 else STATE.IDLE
-
-func handle_jump_input() -> void:
-	if Input.is_action_just_pressed("jump" if IS_1P else "2p_jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-		var is_backjump = (Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right") != 0) and \
-						((velocity.x > 0 and not animated_sprite.flip_h) or \
-						(velocity.x < 0 and animated_sprite.flip_h))
-		animated_sprite.play("backjump" if is_backjump else "jump")
-		state = STATE.JUMPING
-
-func handle_combat_input() -> void:
-	if Input.is_action_just_pressed("dodge" if IS_1P else "2p_dodge") and is_on_floor():
-		start_dodge()
-	if state == STATE.DODGING:
-		handle_parry()
-
-func start_dodge() -> void:
-	state = STATE.DODGING
-	velocity = Vector2.ZERO
-	animated_sprite.play("dodge")
-
-func handle_parry() -> void:
-	var reverse_direction: StringName
-	if IS_1P:
-		reverse_direction = "ui_left" if animated_sprite.flip_h else "ui_right"
-	else:
-		reverse_direction = "2p_left" if animated_sprite.flip_h else "2p_right"
-	print(reverse_direction)
-	if Input.is_action_just_pressed(reverse_direction):
-		animated_sprite.play("parry")
-		state = STATE.PARRYING
-	elif Input.is_action_just_released(reverse_direction):
-		state = STATE.DODGING
-	
-
-func handle_parrying_finish() -> void:
-	if Input.get_axis("ui_left" if IS_1P else "2p_left", "ui_right" if IS_1P else "2p_right") == 0:
-		state = STATE.DODGING
-
-func handle_dodge_finish() -> void:
-	if Input.is_action_just_released("dodge" if IS_1P else "2p_dodge"):
-		state = STATE.IDLE
-
-func handle_knockback(delta: float) -> void:
-	velocity = knockback_direction * KNOCKBACK_FORCE
-	velocity.y += get_gravity().y * delta
-
-func apply_knockback(direction: Vector2) -> void:
-	if state != STATE.KNOCKBACK:
-		state = STATE.KNOCKBACK
-		knockback_direction = direction.normalized()
-		animated_sprite.play("backward")
-
-func update_animation_state() -> void:
-	if state in [STATE.DODGING, STATE.PARRYING, STATE.KNOCKBACK, STATE.JUMPING, STATE.LANDING]:
-		return
-	
-	if not is_on_floor():
-		if animated_sprite.animation != "floating":
-			animated_sprite.play("floating")
-	else:
-		if velocity.x == 0:
-			animated_sprite.play("idle")
-		else:
-			animated_sprite.play("forward")
-
-func _on_animation_finished() -> void:
-	match animated_sprite.animation:
-		"jump", "backjump":
-			if not is_on_floor():
-				animated_sprite.play("floating")
-		"dodge":
-			animated_sprite.pause()
-		"backward":  # TODO
-			if is_on_floor():
-				state = STATE.IDLE
-		"land":
-			if Input.is_action_pressed("dodge" if IS_1P else "2p_dodge"):
-				start_dodge()
-			else:
-				state = STATE.IDLE
+func _on_FrayInput_input_dected(event: FrayInputEvent) -> void:
+	if event.input == "forward_jump" and event.is_pressed():
+		advancer.buffer_press("forward_jump")
+	if event.input == "backward_jump" and event.is_pressed():
+		advancer.buffer_press("backward_jump")

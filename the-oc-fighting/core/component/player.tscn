@@ -1,19 +1,17 @@
-[gd_scene load_steps=129 format=3 uid="uid://5cmm70ag4ylr"]
+[gd_scene load_steps=128 format=3 uid="uid://5cmm70ag4ylr"]
 
 [ext_resource type="Texture2D" uid="uid://ci1a8vijxyevd" path="res://asset/character/forgeey/idle.png" id="1_7g3uq"]
 [ext_resource type="Script" uid="uid://pxkaeq7o4i8d" path="res://script/component/character_body_2d.gd" id="1_mgke5"]
+[ext_resource type="Script" uid="uid://d0nvf4ic81v4p" path="res://addons/fray/src/state_mgmt/state_machine.gd" id="2_0un0k"]
 [ext_resource type="Texture2D" uid="uid://cvrj0yc66x12" path="res://asset/character/forgeey/dodge.png" id="2_57a5o"]
 [ext_resource type="Texture2D" uid="uid://6bot625du5ax" path="res://asset/character/forgeey/backjump.png" id="2_ukini"]
+[ext_resource type="Script" uid="uid://d1hvyulxbwo3k" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="3_40gb3"]
 [ext_resource type="Texture2D" uid="uid://bcwwadqk7o786" path="res://asset/character/forgeey/backward.png" id="3_xu0rw"]
 [ext_resource type="Texture2D" uid="uid://c5ooqgewq3inl" path="res://asset/character/forgeey/floating.png" id="5_0un0k"]
 [ext_resource type="Texture2D" uid="uid://ts6fnyxfpj2g" path="res://asset/character/forgeey/parry.png" id="5_j7cfo"]
 [ext_resource type="Texture2D" uid="uid://nxpwdwrftgcs" path="res://asset/character/forgeey/forward.png" id="6_ljn4p"]
 [ext_resource type="Texture2D" uid="uid://horm4mj5wmc" path="res://asset/character/forgeey/jump.png" id="8_40gb3"]
 [ext_resource type="Texture2D" uid="uid://cvltpimq4s16y" path="res://asset/character/forgeey/land.png" id="9_xu0rw"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_7g3uq"]
-radius = 43.49
-height = 106.12
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6itbt"]
 atlas = ExtResource("2_ukini")
@@ -861,35 +859,31 @@ animations = [{
 "speed": 30.0
 }]
 
-[sub_resource type="Animation" id="Animation_sfmrp"]
-resource_name = "new_animation"
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_qroha"]
-_data = {
-&"new_animation": SubResource("Animation_sfmrp")
-}
-
 [node name="Player" type="Node2D"]
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
 position = Vector2(5, -1)
 script = ExtResource("1_mgke5")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
-shape = SubResource("CapsuleShape2D_7g3uq")
+[node name="FrayStateMachine" type="Node" parent="CharacterBody2D"]
+script = ExtResource("2_0un0k")
+active = true
+advance_mode = 2
+metadata/_custom_type_script = "uid://d0nvf4ic81v4p"
+
+[node name="FrayBufferedInputAdvancer" type="Node" parent="CharacterBody2D/FrayStateMachine"]
+script = ExtResource("3_40gb3")
+metadata/_custom_type_script = "uid://d1hvyulxbwo3k"
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CharacterBody2D"]
+visible = false
+polygon = PackedVector2Array(0, -43, 38, 9, 3, 61, -29, 8)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
 position = Vector2(0.000386685, 2.348)
 sprite_frames = SubResource("SpriteFrames_8gmly")
-animation = &"parry"
+animation = &"dodge"
 autoplay = "idle"
-frame = 10
-frame_progress = 1.0
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D"]
-libraries = {
-&"": SubResource("AnimationLibrary_qroha")
-}
 
 [node name="Label" type="Label" parent="CharacterBody2D"]
 offset_left = -9.0

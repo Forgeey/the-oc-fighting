@@ -1,11 +1,14 @@
 extends TextureRect
 
+# 让游戏标题渐变1秒
 @export var fade_in_time: float = 1
 
+# 信号，用于标识渐变是否完成
 signal fade_in_completed
 
 
 # Called when the node enters the scene tree for the first time.
+# 
 func _ready() -> void:
 	self_modulate.a = 0
 	var tween = get_tree().create_tween()
