@@ -1,4 +1,4 @@
-class_name BackwardJumpState
+class_name LandState
 extends FrayState
 
 # 声明角色、动画精灵变量
@@ -6,9 +6,6 @@ extends FrayState
 var actor: CharacterBody2D
 var sprite: AnimatedSprite2D
 var state_machine: FrayStateMachine
-var speed = 180
-var jump_velocity = 800.0
-var gravity = 1800
 
 # 此函数获取state_machine.initialize第一个参数的context
 func _ready_impl(context: Dictionary) -> void:
@@ -18,15 +15,14 @@ func _ready_impl(context: Dictionary) -> void:
 
 # 进入状态时进行的操作
 func _enter_impl(args: Dictionary):
-	sprite.play("jump")
-	actor.velocity.x = -speed
-	actor.velocity.y = -jump_velocity
+	sprite.play("land")
+	actor.velocity.x = 0
+	
+func _is_done_processing_impl() -> bool:
+	if not is_instance_valid(sprite):
+		return true
+	else:
+		return not sprite.is_playing()
 
 func _physics_process_impl(delta):
-	# 持续施加重力
-	actor.velocity.y += gravity * delta
-	actor.move_and_slide()
-	
-	# 当速度不再向上时，强制移动到浮空状态
-	if actor.velocity.y >=0:
-		state_machine.goto("float_state")
+	pass

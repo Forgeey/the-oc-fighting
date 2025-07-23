@@ -9,10 +9,12 @@ const JumpState = preload("res://script/state_script/jump_script.gd")
 const ForwardJumpState = preload("res://script/state_script/forward_jump_script.gd")
 const BackwardJumpState = preload("res://script/state_script/backward_jump_script.gd")
 const FloatState = preload("res://script/state_script/float_script.gd")
+const LandState = preload("res://script/state_script/land_script.gd")
 
 @onready var state_machine: FrayStateMachine = $FrayStateMachine
 @onready var advancer = $FrayStateMachine/FrayBufferedInputAdvancer
 
+# 载入节点时触发一次
 func _ready() -> void:
 	# 映射输入
 	FrayInputMap.add_bind_action("forward", "right")
@@ -43,6 +45,7 @@ func _ready() -> void:
 		.add_state("forward_jump_state", ForwardJumpState.new())
 		.add_state("backward_jump_state", BackwardJumpState.new())
 		.add_state("float_state", FloatState.new())
+		.add_state("land_state", LandState.new())
 		
 		# 打标签
 		.tag_multi(["idle_state", "forward_state", "backward_state", "dodge_state"], ["stand_on_ground"])
@@ -52,19 +55,51 @@ func _ready() -> void:
 		.register_conditions({ "is_on_ground": _is_on_ground})
 		
 		# 定义状态转换
-		.transition_press("idle_state", "forward_state", {"input": "forward"})
-		.transition_press("forward_state", "idle_state", {"input": "idle"})
-		.transition_press("idle_state", "backward_state", {"input": "backward"})
-		.transition_press("backward_state", "idle_state", {"input": "idle"})
-		.transition_press("idle_state", "dodge_state", {"input": "dodge"})
-		.transition_press("dodge_state", "idle_state", {"input": "idle"})
-		.transition_press("idle_state", "jump_state", {"input": "jump"})
-		.transition_press("forward_state", "forward_jump_state", {"input": "forward_jump"})
-		.transition_press("backward_state", "backward_jump_state", {"input": "backward_jump"})
-		.transition("float_state", "idle_state", {
+		# 待机的状态转换
+		.transition_press("idle_state", "forward_state", {"input": "forward"})					# 持续输入前进
+		.transition_press("idle_state", "backward_state", {"input": "backward"})					# 持续输入后退
+		.transition_press("idle_state", "dodge_state", {"input": "dodge"})						# 持续输入下蹲
+		.transition_press("idle_state", "jump_state", {"input": "jump"})							# 点击输入上跳
+		.transition_press("idle_state", "forward_jump_state", {"input": "forward_jump"})			# 点击输入前跳
+		.transition_press("idle_state", "backward_jump_state", {"input": "backward_jump"})			# 点击输入后跳
+		
+		# 前进的状态转换
+		.transition_press("forward_state", "idle_state", {"input": "forward_release"})			# 松开输入前进
+		.transition_press("forward_state", "backward_state", {"input": "backward"})				# 持续输入后退
+		.transition_press("forward_state", "dodge_state", {"input": "dodge"}) 					# 持续输入下蹲
+		.transition_press("forward_state", "jump_state", {"input": "jump"})						# 点击输入上跳
+		.transition_press("forward_state", "forward_jump_state", {"input": "forward_jump"})		# 点击输入前跳
+		.transition_press("forward_state", "backward_jump_state", {"input": "backward_jump"})		# 点击输入后跳
+		
+		# 后退的状态转换
+		.transition_press("backward_state", "idle_state", {"input": "backward_release"})			# 松开输入后退
+		.transition_press("backward_state", "forward_state", {"input": "forward"})				# 持续输入前进
+		.transition_press("backward_state", "dodge_state", {"input": "dodge"}) 					# 持续输入下蹲
+		.transition_press("backward_state", "jump_state", {"input": "jump"})						# 点击输入上跳
+		.transition_press("backward_state", "forward_jump_state", {"input": "forward_jump"})		# 点击输入前跳
+		.transition_press("backward_state", "backward_jump_state", {"input": "backward_jump"})		# 点击输入后跳
+		
+		# 下蹲的状态转换
+		.transition_press("dodge_state", "idle_state", {"input": "dodge_release"})				# 松开输入下蹲
+		.transition_press("dodge_state", "forward_state", {"input": "forward"})					# 持续输入前进
+		.transition_press("dodge_state", "backward_state", {"input": "backward"})					# 持续输入后退
+		.transition_press("dodge_state", "jump_state", {"input": "jump"})							# 点击输入上跳
+		.transition_press("dodge_state", "forward_jump_state", {"input": "forward_jump"})			# 点击输入前跳
+		.transition_press("dodge_state", "backward_jump_state", {"input": "backward_jump"})		# 点击输入后跳
+		
+		# 浮空的状态转换
+		.transition("float_state", "land_state", {												# 条件回到待机
 			"advance_conditions": ["is_on_ground"],
 			"auto_advance": true
 		})
+		
+		# 落地状态转换
+		.transition("land_state", "idle_state", {
+			"auto_advance": true,
+			"switch_mode": FrayStateMachineTransition.SwitchMode.AT_END
+		})
+		
+		# 构建状态机
 		.build()
 	)
 	
@@ -87,25 +122,32 @@ func init_combine_actions() -> void:
 		.build()
 	)
 
+# 每帧执行一次
 func _process(delta: float) -> void:
-	if FrayInput.is_pressed("forward"):
+	if FrayInput.is_pressed("forward"):			# 持续输入前进
 		advancer.buffer_press("forward")
-	elif FrayInput.is_pressed("backward"):
+	elif FrayInput.is_just_released("forward"):	# 松开输入前进
+		advancer.buffer_press("forward_release")
+	elif FrayInput.is_pressed("backward"):		# 持续输入后退
 		advancer.buffer_press("backward")
-	elif FrayInput.is_pressed("dodge"):
+	elif FrayInput.is_just_released("backward"):	# 松开输入后退
+		advancer.buffer_press("backward_release") 
+	elif FrayInput.is_pressed("dodge"):			# 持续输入下蹲
 		advancer.buffer_press("dodge")
-	elif FrayInput.is_just_pressed("jump"):
+	elif FrayInput.is_just_released("dodge"):		# 松开输入下蹲
+		advancer.buffer_press("dodge_release") 
+	elif FrayInput.is_just_pressed("jump"):		# 点击输入上跳
 		advancer.buffer_press("jump")
-	else:
-		advancer.buffer_press("idle")
 
+# 每帧推进一次状态机，专用于条件转换
 func _physics_process(delta: float) -> void:
-	pass
+	state_machine.advance()
 	
 # 检查是否在地面上
 func _is_on_ground() -> bool:
 	return is_on_floor()
 	
+# 检测器，处理组合输入
 func _on_FrayInput_input_dected(event: FrayInputEvent) -> void:
 	if event.input == "forward_jump" and event.is_pressed():
 		advancer.buffer_press("forward_jump")
