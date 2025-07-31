@@ -14,6 +14,7 @@ func _ready_impl(context: Dictionary) -> void:
 # 进入状态时进行的操作
 func _enter_impl(_context: Dictionary) -> void:
 	sprite.play("idle")
+	actor.velocity.x = 0
 
 # 在这个状态每一帧的操作
 func _physics_process_impl(_delta):

@@ -1,4 +1,4 @@
-class_name BackwardJumpState
+class_name RightJumpState
 extends FrayState
 
 # 声明角色、动画精灵变量
@@ -6,6 +6,7 @@ extends FrayState
 var actor: CharacterBody2D
 var sprite: AnimatedSprite2D
 var state_machine: FrayStateMachine
+var facing_right : bool
 var speed = 180
 var jump_velocity = 800.0
 var gravity = 1800
@@ -18,8 +19,14 @@ func _ready_impl(context: Dictionary) -> void:
 
 # 进入状态时进行的操作
 func _enter_impl(args: Dictionary):
-	sprite.play("jump")
-	actor.velocity.x = -speed
+	# 判断角色面朝哪
+	facing_right = actor.is_facing_right
+	# 如果面朝右，向右移动状态，那就是前跳，否则是后跳
+	if facing_right:
+		sprite.play("jump")
+	else:
+		sprite.play("backjump")
+	actor.velocity.x = speed
 	actor.velocity.y = -jump_velocity
 
 func _physics_process_impl(delta):

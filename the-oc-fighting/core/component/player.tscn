@@ -910,6 +910,11 @@ animations = [{
 "name": &"land",
 "speed": 30.0
 }, {
+"frames": [],
+"loop": true,
+"name": &"new_animation",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_te254")
@@ -972,7 +977,7 @@ polygon = PackedVector2Array(0, -43, 38, 9, 3, 61, -29, 8)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
 position = Vector2(0.000386685, 2.348)
 sprite_frames = SubResource("SpriteFrames_8gmly")
-animation = &"jump"
+animation = &"new_animation"
 autoplay = "idle"
 
 [node name="Label" type="Label" parent="CharacterBody2D"]
