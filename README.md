@@ -23,6 +23,7 @@ _WIP_
 | [@OakPlatinum](https://github.com/OakPlatinum)      | Tech Lead & Developer    |
 | @12.1Ounce        | Scenario Designer        |
 | @瑞雯              | Narrative Designer       |
+| @Furai            |Tech Lead & Developer     | 
 
 > **Want to see your name?** Comment on the pinned **#team-recruitment** discussion!
 
