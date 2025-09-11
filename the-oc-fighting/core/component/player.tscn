@@ -1,4 +1,4 @@
-[gd_scene load_steps=141 format=3 uid="uid://5cmm70ag4ylr"]
+[gd_scene load_steps=154 format=3 uid="uid://5cmm70ag4ylr"]
 
 [ext_resource type="Texture2D" uid="uid://ci1a8vijxyevd" path="res://asset/character/forgeey/idle.png" id="1_7g3uq"]
 [ext_resource type="Script" uid="uid://pxkaeq7o4i8d" path="res://script/component/character_body_2d.gd" id="1_mgke5"]
@@ -7,12 +7,80 @@
 [ext_resource type="Texture2D" uid="uid://6bot625du5ax" path="res://asset/character/forgeey/backjump.png" id="2_ukini"]
 [ext_resource type="Script" uid="uid://d1hvyulxbwo3k" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="3_40gb3"]
 [ext_resource type="Texture2D" uid="uid://bcwwadqk7o786" path="res://asset/character/forgeey/backward.png" id="3_xu0rw"]
+[ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="4_14ffs"]
 [ext_resource type="Texture2D" uid="uid://c5ooqgewq3inl" path="res://asset/character/forgeey/floating.png" id="5_0un0k"]
 [ext_resource type="Texture2D" uid="uid://ts6fnyxfpj2g" path="res://asset/character/forgeey/parry.png" id="5_j7cfo"]
 [ext_resource type="Texture2D" uid="uid://nxpwdwrftgcs" path="res://asset/character/forgeey/forward.png" id="6_ljn4p"]
 [ext_resource type="Texture2D" uid="uid://dx7y71sns06ef" path="res://asset/character/forgeey/double_jump.png" id="7_40gb3"]
 [ext_resource type="Texture2D" uid="uid://horm4mj5wmc" path="res://asset/character/forgeey/jump.png" id="8_40gb3"]
 [ext_resource type="Texture2D" uid="uid://cvltpimq4s16y" path="res://asset/character/forgeey/land.png" id="9_xu0rw"]
+[ext_resource type="Script" uid="uid://boe4oe8kln68m" path="res://addons/fray/src/hit/2d/hit_state_manager_2d.gd" id="14_14ffs"]
+[ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="15_fyn52"]
+[ext_resource type="Resource" uid="uid://d2mjtrrg7huxc" path="res://script/hit_state_script/hurtbox.tres" id="17_5p13c"]
+[ext_resource type="Resource" uid="uid://c6d4mudiv84j8" path="res://script/hit_state_script/attackbox.tres" id="18_5bqmy"]
+
+[sub_resource type="Animation" id="Animation_c3jh2"]
+length = 0.708338
+loop_mode = 1
+step = 0.0416667
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0416667, 0.0833333, 0.125, 0.166667, 0.208333, 0.25, 0.291667, 0.333333, 0.375, 0.416667, 0.458333, 0.5, 0.541667, 0.583333, 0.625, 0.666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("FrayHitStateManager2D/Idle_HitState2D/Head_Hitbox2D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.42979, 0.669892),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [Vector2(0, 0), Vector2(0, 0), Vector2(0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("FrayHitStateManager2D/Idle_HitState2D/Head_Hitbox2D/CollisionShape2D:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.400739, 0.42979),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(-30, -11), Vector2(-30, -6), Vector2(-30, -6.47223)]
+}
+
+[sub_resource type="Animation" id="Animation_5bqmy"]
+resource_name = "idle"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.233333),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [0, 1]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nv8ub"]
+_data = {
+&"RESET": SubResource("Animation_c3jh2"),
+&"idle": SubResource("Animation_5bqmy")
+}
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6itbt"]
 atlas = ExtResource("2_ukini")
@@ -910,11 +978,6 @@ animations = [{
 "name": &"land",
 "speed": 30.0
 }, {
-"frames": [],
-"loop": true,
-"name": &"new_animation",
-"speed": 5.0
-}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_te254")
@@ -954,11 +1017,52 @@ animations = [{
 "speed": 30.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fyn52"]
+size = Vector2(38, 42)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5p13c"]
+size = Vector2(75, 66)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c3jh2"]
+size = Vector2(40, 41.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nv8ub"]
+size = Vector2(53, 72)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5bqmy"]
+size = Vector2(70, 20)
+
 [node name="Player" type="Node2D"]
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
 position = Vector2(5, -1)
 script = ExtResource("1_mgke5")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CharacterBody2D"]
+polygon = PackedVector2Array(0, -43, 38, 9, 3, 61, -29, 8)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D"]
+libraries = {
+&"": SubResource("AnimationLibrary_nv8ub")
+}
+
+[node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D"]
+texture = ExtResource("1_7g3uq")
+hframes = 17
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
+visible = false
+position = Vector2(0.000386685, 2.348)
+sprite_frames = SubResource("SpriteFrames_8gmly")
+animation = &"jump"
+autoplay = "idle"
+
+[node name="Label" type="Label" parent="CharacterBody2D"]
+offset_left = -9.0
+offset_top = -63.0
+offset_right = 12.0
+offset_bottom = -40.0
+text = "1P"
 
 [node name="FrayStateMachine" type="Node" parent="CharacterBody2D"]
 script = ExtResource("2_0un0k")
@@ -970,19 +1074,100 @@ metadata/_custom_type_script = "uid://d0nvf4ic81v4p"
 script = ExtResource("3_40gb3")
 metadata/_custom_type_script = "uid://d1hvyulxbwo3k"
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CharacterBody2D"]
+[node name="FrayHitStateManager2D" type="Node2D" parent="CharacterBody2D" node_paths=PackedStringArray("source")]
+script = ExtResource("14_14ffs")
+source = NodePath("..")
+metadata/_custom_type_script = "uid://boe4oe8kln68m"
+
+[node name="Idle_HitState2D" type="Node2D" parent="CharacterBody2D/FrayHitStateManager2D" node_paths=PackedStringArray("source")]
+script = ExtResource("15_fyn52")
+source = NodePath("../..")
+active_hitboxes = 3
+metadata/_editor_prop_ptr_source = NodePath("../..")
+metadata/_custom_type_script = "uid://c4csuxwyt10ds"
+
+[node name="Head_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/Idle_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/Idle_HitState2D/Head_Hitbox2D"]
+position = Vector2(-30, -11)
+shape = SubResource("RectangleShape2D_fyn52")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="Body_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/Idle_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/Idle_HitState2D/Body_Hitbox2D"]
+position = Vector2(12.5, 29)
+shape = SubResource("RectangleShape2D_5p13c")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="Jump_HitState2D" type="Node2D" parent="CharacterBody2D/FrayHitStateManager2D" node_paths=PackedStringArray("source")]
 visible = false
-polygon = PackedVector2Array(0, -43, 38, 9, 3, 61, -29, 8)
+script = ExtResource("15_fyn52")
+source = NodePath("../..")
+active_hitboxes = 0
+metadata/_editor_prop_ptr_source = NodePath("../..")
+metadata/_custom_type_script = "uid://c4csuxwyt10ds"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CharacterBody2D"]
-position = Vector2(0.000386685, 2.348)
-sprite_frames = SubResource("SpriteFrames_8gmly")
-animation = &"new_animation"
-autoplay = "idle"
+[node name="Head_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/Jump_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
 
-[node name="Label" type="Label" parent="CharacterBody2D"]
-offset_left = -9.0
-offset_top = -63.0
-offset_right = 12.0
-offset_bottom = -40.0
-text = "1P"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/Jump_HitState2D/Head_Hitbox2D"]
+position = Vector2(-15, -13.25)
+shape = SubResource("RectangleShape2D_c3jh2")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="Body_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/Jump_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/Jump_HitState2D/Body_Hitbox2D"]
+position = Vector2(16.5, 26)
+shape = SubResource("RectangleShape2D_nv8ub")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="1_HitState2D" type="Node2D" parent="CharacterBody2D/FrayHitStateManager2D" node_paths=PackedStringArray("source")]
+visible = false
+script = ExtResource("15_fyn52")
+source = NodePath("../..")
+active_hitboxes = 0
+metadata/_editor_prop_ptr_source = NodePath("../..")
+metadata/_custom_type_script = "uid://c4csuxwyt10ds"
+
+[node name="Attack_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("18_5bqmy")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D/Attack_Hitbox2D"]
+position = Vector2(-49, 18)
+shape = SubResource("RectangleShape2D_5bqmy")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="Head_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D/Head_Hitbox2D"]
+position = Vector2(-30, -10)
+shape = SubResource("RectangleShape2D_fyn52")
+debug_color = Color(0, 0, 0, 0.5)
+
+[node name="Body_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+script = ExtResource("4_14ffs")
+attribute = ExtResource("17_5p13c")
+metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D/Body_Hitbox2D"]
+position = Vector2(11.5, 29)
+shape = SubResource("RectangleShape2D_5p13c")
+debug_color = Color(0, 0, 0, 0.5)

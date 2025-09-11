@@ -10,6 +10,7 @@ const RightJumpState = preload("res://script/state_script/right_jump_script.gd")
 const LeftJumpState = preload("res://script/state_script/left_jump_script.gd")
 const FloatState = preload("res://script/state_script/float_script.gd")
 const LandState = preload("res://script/state_script/land_script.gd")
+const AttackState = preload("res://script/state_script/attack_state.gd")
 
 # 状态机节点和推进器节点
 @onready var state_machine: FrayStateMachine = $FrayStateMachine
@@ -38,6 +39,7 @@ func _ready() -> void:
 		.add_state("left_jump_state", LeftJumpState.new())
 		.add_state("float_state", FloatState.new())
 		.add_state("land_state", LandState.new())
+		.add_state("attack_state", AttackState.new())
 		
 		# 打标签
 		.tag_multi(["idle_state", "right_state", "left_state", "dodge_state"], ["stand_on_ground"])
@@ -54,6 +56,7 @@ func _ready() -> void:
 		.transition_press("idle_state", "jump_state", {"input": "jump"})							# 点击输入上跳
 		.transition_press("idle_state", "right_jump_state", {"input": "right_jump"})			# 点击输入前跳
 		.transition_press("idle_state", "left_jump_state", {"input": "left_jump"})			# 点击输入后跳
+		.transition_press("idle_state", "attack_state", {"input": "attack"})					# 点击输入攻击
 		
 		# 前进的状态转换
 		.transition_press("right_state", "idle_state", {"input": "right_release"})			# 松开输入前进
@@ -89,6 +92,12 @@ func _ready() -> void:
 		.transition("land_state", "idle_state", {
 			"auto_advance": true,
 			"switch_mode": FrayStateMachineTransition.SwitchMode.AT_END
+		})
+		
+		# 攻击状态转换
+		.transition("attack_state", "idle_state", {
+			"auto_advance": true,
+			"switch_mode": FrayStateMachineTransition.SwitchMode.IMMEDIATE
 		})
 		
 		# 构建状态机

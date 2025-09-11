@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FrayHitboxAttribute" load_steps=2 format=3 uid="uid://c6d4mudiv84j8"]
+
+[ext_resource type="Script" uid="uid://bmw6nt826ydci" path="res://addons/fray/src/hit/hitbox_attribute.gd" id="1_3vqhj"]
+
+[resource]
+script = ExtResource("1_3vqhj")
+metadata/_custom_type_script = "uid://bmw6nt826ydci"

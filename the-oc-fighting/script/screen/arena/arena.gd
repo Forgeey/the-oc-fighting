@@ -33,6 +33,7 @@ func _process(delta: float) -> void:
 		player2.is_facing_right = false
 		# 玩家1在左，玩家2在右
 		p1_sprite.flip_h = true	# P1朝右
+		player1.get_node("FrayHitStateManager2D").scale.x = -1
 		p2_sprite.flip_h = false	# P2朝左
 	else:
 		# 玩家1面朝左，玩家2面朝右
@@ -57,6 +58,8 @@ func _process(delta: float) -> void:
 		p1_advancer.buffer_press("dodge_release") 
 	elif FrayInput.is_just_pressed("1p_jump"):		# 点击输入上跳
 		p1_advancer.buffer_press("jump")
+	elif  FrayInput.is_just_pressed("1p_attack"):
+		p1_advancer.buffer_press("attack")
 	
 	# p2玩家检测
 	if FrayInput.is_pressed("2p_right_move"):			# 持续输入前进
@@ -81,12 +84,14 @@ func _init_player_control() -> void:
 	FrayInputMap.add_bind_action("1p_left_move", "1p_left")
 	FrayInputMap.add_bind_action("1p_jump", "1p_jump")
 	FrayInputMap.add_bind_action("1p_dodge", "1p_dodge")
+	FrayInputMap.add_bind_action("1p_attack", "1p_attack")
 
 	# 玩家2
 	FrayInputMap.add_bind_action("2p_right_move", "2p_right")
 	FrayInputMap.add_bind_action("2p_left_move", "2p_left")
 	FrayInputMap.add_bind_action("2p_jump", "2p_jump")
 	FrayInputMap.add_bind_action("2p_dodge", "2p_dodge")
+	FrayInputMap.add_bind_action("2p_attack", "2p_attack")
 
 # 构建运动招式表
 func _init_combine_actions() -> void:
