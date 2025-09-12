@@ -24,6 +24,7 @@ _WIP_
 | @12.1Ounce        | Scenario Designer        |
 | @瑞雯              | Narrative Designer       |
 | @Furai            | Programmer               | 
+| @Tocer            | Programmer               |
 
 > **Want to see your name?** Comment on the pinned **#team-recruitment** discussion!
 
