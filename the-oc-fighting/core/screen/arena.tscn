@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://jsjfumasoe5f"]
+[gd_scene load_steps=7 format=3 uid="uid://jsjfumasoe5f"]
 
 [ext_resource type="Script" uid="uid://1gtn8bmwforf" path="res://script/screen/arena/arena.gd" id="1_2fpqi"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_2fpqi"]
 [ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="3_m1dhr"]
+[ext_resource type="Script" uid="uid://dblxwrdtpk5sf" path="res://script/component/camera_2d.gd" id="5_dyq4w"]
 [ext_resource type="Script" uid="uid://2u6j3qvykril" path="res://script/component/collision_manager.gd" id="6_collision_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_m1dhr"]
@@ -44,15 +45,19 @@ scroll_offset = Vector2(73, 41)
 [node name="Player1" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(300, 550)
 
-[node name="Label" parent="Player1/CharacterBody2D" index="2"]
+[node name="Label" parent="Player1/CharacterBody2D" index="4"]
 metadata/_edit_use_anchors_ = true
 
 [node name="Player2" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(800, 550)
 
-[node name="Label" parent="Player2/CharacterBody2D" index="2"]
+[node name="Label" parent="Player2/CharacterBody2D" index="4"]
 text = "2P"
 metadata/_edit_use_anchors_ = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+script = ExtResource("5_dyq4w")
 
 [editable path="Player1"]
 [editable path="Player2"]
