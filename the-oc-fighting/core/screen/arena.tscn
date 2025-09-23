@@ -1,32 +1,12 @@
-<<<<<<< Updated upstream
 [gd_scene load_steps=7 format=3 uid="uid://jsjfumasoe5f"]
-=======
-[gd_scene load_steps=9 format=3 uid="uid://jsjfumasoe5f"]
->>>>>>> Stashed changes
 
 [ext_resource type="Script" uid="uid://1gtn8bmwforf" path="res://script/screen/arena/arena.gd" id="1_2fpqi"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_2fpqi"]
 [ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="3_m1dhr"]
-<<<<<<< Updated upstream
 [ext_resource type="Script" uid="uid://dblxwrdtpk5sf" path="res://script/component/camera_2d.gd" id="5_dyq4w"]
-=======
-[ext_resource type="Script" uid="uid://hbv8voftfdtc" path="res://addons/fray/src/state_mgmt/component/anim_tracker/animator_tracker_animation_player.gd" id="5_dyq4w"]
->>>>>>> Stashed changes
 [ext_resource type="Script" uid="uid://2u6j3qvykril" path="res://script/component/collision_manager.gd" id="6_collision_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_m1dhr"]
-
-[sub_resource type="Resource" id="Resource_by5qm"]
-resource_local_to_scene = true
-script = ExtResource("5_dyq4w")
-anim_player_path = NodePath("../AnimationPlayer")
-metadata/_custom_type_script = "uid://hbv8voftfdtc"
-
-[sub_resource type="Resource" id="Resource_cmjuy"]
-resource_local_to_scene = true
-script = ExtResource("5_dyq4w")
-anim_player_path = NodePath("../AnimationPlayer")
-metadata/_custom_type_script = "uid://hbv8voftfdtc"
 
 [node name="Arena" type="Node2D"]
 script = ExtResource("1_2fpqi")
@@ -65,27 +45,13 @@ scroll_offset = Vector2(73, 41)
 [node name="Player1" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(300, 550)
 
-<<<<<<< Updated upstream
 [node name="Label" parent="Player1/CharacterBody2D" index="4"]
-=======
-[node name="FrayAnimationObserver" parent="Player1/CharacterBody2D" index="1"]
-tracker = SubResource("Resource_by5qm")
-
-[node name="Label" parent="Player1/CharacterBody2D" index="5"]
->>>>>>> Stashed changes
 metadata/_edit_use_anchors_ = true
 
 [node name="Player2" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(800, 550)
 
-<<<<<<< Updated upstream
 [node name="Label" parent="Player2/CharacterBody2D" index="4"]
-=======
-[node name="FrayAnimationObserver" parent="Player2/CharacterBody2D" index="1"]
-tracker = SubResource("Resource_cmjuy")
-
-[node name="Label" parent="Player2/CharacterBody2D" index="5"]
->>>>>>> Stashed changes
 text = "2P"
 metadata/_edit_use_anchors_ = true
 
