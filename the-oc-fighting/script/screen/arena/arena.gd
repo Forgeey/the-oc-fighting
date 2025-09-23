@@ -23,25 +23,25 @@ func _ready():
 # 帧处理
 func _process(delta: float) -> void:
 	# 获取两个玩家的 AnimatedSprite2D 节点
-	var p1_sprite = player1.get_node("AnimatedSprite2D")
-	var p2_sprite = player2.get_node("AnimatedSprite2D")
+	var p1_anim_player = player1.get_node("AnimatedPlayer")
+	var p2_anim_player = player2.get_node("AnimatedPlayer")
 
 	# 根据相对位置决定朝向
-	if player1.global_position.x < player2.global_position.x:
-		# 玩家1面朝右，玩家2面朝左
-		player1.is_facing_right = true
-		player2.is_facing_right = false
-		# 玩家1在左，玩家2在右
-		p1_sprite.flip_h = true	# P1朝右
-		player1.get_node("FrayHitStateManager2D").scale.x = -1
-		p2_sprite.flip_h = false	# P2朝左
-	else:
-		# 玩家1面朝左，玩家2面朝右
-		player1.is_facing_right = false
-		player2.is_facing_right = true
-		# 玩家1在右，玩家2在左
-		p1_sprite.flip_h = false	# P1朝左
-		p2_sprite.flip_h = true	# P2朝右
+	#if player1.global_position.x < player2.global_position.x:
+		## 玩家1面朝右，玩家2面朝左
+		#player1.is_facing_right = true
+		#player2.is_facing_right = false
+		## 玩家1在左，玩家2在右
+		#p1_sprite.flip_h = true	# P1朝右
+		#player1.get_node("FrayHitStateManager2D").scale.x = -1
+		#p2_sprite.flip_h = false	# P2朝左
+	#else:
+		## 玩家1面朝左，玩家2面朝右
+		#player1.is_facing_right = false
+		#player2.is_facing_right = true
+		## 玩家1在右，玩家2在左
+		#p1_sprite.flip_h = false	# P1朝左
+		#p2_sprite.flip_h = true	# P2朝右
 	
 	# p1玩家检测
 	if FrayInput.is_pressed("1p_right_move"):			# 持续输入前进
@@ -58,9 +58,9 @@ func _process(delta: float) -> void:
 		p1_advancer.buffer_press("dodge_release") 
 	elif FrayInput.is_just_pressed("1p_jump"):		# 点击输入上跳
 		p1_advancer.buffer_press("jump")
-	elif  FrayInput.is_just_pressed("1p_attack"):
+	elif FrayInput.is_just_pressed("1p_attack"):
 		p1_advancer.buffer_press("attack")
-	
+
 	# p2玩家检测
 	if FrayInput.is_pressed("2p_right_move"):			# 持续输入前进
 		p2_advancer.buffer_press("right")
