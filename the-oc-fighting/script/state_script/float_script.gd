@@ -14,7 +14,7 @@ func _ready_impl(context: Dictionary) -> void:
 
 # 进入状态时进行的操作
 func _enter_impl(args: Dictionary):
-	sprite.play("float")
+	pass
 
 func _physics_process_impl(delta):
 	# 持续施加重力

@@ -19,7 +19,6 @@ func _ready_impl(context: Dictionary) -> void:
 func _enter_impl(_context: Dictionary) -> void:
 	# 动画和角色速度
 	anim_player.play("idle")
-	print("idle")
 	actor.velocity.x = 0
 
 # 在这个状态每一帧的操作
