@@ -22,7 +22,6 @@
 [ext_resource type="Script" uid="uid://gqugr1a414gr" path="res://script/hit_state_script/AttackboxAttribute.gd" id="18_5bqmy"]
 
 [sub_resource type="Resource" id="Resource_n5l5f"]
-resource_local_to_scene = true
 script = ExtResource("5_nv8ub")
 anim_player_path = NodePath("../AnimationPlayer")
 metadata/_custom_type_script = "uid://hbv8voftfdtc"

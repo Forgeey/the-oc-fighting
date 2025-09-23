@@ -15,6 +15,8 @@ const AttackState = preload("res://script/state_script/attack_state.gd")
 # 状态机节点和推进器节点
 @onready var state_machine: FrayStateMachine = $FrayStateMachine
 @onready var advancer = $FrayStateMachine/FrayBufferedInputAdvancer
+@onready var anim_observer = $FrayAnimationObserver
+@onready var anim_player = $AnimationPlayer
 var is_facing_right = false
 
 # 载入节点时触发一次
@@ -24,6 +26,8 @@ func _ready() -> void:
 	state_machine.initialize({
 			actor = self,
 			sprite = $AnimatedSprite2D,
+			anim_observer = $FrayAnimationObserver,
+			anim_player = $AnimationPlayer,
 			state_machine = state_machine,
 		},
 		FrayCompoundState.builder()
@@ -46,7 +50,8 @@ func _ready() -> void:
 		.tag_multi(["jump_state", "float_state", "right_jump_state", "left_jump_state"], ["in_air"])
 		
 		# 注册条件
-		.register_conditions({ "is_on_ground": _is_on_ground})
+		.register_conditions({"is_on_ground": _is_on_ground})
+		.register_conditions({"is_on_ground": _is_attack_finished})
 		
 		# 定义状态转换
 		# 待机的状态转换
@@ -94,24 +99,31 @@ func _ready() -> void:
 			"switch_mode": FrayStateMachineTransition.SwitchMode.AT_END
 		})
 		
-		# 攻击状态转换
+		# 浮空的状态转换
 		.transition("attack_state", "idle_state", {
-			"auto_advance": true,
-			"switch_mode": FrayStateMachineTransition.SwitchMode.IMMEDIATE
+			"advance_conditions": ["is_attack_finished"],
+			"auto_advance": true
 		})
-		
+
 		# 构建状态机
 		.build()
 	)
 
-# 每帧执行一次
+# 每帧执行一次状态机，专用于条件转换
 func _process(delta: float) -> void:
-	pass
-
-# 每帧推进一次状态机，专用于条件转换
-func _physics_process(delta: float) -> void:
 	state_machine.advance()
+
+# 每帧推进一次
+func _physics_process(delta: float) -> void:
+	pass
 
 # 检查是否在地面上
 func _is_on_ground() -> bool:
 	return is_on_floor()
+
+# 检查动画是否结束
+func _is_attack_finished() -> bool:
+	if anim_player.playing:
+		return false
+	else:
+		return true

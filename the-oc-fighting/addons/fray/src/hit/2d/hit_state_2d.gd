@@ -148,7 +148,7 @@ func is_hitbox_active(index: int) -> bool:
 ## Sets whether the hitbox at the given [kbd]index[/kbd] is active or not.
 func set_hitbox_active(index: int, is_active: bool) -> void:
 	var flag = 1 << index
-	
+
 	if flag > active_hitboxes:
 		push_warning("Index out of bounds.")
 		return

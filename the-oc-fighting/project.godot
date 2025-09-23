@@ -20,10 +20,6 @@ config/icon="res://icon.svg"
 FrayInputMap="*res://addons/fray/src/input/autoloads/fray_input_map.gd"
 FrayInput="*res://addons/fray/src/input/autoloads/fray_input.gd"
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/fray/plugin.cfg")
-
 [input]
 
 1p_jump={

@@ -99,7 +99,6 @@ func _set_current_state(new_current_state: StringName) -> void:
 		for child in get_children():
 			if child is FrayHitState2D and child.name != _current_state:
 				child.deactivate()
-				print(child.name)
 
 
 func _on_ChildChangeDetector_child_changed(node: Node, change: _ChildChangeDetector.Change) -> void:
