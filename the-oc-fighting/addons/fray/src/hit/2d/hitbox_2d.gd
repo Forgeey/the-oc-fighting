@@ -20,6 +20,7 @@ signal hitbox_exited(hitbox: FrayHitbox2D)
 @export var attribute: FrayHitboxAttribute = null:
 	set(value):
 		attribute = value
+		
 		if attribute != null:
 			_update_collision_colors()
 		

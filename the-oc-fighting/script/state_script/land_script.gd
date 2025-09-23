@@ -15,6 +15,7 @@ func _ready_impl(context: Dictionary) -> void:
 
 # 进入状态时进行的操作
 func _enter_impl(args: Dictionary):
+	sprite.play("land")
 	actor.velocity.x = 0
 	
 func _is_done_processing_impl() -> bool:

@@ -4,7 +4,7 @@ class_name AttackAttribute
 
 # 设置一个独特的颜色用于调试时区分
 func _get_color_impl() -> Color:
-	return Color(255, 0, 0, 0.5)
+	return Color.RED
 
 # 定义核心规则：这个攻击框应该检测谁？
 func _allows_detection_of_impl(other_attribute: FrayHitboxAttribute) -> bool:
