@@ -63,16 +63,19 @@ tracks/2/keys = {
 }
 tracks/3/type = "method"
 tracks/3/imported = false
-tracks/3/enabled = true
+tracks/3/enabled = false
 tracks/3/path = NodePath("FrayHitStateManager2D/1_HitState2D")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
+"times": PackedFloat32Array(0, 0.416667),
+"transitions": PackedFloat32Array(1, 1),
 "values": [{
-"args": [0, true],
-"method": &"set_hitbox_active"
+"args": [],
+"method": &"activate"
+}, {
+"args": [],
+"method": &"deactivate"
 }]
 }
 tracks/4/type = "method"
@@ -85,7 +88,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "values": [{
-"args": [1, true],
+"args": [0, true],
 "method": &"set_hitbox_active"
 }]
 }
@@ -96,6 +99,20 @@ tracks/5/path = NodePath("FrayHitStateManager2D/1_HitState2D")
 tracks/5/interp = 1
 tracks/5/loop_wrap = true
 tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [1, true],
+"method": &"set_hitbox_active"
+}]
+}
+tracks/6/type = "method"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("FrayHitStateManager2D/1_HitState2D")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
 "times": PackedFloat32Array(0.125, 0.291667),
 "transitions": PackedFloat32Array(1, 1),
 "values": [{
@@ -106,13 +123,13 @@ tracks/5/keys = {
 "method": &"set_hitbox_active"
 }]
 }
-tracks/6/type = "value"
-tracks/6/imported = false
-tracks/6/enabled = true
-tracks/6/path = NodePath("FrayHitStateManager2D/1_HitState2D/Attack_Hitbox2D:position")
-tracks/6/interp = 1
-tracks/6/loop_wrap = true
-tracks/6/keys = {
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("FrayHitStateManager2D/1_HitState2D/Attack_Hitbox2D:position")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
 "times": PackedFloat32Array(0, 0.0992958, 0.125936, 0.415589),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
@@ -251,16 +268,19 @@ tracks/3/keys = {
 }
 tracks/4/type = "method"
 tracks/4/imported = false
-tracks/4/enabled = true
+tracks/4/enabled = false
 tracks/4/path = NodePath("FrayHitStateManager2D/Idle_HitState2D")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
+"times": PackedFloat32Array(0, 0.708333),
+"transitions": PackedFloat32Array(1, 1),
 "values": [{
-"args": [0, true],
-"method": &"set_hitbox_active"
+"args": [],
+"method": &"activate"
+}, {
+"args": [],
+"method": &"deactivate"
 }]
 }
 tracks/5/type = "method"
@@ -270,6 +290,20 @@ tracks/5/path = NodePath("FrayHitStateManager2D/Idle_HitState2D")
 tracks/5/interp = 1
 tracks/5/loop_wrap = true
 tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [0, true],
+"method": &"set_hitbox_active"
+}]
+}
+tracks/6/type = "method"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("FrayHitStateManager2D/Idle_HitState2D")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "values": [{
@@ -490,11 +524,13 @@ debug_color = Color(0, 0, 255, 0.5)
 [node name="1_HitState2D" type="Node2D" parent="CharacterBody2D/FrayHitStateManager2D" node_paths=PackedStringArray("source")]
 script = ExtResource("15_fyn52")
 source = NodePath("../..")
-active_hitboxes = 7
+active_hitboxes = 0
 metadata/_editor_prop_ptr_source = NodePath("../..")
 metadata/_custom_type_script = "uid://c4csuxwyt10ds"
 
 [node name="Head_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+monitoring = false
+monitorable = false
 script = ExtResource("4_14ffs")
 attribute = SubResource("Resource_ovs8s")
 metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
@@ -505,6 +541,8 @@ shape = SubResource("RectangleShape2D_fyn52")
 debug_color = Color(0, 0, 255, 0.5)
 
 [node name="Body_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+monitoring = false
+monitorable = false
 script = ExtResource("4_14ffs")
 attribute = SubResource("Resource_p1h8i")
 metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"
@@ -515,6 +553,8 @@ shape = SubResource("RectangleShape2D_5p13c")
 debug_color = Color(0, 0, 255, 0.5)
 
 [node name="Attack_Hitbox2D" type="Area2D" parent="CharacterBody2D/FrayHitStateManager2D/1_HitState2D"]
+monitoring = false
+monitorable = false
 script = ExtResource("4_14ffs")
 attribute = SubResource("Resource_lm07r")
 metadata/_custom_type_script = "uid://b0vx4yrnvlfgv"

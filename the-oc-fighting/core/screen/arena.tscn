@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_2fpqi"]
 [ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="3_m1dhr"]
 [ext_resource type="Script" uid="uid://hbv8voftfdtc" path="res://addons/fray/src/state_mgmt/component/anim_tracker/animator_tracker_animation_player.gd" id="5_by5qm"]
-[ext_resource type="Script" path="res://script/component/camera_2d.gd" id="5_dyq4w"]
+[ext_resource type="Script" uid="uid://dblxwrdtpk5sf" path="res://script/component/camera_2d.gd" id="5_dyq4w"]
 [ext_resource type="Script" uid="uid://2u6j3qvykril" path="res://script/component/collision_manager.gd" id="6_collision_manager"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_m1dhr"]
