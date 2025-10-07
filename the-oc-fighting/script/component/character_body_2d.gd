@@ -123,7 +123,7 @@ func _is_on_ground() -> bool:
 
 # 检查动画是否结束
 func _is_attack_finished() -> bool:
-	if anim_player.playing:
+	if anim_player.is_playing():
 		return false
 	else:
 		return true

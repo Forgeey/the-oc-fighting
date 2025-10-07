@@ -58,22 +58,21 @@ scroll_offset = Vector2(73, 41)
 [node name="Player1" parent="." instance=ExtResource("3_m1dhr")]
 position = Vector2(300, 550)
 
-[node name="FrayAnimationObserver" parent="Player1/CharacterBody2D" index="1"]
+[node name="Label" parent="Player1/CharacterBody2D" index="1"]
+metadata/_edit_use_anchors_ = true
+
+[node name="FrayAnimationObserver" parent="Player1/CharacterBody2D" index="3"]
 tracker = SubResource("Resource_cmjuy")
 
-[node name="Label" parent="Player1/CharacterBody2D" index="4"]
-metadata/_edit_use_anchors_ = true
-
 [node name="Player2" parent="." instance=ExtResource("3_m1dhr")]
-process_mode = 4
 position = Vector2(800, 550)
 
-[node name="FrayAnimationObserver" parent="Player2/CharacterBody2D" index="1"]
-tracker = SubResource("Resource_7q1su")
-
-[node name="Label" parent="Player2/CharacterBody2D" index="4"]
+[node name="Label" parent="Player2/CharacterBody2D" index="1"]
 text = "2P"
 metadata/_edit_use_anchors_ = true
+
+[node name="FrayAnimationObserver" parent="Player2/CharacterBody2D" index="3"]
+tracker = SubResource("Resource_7q1su")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(576, 324)

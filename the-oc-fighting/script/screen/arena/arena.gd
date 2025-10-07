@@ -4,6 +4,10 @@ extends Node2D
 @onready var player1: CharacterBody2D = $Player1/CharacterBody2D
 @onready var player2: CharacterBody2D = $Player2/CharacterBody2D
 
+# 获取两个玩家的 AnimatedSprite2D 节点
+@onready var p1_vr: Node2D = $Player1/CharacterBody2D/VisualRoot
+@onready var p2_vr: Node2D = $Player2/CharacterBody2D/VisualRoot
+
 # 获取每个玩家的输入推进器
 @onready var p1_advancer = player1.advancer
 @onready var p2_advancer = player2.advancer
@@ -22,26 +26,21 @@ func _ready():
 
 # 帧处理
 func _process(delta: float) -> void:
-	# 获取两个玩家的 AnimatedSprite2D 节点
-	var p1_anim_player = player1.get_node("AnimatedPlayer")
-	var p2_anim_player = player2.get_node("AnimatedPlayer")
-
 	# 根据相对位置决定朝向
-	#if player1.global_position.x < player2.global_position.x:
-		## 玩家1面朝右，玩家2面朝左
-		#player1.is_facing_right = true
-		#player2.is_facing_right = false
-		## 玩家1在左，玩家2在右
-		#p1_sprite.flip_h = true	# P1朝右
-		#player1.get_node("FrayHitStateManager2D").scale.x = -1
-		#p2_sprite.flip_h = false	# P2朝左
-	#else:
-		## 玩家1面朝左，玩家2面朝右
-		#player1.is_facing_right = false
-		#player2.is_facing_right = true
-		## 玩家1在右，玩家2在左
-		#p1_sprite.flip_h = false	# P1朝左
-		#p2_sprite.flip_h = true	# P2朝右
+	if player1.global_position.x < player2.global_position.x:
+		# 玩家1面朝右，玩家2面朝左
+		player1.is_facing_right = true
+		player2.is_facing_right = false
+		# 玩家1在左，玩家2在右
+		p1_vr.scale.x = -1		# P1朝右
+		p2_vr.scale.x = 1		# P2朝左
+	else:
+		# 玩家1面朝左，玩家2面朝右
+		player1.is_facing_right = false
+		player2.is_facing_right = true
+		# 玩家1在右，玩家2在左
+		p1_vr.scale.x = 1		# P1朝左
+		p2_vr.scale.x = -1		# P2朝右
 	
 	# p1玩家检测
 	if FrayInput.is_pressed("1p_right_move"):			# 持续输入前进
