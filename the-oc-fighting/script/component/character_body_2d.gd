@@ -46,12 +46,14 @@ func _ready() -> void:
 		.add_state("attack_state", AttackState.new())
 		
 		# 打标签
-		.tag_multi(["idle_state", "right_state", "left_state", "dodge_state"], ["stand_on_ground"])
+		.tag_multi(["idle_state", "right_state", "left_state", "land_state", "dodge_state"], ["stand_on_ground"])
 		.tag_multi(["jump_state", "float_state", "right_jump_state", "left_jump_state"], ["in_air"])
 		
 		# 注册条件
-		.register_conditions({"is_on_ground": _is_on_ground})
-		.register_conditions({"is_on_ground": _is_attack_finished})
+		.register_conditions({
+			"is_on_ground": _is_on_ground,
+			"is_attack_finished": _is_attack_finished
+		})
 		
 		# 定义状态转换
 		# 待机的状态转换
@@ -111,11 +113,11 @@ func _ready() -> void:
 
 # 每帧执行一次状态机，专用于条件转换
 func _process(delta: float) -> void:
-	state_machine.advance()
+	pass
 
 # 每帧推进一次
 func _physics_process(delta: float) -> void:
-	pass
+	state_machine.advance()
 
 # 检查是否在地面上
 func _is_on_ground() -> bool:

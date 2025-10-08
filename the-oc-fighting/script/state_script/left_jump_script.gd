@@ -4,7 +4,7 @@ extends FrayState
 # 声明角色、动画精灵变量
 # 它们通过_ready_impl被赋值
 var actor: CharacterBody2D
-var sprite: AnimatedSprite2D
+var anim_player: AnimationPlayer
 var state_machine: FrayStateMachine
 var facing_right : bool
 var speed = 180
@@ -14,7 +14,7 @@ var gravity = 1800
 # 此函数获取state_machine.initialize第一个参数的context
 func _ready_impl(context: Dictionary) -> void:
 	actor = context.get("actor")
-	sprite = context.get("sprite")
+	anim_player = context.get("anim_player")
 	state_machine = context.get("state_machine")
 
 # 进入状态时进行的操作
@@ -23,9 +23,9 @@ func _enter_impl(args: Dictionary):
 	facing_right = actor.is_facing_right
 	# 如果面朝右，向左移动状态，那就是后跳，否则是前跳
 	if facing_right:
-		sprite.play("backjump")
+		anim_player.play("backward_jump")
 	else:
-		sprite.play("jump")
+		anim_player.play("jump")
 	actor.velocity.x = -speed
 	actor.velocity.y = -jump_velocity
 
