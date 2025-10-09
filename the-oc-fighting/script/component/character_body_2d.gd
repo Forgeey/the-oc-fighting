@@ -10,11 +10,13 @@ const RightJumpState = preload("res://script/state_script/right_jump_script.gd")
 const LeftJumpState = preload("res://script/state_script/left_jump_script.gd")
 const FloatState = preload("res://script/state_script/float_script.gd")
 const LandState = preload("res://script/state_script/land_script.gd")
-const AttackState = preload("res://script/state_script/attack_state.gd")
+const AttackState = preload("res://script/state_script/attack_script.gd")
+const HurtState = preload("res://script/state_script/hurt_script.gd")
 
 # 状态机节点和推进器节点
-@onready var state_machine: FrayStateMachine = $FrayStateMachine
+@onready var state_machine = $FrayStateMachine
 @onready var advancer = $FrayStateMachine/FrayBufferedInputAdvancer
+@onready var hit_state_manager = $VisualRoot/FrayHitStateManager2D
 @onready var anim_observer = $FrayAnimationObserver
 @onready var anim_player = $AnimationPlayer
 var is_facing_right = false
@@ -44,6 +46,7 @@ func _ready() -> void:
 		.add_state("float_state", FloatState.new())
 		.add_state("land_state", LandState.new())
 		.add_state("attack_state", AttackState.new())
+		.add_state("hurt_state", HurtState.new())
 		
 		# 打标签
 		.tag_multi(["idle_state", "right_state", "left_state", "land_state", "dodge_state"], ["stand_on_ground"])
@@ -51,8 +54,7 @@ func _ready() -> void:
 		
 		# 注册条件
 		.register_conditions({
-			"is_on_ground": _is_on_ground,
-			"is_attack_finished": _is_attack_finished
+			"is_on_ground": _is_on_ground
 		})
 		
 		# 定义状态转换
@@ -100,16 +102,14 @@ func _ready() -> void:
 			"auto_advance": true,
 			"switch_mode": FrayStateMachineTransition.SwitchMode.AT_END
 		})
-		
-		# 浮空的状态转换
-		.transition("attack_state", "idle_state", {
-			"advance_conditions": ["is_attack_finished"],
-			"auto_advance": true
-		})
 
 		# 构建状态机
 		.build()
 	)
+	
+	# FrayHitStateManager判定管理器信号连接
+	hit_state_manager.hitbox_intersected.connect(_is_hurt)
+	#hit_state_manager.hitbox_separated()
 
 # 每帧执行一次状态机，专用于条件转换
 func _process(delta: float) -> void:
@@ -123,9 +123,6 @@ func _physics_process(delta: float) -> void:
 func _is_on_ground() -> bool:
 	return is_on_floor()
 
-# 检查动画是否结束
-func _is_attack_finished() -> bool:
-	if anim_player.is_playing():
-		return false
-	else:
-		return true
+# 攻击判定，强制转换到受击状态
+func _is_hurt(detector_hitbox: FrayHitbox2D, detected_hitbox: FrayHitbox2D) -> void:
+	state_machine.goto("hurt_state")

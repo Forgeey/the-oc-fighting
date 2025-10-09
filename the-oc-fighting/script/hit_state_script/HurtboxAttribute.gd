@@ -6,7 +6,6 @@ class_name HurtboxAttribute
 func _get_color_impl() -> Color:
 	return Color(0, 0, 255, 0.5)
 
-# 受击框的规则：它不主动“检测”别人，所以可以直接返回false
-# 真正重要的是它被别人检测时的身份
+# 接收另一个FrayHitbox的FrayAttribute，进行判断返回是否可以允许检测，默认为true
 func _allows_detection_of_impl(other_attribute: FrayHitboxAttribute) -> bool:
-	return false
+	return true

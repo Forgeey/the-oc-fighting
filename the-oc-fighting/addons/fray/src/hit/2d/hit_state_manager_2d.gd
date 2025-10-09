@@ -45,7 +45,9 @@ func _ready() -> void:
 		if child is FrayHitState2D:
 			child.set_hitbox_source(source)
 			child.hitbox_intersected.connect(_on_Hitstate_hitbox_intersected)
-			child.hitbox_intersected.connect(_on_Hitstate_hitbox_separated)
+			#child.hitbox_intersected.connect(_on_Hitstate_hitbox_separated)
+			# Furai modified
+			child.hitbox_separated.connect(_on_Hitstate_hitbox_separated)
 			child.active_hitboxes_changed.connect(_on_HitState_active_hitboxes_changed.bind(child))
 
 

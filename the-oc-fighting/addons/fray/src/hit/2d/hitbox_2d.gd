@@ -41,7 +41,7 @@ func _ready() -> void:
 					_update_collision_colors()
 				)
 		return
-		
+
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 
