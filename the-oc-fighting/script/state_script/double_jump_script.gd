@@ -1,4 +1,4 @@
-class_name LandState
+class_name DoubleJumpState
 extends FrayState
 
 # 声明角色、动画精灵变量
@@ -6,9 +6,11 @@ extends FrayState
 var actor: CharacterBody2D
 var anim_player: AnimationPlayer
 var state_machine: FrayStateMachine
+var jump_velocity = 800.0
+var gravity = 1800
 
 # 信号
-signal reset_double_jump
+signal reduce_double_jump
 
 # 此函数获取state_machine.initialize第一个参数的context
 func _ready_impl(context: Dictionary) -> void:
@@ -18,17 +20,18 @@ func _ready_impl(context: Dictionary) -> void:
 
 # 进入状态时进行的操作
 func _enter_impl(args: Dictionary):
-	# 重置二段跳次数
-	reset_double_jump.emit()
-	# 动画和角色运动
-	anim_player.play("land")
+	# 减少一次二段跳次数
+	reduce_double_jump.emit()
+	#动画和角色运动
+	anim_player.play("double_jump")
 	actor.velocity.x = 0
-
-func _is_done_processing_impl() -> bool:
-	if not is_instance_valid(anim_player):
-		return true
-	else:
-		return not anim_player.is_playing()
+	actor.velocity.y = -jump_velocity
 
 func _physics_process_impl(delta):
-	pass
+	# 持续施加重力
+	actor.velocity.y += gravity * delta
+	actor.move_and_slide()
+	
+	# 当速度不再向上时，强制移动到浮空状态
+	if actor.velocity.y >=0:
+		state_machine.goto("float_state")

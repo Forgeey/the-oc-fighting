@@ -11,5 +11,6 @@ func _allows_detection_of_impl(other_attribute: FrayHitboxAttribute) -> bool:
 	if other_attribute is AttackAttribute:
 		return true
 
-	# 除此之外，允许检测所有其他东西（比如敌人的受击框）
+	# 目前检测到的是hurtbox，攻击框返回false，意味着不允许其他判定框作用于攻击框
+	# 导致攻击框源不会收到攻击框区域进入判定框的信号
 	return false
