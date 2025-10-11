@@ -2,6 +2,9 @@
 extends FrayHitboxAttribute
 class_name HurtboxAttribute
 
+# 受击数值
+
+
 # 受击框用蓝色表示
 func _get_color_impl() -> Color:
 	return Color(0, 0, 255, 0.5)

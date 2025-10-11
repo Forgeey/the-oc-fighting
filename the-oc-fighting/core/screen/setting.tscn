@@ -1,0 +1,48 @@
+[gd_scene load_steps=3 format=3 uid="uid://dtfwhw1fqwg3t"]
+
+[ext_resource type="Script" uid="uid://k3gmbp3lf5il" path="res://core/screen/setting.gd" id="1_gtfcx"]
+[ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_21vte"]
+
+[node name="Setting" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_gtfcx")
+
+[node name="BackGround" type="TextureRect" parent="."]
+offset_left = -40.0
+offset_right = 1880.0
+offset_bottom = 1000.0
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("2_21vte")
+
+[node name="Label" type="Label" parent="."]
+offset_left = 529.0
+offset_top = 16.0
+offset_right = 593.0
+offset_bottom = 39.0
+text = "设置界面"
+
+[node name="Settings" type="VBoxContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ControlsSettings" type="VBoxContainer" parent="Settings"]
+layout_mode = 2
+
+[node name="GraphicsSetting" type="VBoxContainer" parent="Settings"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 526.0
+offset_top = 526.0
+offset_right = 610.0
+offset_bottom = 566.0
+
+[node name="Apply" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "应用"
+
+[node name="Back" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "返回"
