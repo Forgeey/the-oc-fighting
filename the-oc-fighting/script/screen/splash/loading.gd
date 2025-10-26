@@ -14,7 +14,8 @@ func _process(delta: float) -> void:
 func _on_title_fade_in_completed() -> void:
 	visible = true
 	get_tree().create_timer(3).timeout.connect(_on_loading_finished)
-	
+
+# 加载界面完成后，跳到主界面界面
 func _on_loading_finished() -> void:
-	get_tree().change_scene_to_file("res://core/screen/arena.tscn")
+	get_tree().change_scene_to_file("res://core/screen/main.tscn")
 	

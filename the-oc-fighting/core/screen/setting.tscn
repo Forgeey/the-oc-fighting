@@ -9,6 +9,7 @@ anchors_preset = 0
 script = ExtResource("1_gtfcx")
 
 [node name="BackGround" type="TextureRect" parent="."]
+layout_mode = 0
 offset_left = -40.0
 offset_right = 1880.0
 offset_bottom = 1000.0
@@ -16,6 +17,7 @@ scale = Vector2(0.65, 0.65)
 texture = ExtResource("2_21vte")
 
 [node name="Label" type="Label" parent="."]
+layout_mode = 0
 offset_left = 529.0
 offset_top = 16.0
 offset_right = 593.0
@@ -23,6 +25,7 @@ offset_bottom = 39.0
 text = "设置界面"
 
 [node name="Settings" type="VBoxContainer" parent="."]
+layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
