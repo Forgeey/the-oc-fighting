@@ -31,6 +31,7 @@ grow_vertical = 2
 texture = ExtResource("3_005n7")
 
 [node name="Buttons" type="VBoxContainer" parent="."]
+layout_mode = 0
 offset_left = 565.0
 offset_top = 353.0
 offset_right = 605.0
