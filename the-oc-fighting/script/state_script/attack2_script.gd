@@ -1,4 +1,4 @@
-class_name AttackState
+class_name AttackState2
 extends FrayState
 
 # 声明角色、动画精灵变量
@@ -8,9 +8,6 @@ var state_machine: FrayStateMachine
 var anim_observer: FrayAnimationObserver
 var anim_player: AnimationPlayer
 
-# 信号
-signal reset_cancel_cond
-
 # 此函数获取state_machine.initialize第一个参数的context
 func _ready_impl(context: Dictionary) -> void:
 	actor = context.get("actor")
@@ -19,18 +16,14 @@ func _ready_impl(context: Dictionary) -> void:
 	anim_player = context.get("anim_player")
 	
 	# 初始化信号
-	var attack_finished = anim_observer.usignal_finished("1_attack")
+	var attack_finished = anim_observer.usignal_finished("中击_attack_1")
 	attack_finished.connect(_is_attack_finished)
 
 # 进入状态时进行的操作
 func _enter_impl(_context: Dictionary) -> void:
 	# 动画和角色速度
-	anim_player.play("1_attack")
+	anim_player.play("中击_attack_1")
 	actor.velocity.x = 0
-
-# 离开状态时进行的操作
-func _exit_impl() -> void:
-	reset_cancel_cond.emit()
 
 # 在这个状态每一帧的操作
 func _physics_process_impl(delta):
