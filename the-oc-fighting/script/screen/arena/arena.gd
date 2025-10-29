@@ -59,6 +59,8 @@ func _process(delta: float) -> void:
 		p1_advancer.buffer_press("jump")
 	elif FrayInput.is_just_pressed("1p_attack"):
 		p1_advancer.buffer_press("attack")
+	elif FrayInput.is_just_pressed("1p_attack2"):
+		p1_advancer.buffer_press("attack2")
 
 	# p2玩家检测
 	if FrayInput.is_pressed("2p_right_move"):			# 持续输入前进
@@ -84,6 +86,7 @@ func _init_player_control() -> void:
 	FrayInputMap.add_bind_action("1p_jump", "1p_jump")
 	FrayInputMap.add_bind_action("1p_dodge", "1p_dodge")
 	FrayInputMap.add_bind_action("1p_attack", "1p_attack")
+	FrayInputMap.add_bind_action("1p_attack2", "1p_attack2")
 
 	# 玩家2
 	FrayInputMap.add_bind_action("2p_right_move", "2p_right")

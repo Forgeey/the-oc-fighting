@@ -12,6 +12,7 @@ const LeftJumpState = preload("res://script/state_script/left_jump_script.gd")
 const FloatState = preload("res://script/state_script/float_script.gd")
 const LandState = preload("res://script/state_script/land_script.gd")
 const AttackState = preload("res://script/state_script/attack_script.gd")
+const AttackState2 = preload("res://script/state_script/attack2_script.gd")
 const HurtState = preload("res://script/state_script/hurt_script.gd")
 
 # 状态机节点和推进器节点
@@ -25,8 +26,12 @@ const HurtState = preload("res://script/state_script/hurt_script.gd")
 @export var max_air_jumps: int = 1
 var remaining_air_jumps: int
 var is_facing_right = false
+var attack_confirmation = false
+@export var active_f_finished = false
+
 var double_jump_state: DoubleJumpState
 var land_state: LandState
+var attack_state: AttackState
 
 # 载入节点时触发一次
 func _ready() -> void:
@@ -36,6 +41,7 @@ func _ready() -> void:
 	# 二段跳状态实例
 	double_jump_state = DoubleJumpState.new()
 	land_state = LandState.new()
+	attack_state = AttackState.new()
 	
 	# 初始化状态机
 	# 第一个参数是状态数据
@@ -60,17 +66,21 @@ func _ready() -> void:
 		.add_state("left_jump_state", LeftJumpState.new())
 		.add_state("float_state", FloatState.new())
 		.add_state("land_state", land_state)
-		.add_state("attack_state", AttackState.new())
+		.add_state("attack_state", attack_state)
+		.add_state("attack2_state", AttackState2.new())
 		.add_state("hurt_state", HurtState.new())
 		
 		# 打标签
 		.tag_multi(["idle_state", "right_state", "left_state", "land_state", "dodge_state"], ["stand_on_ground"])
 		.tag_multi(["jump_state", "float_state", "right_jump_state", "left_jump_state"], ["in_air"])
+		.tag_multi(["attack_state"], ["can_cancel"])
 		
 		# 注册条件
 		.register_conditions({
 			"is_on_ground": _is_on_ground,
-			"can_double_jump": _can_double_jump
+			"can_double_jump": _can_double_jump,
+			"light_attack_cancel": _light_attack_cancel,
+			"can_cancel": _attack_confirm
 		})
 		
 		# 定义状态转换
@@ -128,16 +138,26 @@ func _ready() -> void:
 			"auto_advance": true,
 			"switch_mode": FrayStateMachineTransition.SwitchMode.AT_END
 		})
+		
+		# 轻击取消的状态转换
+		.transition_press("attack_state", "attack2_state", {
+			"prereqs": ["light_attack_cancel", "can_cancel"],
+			"input": "attack2"
+		})
 
 		# 构建状态机
 		.build()
 	)
 	
 	# FrayHitStateManager判定管理器信号连接
-	hit_state_manager.hitbox_intersected.connect(_is_hurt)
+	hit_state_manager.hitbox_intersected.connect(_hitbox_detect)
 	#hit_state_manager.hitbox_separated()
+	# 连招取消
+	
+	# 二段跳信号处理函数
 	double_jump_state.reduce_double_jump.connect(_reduce_double_jump)
 	land_state.reset_double_jump.connect(_reset_double_jump)
+	attack_state.reset_cancel_cond.connect(_reset_cancel_cond)
 	
 
 # 每帧执行一次状态机，专用于条件转换
@@ -151,6 +171,31 @@ func _physics_process(delta: float) -> void:
 # 检查是否在地面上
 func _is_on_ground() -> bool:
 	return is_on_floor()
+
+# 攻击判定
+# 如果是自身检测框是攻击框，检查是否能够取消当前状态
+# 如果是自身检测框是受击框，强制转换到受击状态
+func _hitbox_detect(detector_hitbox: FrayHitbox2D, detected_hitbox: FrayHitbox2D) -> void:
+	if detector_hitbox.attribute is AttackAttribute:
+		attack_confirmation = true
+	elif detector_hitbox.attribute is HurtboxAttribute:
+		state_machine.goto("hurt_state")
+
+# 攻击确认或攻击有效帧用完
+func _attack_confirm() -> bool:
+	return attack_confirmation or active_f_finished
+
+# 取消条件重置
+func _reset_cancel_cond() -> void:
+	attack_confirmation = false
+	active_f_finished = false
+
+# 攻击判定，检查当前攻击，是否能进入连招表中的后续攻击
+func _light_attack_cancel() -> bool:
+	if anim_player.current_animation == "1_attack":
+		return true
+	else:
+		return false
 
 # 检查是否可以二段跳
 func _can_double_jump() -> bool:
@@ -166,7 +211,3 @@ func _reduce_double_jump() -> void:
 # 重置二段跳次数
 func _reset_double_jump() -> void:
 	remaining_air_jumps = max_air_jumps
-
-# 攻击判定，强制转换到受击状态
-func _is_hurt(detector_hitbox: FrayHitbox2D, detected_hitbox: FrayHitbox2D) -> void:
-	state_machine.goto("hurt_state")

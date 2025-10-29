@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://carsjilx3y01m"
-path="res://.godot/imported/title 2X.png-666a544f0c1b2584b7f87dd97fbb3b2d.ctex"
+uid="uid://bqf7ay2fubjuq"
+path="res://.godot/imported/中击（1段）-Sheet.png-9393bb0a305df125d66f05e3be4efa9c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://asset/screen/title 2X.png"
-dest_files=["res://.godot/imported/title 2X.png-666a544f0c1b2584b7f87dd97fbb3b2d.ctex"]
+source_file="res://asset/character/forgeey/中击（1段）-Sheet.png"
+dest_files=["res://.godot/imported/中击（1段）-Sheet.png-9393bb0a305df125d66f05e3be4efa9c.ctex"]
 
 [params]
 
