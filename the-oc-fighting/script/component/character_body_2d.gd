@@ -157,6 +157,8 @@ func _ready() -> void:
 	# 二段跳信号处理函数
 	double_jump_state.reduce_double_jump.connect(_reduce_double_jump)
 	land_state.reset_double_jump.connect(_reset_double_jump)
+	
+	# 攻击取消信号处理
 	attack_state.reset_cancel_cond.connect(_reset_cancel_cond)
 	
 
