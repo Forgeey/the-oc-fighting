@@ -13,7 +13,7 @@ func _ready():
 func _on_combat_pressed():
 	print("开始对战")
 	# 切换到战斗场景
-	SceneManager.change_scene("arena")
+	SceneManager.change_scene("sky")
 
 func _on_settings_pressed():
 	print("打开设置")

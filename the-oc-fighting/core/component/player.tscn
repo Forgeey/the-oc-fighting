@@ -851,10 +851,6 @@ tracks/3/keys = {
 "values": [Vector2(2, 0)]
 }
 
-[sub_resource type="Animation" id="Animation_8icmy"]
-resource_name = "中击_attack_2"
-step = 0.0416667
-
 [sub_resource type="Animation" id="Animation_jnefq"]
 resource_name = "中击_attack"
 length = 1.00001
@@ -907,6 +903,10 @@ tracks/3/keys = {
 "update": 0,
 "values": [Vector2(-8, 0)]
 }
+
+[sub_resource type="Animation" id="Animation_8icmy"]
+resource_name = "中击_attack_2"
+step = 0.0416667
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nv8ub"]
 _data = {
@@ -1018,7 +1018,6 @@ texture = ExtResource("1_7g3uq")
 hframes = 17
 
 [node name="FrayHitStateManager2D" type="Node2D" parent="CharacterBody2D/VisualRoot" node_paths=PackedStringArray("source")]
-visible = false
 script = ExtResource("14_14ffs")
 source = NodePath("../..")
 metadata/_custom_type_script = "uid://boe4oe8kln68m"

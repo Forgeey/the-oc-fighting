@@ -4,7 +4,8 @@ extends Node
 const SCENES = {
 	"main": "res://core/screen/main.tscn",
 	"setting": "res://core/screen/setting.tscn",
-	"arena": "res://core/screen/arena.tscn"
+	"arena": "res://core/screen/arena.tscn",
+	"sky": "res://core/screen/sky.tscn"
 }
 
 # 信号
