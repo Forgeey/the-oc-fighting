@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://dl2tepjtvhry4"]
+[gd_scene load_steps=7 format=3 uid="uid://dl2tepjtvhry4"]
 
 [ext_resource type="Script" uid="uid://cun0y75e3fhe3" path="res://core/screen/main.gd" id="1_4esqw"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_005n7"]
 [ext_resource type="Texture2D" uid="uid://carsjilx3y01m" path="res://asset/screen/title 2X.png" id="3_005n7"]
+[ext_resource type="Script" uid="uid://c2lifp8ge6n37" path="res://core/screen/选择框.gd" id="4_15ld6"]
+[ext_resource type="Texture2D" uid="uid://dk875cw43o8kx" path="res://asset/screen/Sprite-0003.png" id="5_enr81"]
+[ext_resource type="Texture2D" uid="uid://dukuy06qx1dn2" path="res://asset/screen/Sprite-0004.png" id="5_p18fe"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -30,17 +33,88 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_005n7")
 
-[node name="Buttons" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 565.0
-offset_top = 353.0
-offset_right = 605.0
-offset_bottom = 419.0
+[node name="Buttons" type="Sprite2D" parent="."]
+script = ExtResource("4_15ld6")
 
-[node name="对战" type="Button" parent="Buttons"]
-layout_mode = 2
-text = "对战"
+[node name="双人对战" type="Button" parent="Buttons"]
+clip_contents = true
+offset_left = 860.0
+offset_top = 360.0
+offset_right = 1145.0
+offset_bottom = 428.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.627451)
+theme_override_font_sizes/font_size = 32
+text = "双人对战"
+icon = ExtResource("5_p18fe")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
 
 [node name="设置" type="Button" parent="Buttons"]
-layout_mode = 2
+self_modulate = Color(1, 1, 1, 0.784314)
+clip_contents = true
+offset_left = 885.0
+offset_top = 422.0
+offset_right = 1145.0
+offset_bottom = 490.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
 text = "设置"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="退出" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0.666667)
+clip_contents = true
+offset_left = 910.0
+offset_top = 478.0
+offset_right = 1145.0
+offset_bottom = 546.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "退出"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="故事" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0.784314)
+clip_contents = true
+offset_left = 885.0
+offset_top = 300.0
+offset_right = 1145.0
+offset_bottom = 368.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "故事"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="自定义" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0.666667)
+clip_contents = true
+offset_left = 910.0
+offset_top = 245.0
+offset_right = 1145.0
+offset_bottom = 313.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "自定义"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true

@@ -12,7 +12,7 @@ config_version=5
 
 config/name="The oc fighting"
 run/main_scene="uid://dltcxk8psuajk"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]

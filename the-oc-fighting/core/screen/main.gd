@@ -1,6 +1,6 @@
 extends Control
 
-@onready var combat_button = $Buttons/对战
+@onready var combat_button = $Buttons/双人对战
 @onready var settings_button = $Buttons/设置
 @onready var background = $BackGround
 @onready var game_title = $GameTitle
