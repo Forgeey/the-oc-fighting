@@ -22,6 +22,7 @@ anim_player_path = NodePath("../AnimationPlayer")
 metadata/_custom_type_script = "uid://hbv8voftfdtc"
 
 [node name="Arena" type="Node2D"]
+position = Vector2(1, 0)
 script = ExtResource("1_2fpqi")
 
 [node name="CollisionManager" type="Node" parent="."]
