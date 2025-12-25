@@ -25,6 +25,7 @@ func _enter_impl(args: Dictionary):
 	if facing_right:
 		anim_player.play("jump")
 	else:
+
 		anim_player.play("backward_jump")
 	actor.velocity.x = speed
 	actor.velocity.y = -jump_velocity

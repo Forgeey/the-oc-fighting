@@ -1,0 +1,96 @@
+[gd_scene load_steps=15 format=3 uid="uid://cmagj7toweal5"]
+
+[ext_resource type="Script" uid="uid://d4j5wrqwvb7ix" path="res://core/screen/sky.gd" id="1_sfo8v"]
+[ext_resource type="Texture2D" uid="uid://bowi2dv4cro3q" path="res://asset/screen/Sky map/blue_sky.png" id="2_bux80"]
+[ext_resource type="Texture2D" uid="uid://dbbl33sx75a0b" path="res://asset/screen/Sky map/Cloud_5.png" id="3_qkyol"]
+[ext_resource type="PackedScene" uid="uid://5cmm70ag4ylr" path="res://core/component/player.tscn" id="4_bsupe"]
+[ext_resource type="Script" uid="uid://hbv8voftfdtc" path="res://addons/fray/src/state_mgmt/component/anim_tracker/animator_tracker_animation_player.gd" id="4_ce3wo"]
+[ext_resource type="Script" uid="uid://cgh0fqgkstgow" path="res://core/screen/cloud_move.gd" id="4_nb61p"]
+[ext_resource type="Texture2D" uid="uid://3s0iorofl7ol" path="res://asset/screen/Sky map/Cloud_1.png" id="4_qcj41"]
+[ext_resource type="Script" uid="uid://dblxwrdtpk5sf" path="res://script/component/camera_2d.gd" id="5_sfo8v"]
+[ext_resource type="Texture2D" uid="uid://do2c5if4lxot3" path="res://asset/screen/Sky map/Cloud_2.png" id="6_ayi31"]
+[ext_resource type="Texture2D" uid="uid://cqj6416nwjmqi" path="res://asset/screen/Sky map/Cloud_3.png" id="7_2m40p"]
+[ext_resource type="Texture2D" uid="uid://c2yxfsu6hsggw" path="res://asset/screen/Sky map/Cloud_4.png" id="8_ojxmt"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_qkyol"]
+
+[sub_resource type="Resource" id="Resource_qcj41"]
+resource_local_to_scene = true
+script = ExtResource("4_ce3wo")
+anim_player_path = NodePath("../AnimationPlayer")
+metadata/_custom_type_script = "uid://hbv8voftfdtc"
+
+[sub_resource type="Resource" id="Resource_nb61p"]
+resource_local_to_scene = true
+script = ExtResource("4_ce3wo")
+anim_player_path = NodePath("../AnimationPlayer")
+metadata/_custom_type_script = "uid://hbv8voftfdtc"
+
+[node name="Sky" type="Node2D"]
+script = ExtResource("1_sfo8v")
+
+[node name="BackGround" type="Node2D" parent="."]
+
+[node name="Ground" type="Parallax2D" parent="BackGround"]
+scroll_offset = Vector2(0, 51)
+
+[node name="Sprite2D" type="Sprite2D" parent="BackGround/Ground"]
+scale = Vector2(3, 3)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="BackGround/Ground/Sprite2D"]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BackGround/Ground/Sprite2D/StaticBody2D"]
+position = Vector2(200, 200)
+shape = SubResource("WorldBoundaryShape2D_qkyol")
+
+[node name="Parallax2D" type="Parallax2D" parent="BackGround"]
+scroll_scale = Vector2(0.2, 0.3)
+repeat_size = Vector2(1200, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="BackGround/Parallax2D"]
+position = Vector2(600, 350)
+scale = Vector2(3, 3)
+texture = ExtResource("2_bux80")
+
+[node name="Parallax2D2" type="Parallax2D" parent="BackGround"]
+scroll_scale = Vector2(0.7, 1)
+repeat_size = Vector2(1200, 0)
+repeat_times = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="BackGround/Parallax2D2"]
+position = Vector2(600, 350)
+scale = Vector2(3, 3)
+texture = ExtResource("3_qkyol")
+
+[node name="Parallax2D3" type="Parallax2D" parent="BackGround"]
+scroll_scale = Vector2(0.4, 0.6)
+script = ExtResource("4_nb61p")
+cloud_textures = Array[Texture2D]([ExtResource("4_qcj41"), ExtResource("6_ayi31"), ExtResource("7_2m40p"), ExtResource("8_ojxmt")])
+
+[node name="Player1" parent="." instance=ExtResource("4_bsupe")]
+position = Vector2(300, 550)
+
+[node name="Label" parent="Player1/CharacterBody2D" index="1"]
+metadata/_edit_use_anchors_ = true
+
+[node name="FrayAnimationObserver" parent="Player1/CharacterBody2D" index="3"]
+tracker = SubResource("Resource_qcj41")
+
+[node name="Player2" parent="." instance=ExtResource("4_bsupe")]
+position = Vector2(800, 550)
+
+[node name="Label" parent="Player2/CharacterBody2D" index="1"]
+text = "2P"
+metadata/_edit_use_anchors_ = true
+
+[node name="FrayAnimationObserver" parent="Player2/CharacterBody2D" index="3"]
+tracker = SubResource("Resource_nb61p")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+script = ExtResource("5_sfo8v")
+
+[editable path="Player1"]
+[editable path="Player2"]
