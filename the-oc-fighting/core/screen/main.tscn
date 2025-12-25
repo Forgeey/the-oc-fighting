@@ -36,6 +36,57 @@ texture = ExtResource("3_005n7")
 [node name="Buttons" type="Sprite2D" parent="."]
 script = ExtResource("4_15ld6")
 
+[node name="训练场" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0)
+clip_contents = true
+offset_left = 940.0
+offset_top = 195.0
+offset_right = 1140.0
+offset_bottom = 263.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "训练场"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="自定义" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0.666667)
+clip_contents = true
+offset_left = 910.0
+offset_top = 245.0
+offset_right = 1145.0
+offset_bottom = 313.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "自定义"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="故事" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0.784314)
+clip_contents = true
+offset_left = 885.0
+offset_top = 300.0
+offset_right = 1145.0
+offset_bottom = 368.0
+theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
+theme_override_font_sizes/font_size = 32
+button_mask = 0
+text = "故事"
+icon = ExtResource("5_enr81")
+flat = true
+clip_text = true
+icon_alignment = 1
+expand_icon = true
+
 [node name="双人对战" type="Button" parent="Buttons"]
 clip_contents = true
 offset_left = 860.0
@@ -85,34 +136,17 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="故事" type="Button" parent="Buttons"]
-self_modulate = Color(1, 1, 1, 0.784314)
+[node name="角色库" type="Button" parent="Buttons"]
+self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
-offset_left = 885.0
-offset_top = 300.0
-offset_right = 1145.0
-offset_bottom = 368.0
+offset_left = 940.0
+offset_top = 526.0
+offset_right = 1140.0
+offset_bottom = 594.0
 theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
 theme_override_font_sizes/font_size = 32
 button_mask = 0
-text = "故事"
-icon = ExtResource("5_enr81")
-flat = true
-clip_text = true
-icon_alignment = 1
-expand_icon = true
-
-[node name="自定义" type="Button" parent="Buttons"]
-self_modulate = Color(1, 1, 1, 0.666667)
-clip_contents = true
-offset_left = 910.0
-offset_top = 245.0
-offset_right = 1145.0
-offset_bottom = 313.0
-theme_override_colors/font_color = Color(0, 0, 0, 0.627451)
-theme_override_font_sizes/font_size = 32
-button_mask = 0
-text = "自定义"
+text = "角色库"
 icon = ExtResource("5_enr81")
 flat = true
 clip_text = true
