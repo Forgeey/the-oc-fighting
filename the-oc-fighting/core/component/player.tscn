@@ -1,8 +1,9 @@
-[gd_scene load_steps=51 format=3 uid="uid://5cmm70ag4ylr"]
+[gd_scene load_steps=53 format=3 uid="uid://5cmm70ag4ylr"]
 
 [ext_resource type="Texture2D" uid="uid://ci1a8vijxyevd" path="res://asset/character/forgeey/idle.png" id="1_7g3uq"]
 [ext_resource type="Script" uid="uid://pxkaeq7o4i8d" path="res://script/component/character_body_2d.gd" id="1_mgke5"]
 [ext_resource type="Script" uid="uid://d0nvf4ic81v4p" path="res://addons/fray/src/state_mgmt/state_machine.gd" id="2_0un0k"]
+[ext_resource type="Script" uid="uid://c7wj0i2u0c73o" path="res://core/component/push_box.gd" id="2_ovs8s"]
 [ext_resource type="Script" uid="uid://d1hvyulxbwo3k" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="3_40gb3"]
 [ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="4_14ffs"]
 [ext_resource type="Texture2D" uid="uid://bfwq1bs6ttnxw" path="res://asset/character/forgeey/轻击-Sheet.png" id="4_40gb3"]
@@ -22,6 +23,9 @@
 [ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="15_fyn52"]
 [ext_resource type="Script" uid="uid://c5b7e4ofecd30" path="res://script/hit_state_script/HurtboxAttribute.gd" id="17_5bqmy"]
 [ext_resource type="Script" uid="uid://gqugr1a414gr" path="res://script/hit_state_script/AttackboxAttribute.gd" id="18_5bqmy"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lm07r"]
+size = Vector2(95, 94)
 
 [sub_resource type="Animation" id="Animation_nv8ub"]
 resource_name = "1_attack"
@@ -981,15 +985,19 @@ size = Vector2(38.031, 86)
 position = Vector2(5, -1)
 script = ExtResource("1_mgke5")
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CharacterBody2D"]
-polygon = PackedVector2Array(0, -43, 38, 9, 3, 61, -29, 8)
-
 [node name="Label" type="Label" parent="CharacterBody2D"]
 offset_left = -9.0
 offset_top = -63.0
 offset_right = 12.0
 offset_bottom = -40.0
 text = "1P"
+
+[node name="PushBox" type="Area2D" parent="CharacterBody2D"]
+script = ExtResource("2_ovs8s")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D/PushBox"]
+position = Vector2(1.5, 13)
+shape = SubResource("RectangleShape2D_lm07r")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="CharacterBody2D"]
 libraries = {
@@ -1018,6 +1026,7 @@ texture = ExtResource("1_7g3uq")
 hframes = 17
 
 [node name="FrayHitStateManager2D" type="Node2D" parent="CharacterBody2D/VisualRoot" node_paths=PackedStringArray("source")]
+visible = false
 script = ExtResource("14_14ffs")
 source = NodePath("../..")
 metadata/_custom_type_script = "uid://boe4oe8kln68m"
