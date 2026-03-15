@@ -8,17 +8,21 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="The oc fighting"
 run/main_scene="uid://dltcxk8psuajk"
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-FrayInputMap="*res://addons/fray/src/input/autoloads/fray_input_map.gd"
-FrayInput="*res://addons/fray/src/input/autoloads/fray_input.gd"
+FrayInputMap="*uid://c5hxe5u0t6gtp"
+FrayInput="*uid://dhejhixapm1m7"
 SceneManager="*res://script/screen/scene_manager.gd"
 
 [editor]
