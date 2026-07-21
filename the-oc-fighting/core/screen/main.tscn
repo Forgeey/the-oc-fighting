@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dl2tepjtvhry4"]
+[gd_scene format=3 uid="uid://dl2tepjtvhry4"]
 
 [ext_resource type="Script" uid="uid://cun0y75e3fhe3" path="res://core/screen/main.gd" id="1_4esqw"]
 [ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_005n7"]
@@ -7,36 +7,38 @@
 [ext_resource type="Texture2D" uid="uid://dk875cw43o8kx" path="res://asset/screen/Sprite-0003.png" id="5_enr81"]
 [ext_resource type="Texture2D" uid="uid://dukuy06qx1dn2" path="res://asset/screen/Sprite-0004.png" id="5_p18fe"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=655942731]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_4esqw")
 
-[node name="BackGround" type="TextureRect" parent="."]
+[node name="BackGround" type="TextureRect" parent="." unique_id=542266071]
 layout_mode = 1
-offset_left = -48.0
-offset_right = 1872.0
-offset_bottom = 1000.0
+offset_left = -384.0
+offset_top = -175.0
+offset_right = 1536.0
+offset_bottom = 825.0
+pivot_offset = Vector2(960, 500)
 scale = Vector2(0.65, 0.65)
 texture = ExtResource("2_005n7")
 
-[node name="GameTitle" type="TextureRect" parent="."]
+[node name="GameTitle" type="TextureRect" parent="." unique_id=1229707452]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 362.0
-offset_top = 7.0
-offset_right = 856.0
-offset_bottom = 296.0
+offset_left = 42.0
+offset_top = 32.0
+offset_right = 536.0
+offset_bottom = 321.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_005n7")
 
-[node name="Buttons" type="Sprite2D" parent="."]
+[node name="Buttons" type="Sprite2D" parent="." unique_id=128934446]
 script = ExtResource("4_15ld6")
 
-[node name="训练场" type="Button" parent="Buttons"]
+[node name="训练场" type="Button" parent="Buttons" unique_id=932042848]
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
 offset_left = 940.0
@@ -53,7 +55,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="自定义" type="Button" parent="Buttons"]
+[node name="自定义" type="Button" parent="Buttons" unique_id=1316700135]
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
 offset_left = 910.0
@@ -70,7 +72,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="故事" type="Button" parent="Buttons"]
+[node name="故事" type="Button" parent="Buttons" unique_id=1303267308]
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
 offset_left = 885.0
@@ -87,7 +89,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="双人对战" type="Button" parent="Buttons"]
+[node name="双人对战" type="Button" parent="Buttons" unique_id=309582068]
 clip_contents = true
 offset_left = 860.0
 offset_top = 360.0
@@ -102,7 +104,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="设置" type="Button" parent="Buttons"]
+[node name="设置" type="Button" parent="Buttons" unique_id=1786086070]
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
 offset_left = 885.0
@@ -119,7 +121,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="退出" type="Button" parent="Buttons"]
+[node name="退出" type="Button" parent="Buttons" unique_id=1681651206]
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
 offset_left = 910.0
@@ -136,7 +138,7 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="角色库" type="Button" parent="Buttons"]
+[node name="角色库" type="Button" parent="Buttons" unique_id=1391071419]
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
 offset_left = 940.0

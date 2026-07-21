@@ -1,7 +1,8 @@
 # settings.gd
 extends Control
 
-@onready var background = $BackGround
+signal closed  # 设置页关闭信号，通知主菜单恢复
+
 @onready var settings_panel = $Settings
 @onready var controls_settings = $Settings/ControlsSettings
 @onready var graphics_settings = $Settings/GraphicsSetting
@@ -24,6 +25,11 @@ func _ready():
 	
 	# 初始化UI控件
 	_setup_ui_controls()
+	
+	# 入场动画
+	modulate = Color(1, 1, 1, 0)
+	var tween = create_tween()
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT)
 
 func _load_current_settings():
 	# 未来增加设置管理器，从设置管理器加载设置
@@ -104,7 +110,19 @@ func _on_apply_pressed():
 
 func _on_back_pressed():
 	# 返回主菜单
-	SceneManager.change_scene("main")
+	_play_exit_animation()
+
+func _play_exit_animation():
+	# 禁用输入
+	set_process_input(false)
+	
+	# 淡出
+	var tween = create_tween()
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.2).set_ease(Tween.EASE_IN)
+	
+	await tween.finished
+	closed.emit()
+	queue_free()
 
 func _save_settings():
 	# 未来增加设置管理器，保存到设置管理器

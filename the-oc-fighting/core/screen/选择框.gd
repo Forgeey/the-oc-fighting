@@ -1,5 +1,6 @@
 extends Sprite2D
-var 当前选择框:Node
+
+var 当前选择框: Node
 
 var 尺寸列表 = [
 	Vector2(200,68),
@@ -9,7 +10,7 @@ var 尺寸列表 = [
 	Vector2(260,68),
 	Vector2(235,68),
 	Vector2(200,68)
-	]
+]
 
 var 位置列表 = [
 	Vector2(940,195),
@@ -19,7 +20,7 @@ var 位置列表 = [
 	Vector2(885,422),
 	Vector2(910,478),
 	Vector2(940,526)
-	]
+]
 
 var 透明度列表 = [
 	"ffffff00",
@@ -31,267 +32,113 @@ var 透明度列表 = [
 	"ffffff00"
 ]
 
-var 按钮1
-var 按钮2
-var 按钮3
-var 按钮4
-var 按钮5
-var 按钮6
-var 按钮7
+var 按钮列表: Array      # 7个按钮节点
+var 计数器列表: Array    # 每个按钮的槽位索引 (0-6)
 
-var 按钮1尺寸
-var 按钮2尺寸
-var 按钮3尺寸
-var 按钮4尺寸
-var 按钮5尺寸
-var 按钮6尺寸
-var 按钮7尺寸
+var 动画时长: float = 0.2  # 所有按钮统一动画时长（秒）
+var _tween: Tween        # 当前运行的动画
 
-var 按钮1位置
-var 按钮2位置
-var 按钮3位置
-var 按钮4位置
-var 按钮5位置
-var 按钮6位置
-var 按钮7位置
-
-var 按钮1可见性
-var 按钮2可见性
-var 按钮3可见性
-var 按钮4可见性
-var 按钮5可见性
-var 按钮6可见性
-var 按钮7可见性
-
-var 按钮1计数器:int = 0
-var 按钮2计数器:int = 1
-var 按钮3计数器:int = 2
-var 按钮4计数器:int = 3
-var 按钮5计数器:int = 4
-var 按钮6计数器:int = 5
-var 按钮7计数器:int = 6
-
-var 动画速率:float = 4
 
 func _ready() -> void:
+	# 收集按钮节点
+	按钮列表 = []
+	for i in range(7):
+		按钮列表.append(get_child(i))
 	
-	按钮1 = get_child(0)
-	按钮2 = get_child(1)
-	按钮3 = get_child(2)
-	按钮4 = get_child(3)
-	按钮5 = get_child(4)
-	按钮6 = get_child(5)
-	按钮7 = get_child(6)
+	# 初始槽位: 按钮0→槽0, 按钮1→槽1, ...
+	计数器列表 = [0, 1, 2, 3, 4, 5, 6]
 	
-	按钮1尺寸 = 尺寸列表[0]
-	按钮2尺寸 = 尺寸列表[1]
-	按钮3尺寸 = 尺寸列表[2]
-	按钮4尺寸 = 尺寸列表[3]
-	按钮5尺寸 = 尺寸列表[4]
-	按钮6尺寸 = 尺寸列表[5]
-	按钮7尺寸 = 尺寸列表[6]
+	# 设置初始状态
+	_apply_instant()
 	
-	按钮1位置 = 位置列表[0]
-	按钮2位置 = 位置列表[1]
-	按钮3位置 = 位置列表[2]
-	按钮4位置 = 位置列表[3]
-	按钮5位置 = 位置列表[4]
-	按钮6位置 = 位置列表[5]
-	按钮7位置 = 位置列表[6]
+	# 入场动画：按钮从右侧依次划入淡入
+	_play_entrance()
+
+
+func _input(event):
+	var direction = 0
+	if event.is_action_pressed("1p_jump") or event.is_action_pressed("2p_jump"):
+		direction = 1
+	elif event.is_action_pressed("1p_dodge") or event.is_action_pressed("2p_dodge"):
+		direction = -1
 	
-func _process(_delta: float) -> void:
+	if direction != 0:
+		_shift(direction)
+
+
+# 整体循环移动一个方向
+func _shift(direction: int):
+	# 更新计数器（循环移位）
+	for i in range(7):
+		计数器列表[i] = (计数器列表[i] + direction + 7) % 7
 	
-	_change_size()
+	# 启动Tween —— 所有按钮同时到达目标，消除"末尾按钮缓慢漂移"
+	_animate_all()
+	_更新当前选择框()
+
+
+# 用 Tween 统一时长驱动所有按钮的动画
+func _animate_all():
+	if _tween and _tween.is_valid():
+		_tween.kill()
 	
-	_change_position()
+	_tween = create_tween()
+	_tween.set_parallel(true)
 	
-	_计数器 ()
+	for i in range(7):
+		var btn = 按钮列表[i]
+		var slot = 计数器列表[i]
+		
+		_tween.tween_property(btn, "position",   位置列表[slot],    动画时长).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		_tween.tween_property(btn, "size",       尺寸列表[slot],    动画时长).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		_tween.tween_property(btn, "self_modulate", Color(透明度列表[slot]), 动画时长).set_ease(Tween.EASE_OUT)
+
+
+# 立刻设置所有按钮的最终状态（无动画，用于初始化）
+func _apply_instant():
+	for i in range(7):
+		var btn = 按钮列表[i]
+		var slot = 计数器列表[i]
+		btn.position = 位置列表[slot]
+		btn.size = 尺寸列表[slot]
+		btn.self_modulate = Color(透明度列表[slot])
 	
-	_Animation()
+	_更新当前选择框()
+
+
+# 入场动画：所有按钮从右侧依次划入淡入
+func _play_entrance():
+	# 先把按钮移到右侧并透明（覆盖 _apply_instant 的位置）
+	for i in range(7):
+		var btn = 按钮列表[i]
+		var slot = 计数器列表[i]
+		btn.modulate = Color(1, 1, 1, 0)
+		btn.position = 位置列表[slot] + Vector2(300, 0)
 	
-	_change_visible()
-	
-	当前选项框方法()
-	
-func _计数器 ():
-	if Input.is_action_just_pressed("1p_jump") or Input.is_action_just_pressed("2p_jump"):
-		if 按钮1计数器 != 6 :
-			按钮1计数器 = 按钮1计数器 + 1
-		else:
-			按钮1计数器 = 0
-			
-			
-		if 按钮2计数器 != 6 :
-			按钮2计数器 = 按钮2计数器 + 1
-		else:
-			按钮2计数器 = 0
-			
-			
-		if 按钮3计数器 != 6 :
-			按钮3计数器 = 按钮3计数器 + 1
-		else:
-			按钮3计数器 = 0
-			
-			
-		if 按钮4计数器 != 6 :
-			按钮4计数器 = 按钮4计数器 + 1
-		else:
-			按钮4计数器 = 0
-			
-			
-		if 按钮5计数器 != 6 :
-			按钮5计数器 = 按钮5计数器 + 1
-		else:
-			按钮5计数器 = 0
-			
-			
-		if 按钮6计数器 != 6 :
-			按钮6计数器 = 按钮6计数器 + 1
-		else:
-			按钮6计数器 = 0
-			
-			
-		if 按钮7计数器 != 6 :
-			按钮7计数器 = 按钮7计数器 + 1
-		else:
-			按钮7计数器 = 0
-		pass
-	if Input.is_action_just_pressed("1p_dodge") or Input.is_action_just_pressed("2p_dodge"):
-		if 按钮1计数器 != 0 :
-			按钮1计数器 = 按钮1计数器 - 1
-		else:
-			按钮1计数器 = 6
-			
-			
-		if 按钮2计数器 != 0 :
-			按钮2计数器 = 按钮2计数器 - 1
-		else:
-			按钮2计数器 = 6
-			
-			
-		if 按钮3计数器 != 0 :
-			按钮3计数器 = 按钮3计数器 - 1
-		else:
-			按钮3计数器 = 6
-			
-			
-		if 按钮4计数器 != 0 :
-			按钮4计数器 = 按钮4计数器 - 1
-		else:
-			按钮4计数器 = 6
-			
-			
-		if 按钮5计数器 != 0 :
-			按钮5计数器 = 按钮5计数器 - 1
-		else:
-			按钮5计数器 = 6
-			
-			
-		if 按钮6计数器 != 0 :
-			按钮6计数器 = 按钮6计数器 - 1
-		else:
-			按钮6计数器 = 6
-			
-			
-		if 按钮7计数器 != 0 :
-			按钮7计数器 = 按钮7计数器 - 1
-		else:
-			按钮7计数器 = 6
-		pass
-	pass
-	
-func _Animation ():
-	按钮1.size.x = move_toward( 按钮1.size.x , 按钮1尺寸.x , 动画速率 )
-	按钮1.size.y = move_toward( 按钮1.size.y , 按钮1尺寸.y , 动画速率 )
-	
-	按钮2.size.x = move_toward( 按钮2.size.x , 按钮2尺寸.x , 动画速率 )
-	按钮2.size.y = move_toward( 按钮2.size.y , 按钮2尺寸.y , 动画速率 )
-	
-	按钮3.size.x = move_toward( 按钮3.size.x , 按钮3尺寸.x , 动画速率 )
-	按钮3.size.y = move_toward( 按钮3.size.y , 按钮3尺寸.y , 动画速率 )
-	
-	按钮4.size.x = move_toward( 按钮4.size.x , 按钮4尺寸.x , 动画速率 )
-	按钮4.size.y = move_toward( 按钮4.size.y , 按钮4尺寸.y , 动画速率 )
-	
-	按钮5.size.x = move_toward( 按钮5.size.x , 按钮5尺寸.x , 动画速率 )
-	按钮5.size.y = move_toward( 按钮5.size.y , 按钮5尺寸.y , 动画速率 )
-	
-	按钮6.size.x = move_toward( 按钮6.size.x , 按钮6尺寸.x , 动画速率 )
-	按钮6.size.y = move_toward( 按钮6.size.y , 按钮6尺寸.y , 动画速率 )
-	
-	按钮7.size.x = move_toward( 按钮7.size.x , 按钮7尺寸.x , 动画速率 )
-	按钮7.size.y = move_toward( 按钮7.size.y , 按钮7尺寸.y , 动画速率 )
-	
-	
-	按钮1.position.x = move_toward( 按钮1.position.x , 按钮1位置.x , 动画速率 )
-	按钮1.position.y = move_toward( 按钮1.position.y , 按钮1位置.y , 动画速率 )
-	
-	按钮2.position.x = move_toward( 按钮2.position.x , 按钮2位置.x , 动画速率 )
-	按钮2.position.y = move_toward( 按钮2.position.y , 按钮2位置.y , 动画速率 )
-	
-	按钮3.position.x = move_toward( 按钮3.position.x , 按钮3位置.x , 动画速率 )
-	按钮3.position.y = move_toward( 按钮3.position.y , 按钮3位置.y , 动画速率 )
-	
-	按钮4.position.x = move_toward( 按钮4.position.x , 按钮4位置.x , 动画速率 )
-	按钮4.position.y = move_toward( 按钮4.position.y , 按钮4位置.y , 动画速率 )
-	
-	按钮5.position.x = move_toward( 按钮5.position.x , 按钮5位置.x , 动画速率 )
-	按钮5.position.y = move_toward( 按钮5.position.y , 按钮5位置.y , 动画速率 )
-	
-	按钮6.position.x = move_toward( 按钮6.position.x , 按钮6位置.x , 动画速率 )
-	按钮6.position.y = move_toward( 按钮6.position.y , 按钮6位置.y , 动画速率 )
-	
-	按钮7.position.x = move_toward( 按钮7.position.x , 按钮7位置.x , 动画速率 )
-	按钮7.position.y = move_toward( 按钮7.position.y , 按钮7位置.y , 动画速率 )
-	
-func _change_size():
-	按钮1尺寸 = 尺寸列表[按钮1计数器]
-	按钮2尺寸 = 尺寸列表[按钮2计数器]
-	按钮3尺寸 = 尺寸列表[按钮3计数器]
-	按钮4尺寸 = 尺寸列表[按钮4计数器]
-	按钮5尺寸 = 尺寸列表[按钮5计数器]
-	按钮6尺寸 = 尺寸列表[按钮6计数器]
-	按钮7尺寸 = 尺寸列表[按钮7计数器]
-	pass
-	
-func _change_position():
-	按钮1位置 = 位置列表[按钮1计数器]
-	按钮2位置 = 位置列表[按钮2计数器]
-	按钮3位置 = 位置列表[按钮3计数器]
-	按钮4位置 = 位置列表[按钮4计数器]
-	按钮5位置 = 位置列表[按钮5计数器]
-	按钮6位置 = 位置列表[按钮6计数器]
-	按钮7位置 = 位置列表[按钮7计数器]
-	pass
-	
-func _change_visible():
-	按钮1.self_modulate = 透明度列表[按钮1计数器]
-	按钮2.self_modulate = 透明度列表[按钮2计数器]
-	按钮3.self_modulate = 透明度列表[按钮3计数器]
-	按钮4.self_modulate = 透明度列表[按钮4计数器]
-	按钮5.self_modulate = 透明度列表[按钮5计数器]
-	按钮6.self_modulate = 透明度列表[按钮6计数器]
-	按钮7.self_modulate = 透明度列表[按钮7计数器]
-	pass
-	
-func 当前选项框方法():
-	var 计数器列表 = [
-		按钮1计数器,
-		按钮2计数器,
-		按钮3计数器,
-		按钮4计数器,
-		按钮5计数器,
-		按钮6计数器,
-		按钮7计数器,
-	]
-	for i in 计数器列表:
-		var 其他选项框 = get("按钮"+str(i+1))
+	# 用单个Tween + PropertyTweener.set_delay 实现依次划入
+	var tween = create_tween()
+	tween.set_parallel(true)
+	for i in range(7):
+		var btn = 按钮列表[i]
+		var slot = 计数器列表[i]
+		tween.tween_property(btn, "position", 位置列表[slot], 0.25).set_delay(i * 0.06).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		tween.tween_property(btn, "modulate", Color(1, 1, 1, 1), 0.25).set_delay(i * 0.06).set_ease(Tween.EASE_OUT)
+
+
+# 从设置页返回时：恢复按钮到正确状态并播放入场动画
+func restore_and_play_entrance():
+	_apply_instant()
+	_play_entrance()
+
+
+# 找出焦点槽位（计数器=3）的按钮，更新图标和文字颜色
+func _更新当前选择框():
+	for i in range(7):
+		var btn = 按钮列表[i]
 		if 计数器列表[i] == 3:
-			当前选择框 = get("按钮"+str(i+1))
-		if 其他选项框 != 当前选择框:
-			其他选项框.add_theme_color_override("font_color", Color(0,0,0,0.62))
-			其他选项框.icon = load("res://asset/screen/Sprite-0003.png")
-			pass
-	当前选择框.add_theme_color_override("font_color", Color(1,1,1,0.62))
-	当前选择框.icon = load("res://asset/screen/Sprite-0004.png")
-	pass
+			当前选择框 = btn
+			btn.add_theme_color_override("font_color", Color(1,1,1,0.62))
+			btn.icon = load("res://asset/screen/Sprite-0004.png")
+		else:
+			btn.add_theme_color_override("font_color", Color(0,0,0,0.62))
+			btn.icon = load("res://asset/screen/Sprite-0003.png")

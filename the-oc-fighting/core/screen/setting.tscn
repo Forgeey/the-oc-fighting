@@ -1,51 +1,62 @@
-[gd_scene load_steps=3 format=3 uid="uid://dtfwhw1fqwg3t"]
+[gd_scene format=3 uid="uid://dtfwhw1fqwg3t"]
 
 [ext_resource type="Script" uid="uid://k3gmbp3lf5il" path="res://core/screen/setting.gd" id="1_gtfcx"]
-[ext_resource type="Texture2D" uid="uid://dlmwtti0w2jbj" path="res://asset/screen/bg_test.png" id="2_21vte"]
 
-[node name="Setting" type="Control"]
+[node name="Setting" type="Control" unique_id=316146726]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_gtfcx")
 
-[node name="BackGround" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = -40.0
-offset_right = 1880.0
-offset_bottom = 1000.0
-scale = Vector2(0.65, 0.65)
-texture = ExtResource("2_21vte")
+[node name="Overlay" type="ColorRect" parent="." unique_id=17578621]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -48.0
+offset_top = -41.0
+offset_right = 48.0
+offset_bottom = 43.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45882353)
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=589271620]
 layout_mode = 0
-offset_left = 529.0
-offset_top = 16.0
-offset_right = 593.0
-offset_bottom = 39.0
+offset_left = 45.0
+offset_top = 46.0
+offset_right = 237.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 48
 text = "设置界面"
 
-[node name="Settings" type="VBoxContainer" parent="."]
+[node name="Settings" type="VBoxContainer" parent="." unique_id=1175593265]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="ControlsSettings" type="VBoxContainer" parent="Settings"]
+[node name="ControlsSettings" type="VBoxContainer" parent="Settings" unique_id=1372277209]
 layout_mode = 2
 
-[node name="GraphicsSetting" type="VBoxContainer" parent="Settings"]
+[node name="GraphicsSetting" type="VBoxContainer" parent="Settings" unique_id=1401529883]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1768645349]
 layout_mode = 0
 offset_left = 526.0
 offset_top = 526.0
 offset_right = 610.0
 offset_bottom = 566.0
 
-[node name="Apply" type="Button" parent="HBoxContainer"]
+[node name="Apply" type="Button" parent="HBoxContainer" unique_id=800892755]
 layout_mode = 2
 text = "应用"
 
-[node name="Back" type="Button" parent="HBoxContainer"]
+[node name="Back" type="Button" parent="HBoxContainer" unique_id=2024696385]
 layout_mode = 2
 text = "返回"
