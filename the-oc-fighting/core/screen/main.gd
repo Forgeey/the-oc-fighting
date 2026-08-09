@@ -60,32 +60,26 @@ func _set_blur(value: float):
 
 # 主菜单退出动画：按钮依次划出淡出 → Logo淡出 → 叠加设置页面
 func _play_exit_animation():
-	# 禁用输入，防止动画期间用户误操作
 	set_process_input(false)
 	buttons.process_mode = Node.PROCESS_MODE_DISABLED
 	
-	# 1) 按钮依次向右划出淡出（从上到下）
 	for i in range(7):
 		var btn = buttons.get_child(i)
 		var tween = create_tween()
-		tween.tween_interval(i * 0.06)  # 延迟后开始
+		tween.tween_interval(i * 0.06)
 		tween.set_parallel(true)
 		tween.tween_property(btn, "position", btn.position + Vector2(300, 0), 0.2).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 		tween.tween_property(btn, "modulate", Color(1, 1, 1, 0), 0.18).set_ease(Tween.EASE_IN)
 	
-	# 2) Logo 与按键说明淡出
 	_fade_out_decor()
 	
-	# 3) 背景图轻微缩放 + 同步模糊
 	var bg_tween = create_tween()
 	bg_tween.set_parallel(true)
 	bg_tween.tween_property(background, "scale", Vector2(BG_ZOOM, BG_ZOOM), 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	bg_tween.tween_method(_set_blur, 0.0, 0.8, 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	
-	# 等待动画完成
 	await get_tree().create_timer(0.7).timeout
 	
-	# 4) 叠加设置页面（不销毁主菜单）
 	_load_settings_overlay()
 
 
@@ -99,20 +93,16 @@ func _load_settings_overlay():
 
 # 设置页关闭：恢复主菜单
 func _on_settings_closed():
-	# 恢复按钮
 	buttons.process_mode = Node.PROCESS_MODE_INHERIT
 	buttons.restore_and_play_entrance()
 	
-	# 恢复 Logo 与按键说明
 	_fade_in_decor()
 	
-	# 恢复背景缩放 + 清除模糊
 	var bg_tween = create_tween()
 	bg_tween.set_parallel(true)
 	bg_tween.tween_property(background, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	bg_tween.tween_method(_set_blur, 0.8, 0.0, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	
-	# 恢复输入
 	set_process_input(true)
 
 func _on_combat_pressed():

@@ -1,14 +1,6 @@
-# settings.gd
-# 设置页采用格斗游戏的按键操作逻辑：整页只靠键盘/手柄驱动，不接受鼠标点击。
-#   W / ↑ (1p_jump, 2p_jump)    上移选择
-#   S / ↓ (1p_dodge, 2p_dodge)  下移选择
-#   A / ← (1p_left, 2p_left)    减小 / 关闭 / 上一项
-#   D / → (1p_right, 2p_right)  增大 / 开启 / 下一项
-#   Enter / Space (ui_accept)   确认（开关翻转、分辨率下一项、执行「应用」「返回」）
-#   Esc (ui_cancel)             返回
 extends Control
 
-signal closed  # 设置页关闭信号，通知主菜单恢复
+signal closed
 
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
@@ -168,17 +160,14 @@ func _activate() -> void:
 		Row.BACK:
 			_on_back_pressed()
 
+# 以下 _set_* 只缓存改动并刷新界面，真正写入系统在点「应用」后的 _apply_settings()
 func _set_master_volume(value: float) -> void:
 	master_volume = clampf(value, 0.0, 1.0)
-	AudioServer.set_bus_volume_db(0, linear_to_db(master_volume))
 	_refresh_master_volume()
 
 
 func _set_music_volume(value: float) -> void:
 	music_volume = clampf(value, 0.0, 1.0)
-	# 项目暂时只有 Master 一条总线，加了音乐总线后这里才会生效
-	if AudioServer.get_bus_count() > 1:
-		AudioServer.set_bus_volume_db(1, linear_to_db(music_volume))
 	_refresh_music_volume()
 
 
@@ -186,18 +175,12 @@ func _set_fullscreen(value: bool) -> void:
 	if fullscreen == value:
 		return
 	fullscreen = value
-	if fullscreen:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	_refresh_fullscreen()
 
 
 func _set_resolution_index(index: int) -> void:
 	_resolution_index = index
 	resolution = RESOLUTIONS[_resolution_index]
-	if not fullscreen:
-		DisplayServer.window_set_size(resolution)
 	_refresh_resolution()
 
 func _refresh_all() -> void:
@@ -240,9 +223,25 @@ func _row_value(row_index: int) -> Label:
 	return _rows[row_index].get_node("HBox/Value") as Label
 
 func _on_apply_pressed():
+	# 应用按钮：把缓存改动真正写入系统
+	_apply_settings()
+	print("设置已应用")
+
+
+# 将缓存的音量 / 全屏 / 分辨率改动一次性生效
+func _apply_settings():
+	AudioServer.set_bus_volume_db(0, linear_to_db(master_volume))
+	# 项目暂时只有 Master 一条总线，加了音乐总线后这里才会生效
+	if AudioServer.get_bus_count() > 1:
+		AudioServer.set_bus_volume_db(1, linear_to_db(music_volume))
+	if fullscreen:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	if not fullscreen:
+		DisplayServer.window_set_size(resolution)
 	# 保存设置
 	_save_settings()
-	print("设置已应用")
 
 
 func _on_back_pressed():
