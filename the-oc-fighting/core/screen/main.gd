@@ -9,6 +9,7 @@ const BG_ZOOM := 1.108
 @onready var quit_game = $Buttons/退出
 @onready var background = $BackGround
 @onready var game_title = $GameTitle
+@onready var input_hint = $InputHint
 
 func _ready():
 	# 连接按钮信号
@@ -27,15 +28,28 @@ func _ready():
 	blur_mat.set_shader_parameter("blur_strength", 0.0)
 	background.material = blur_mat
 
-	# Logo 入场淡入（配合按钮入场动画）
-	game_title.modulate = Color(1, 1, 1, 0)
-	var logo_tween = create_tween()
-	logo_tween.tween_property(game_title, "modulate", Color(1, 1, 1, 1), 0.4).set_delay(0.15).set_ease(Tween.EASE_OUT)
+	# Logo 与按键说明入场淡入（配合按钮入场动画）
+	_fade_in_decor()
 
 
 # 窗口尺寸变化时把缩放中心重新对到背景正中
 func _update_bg_pivot():
 	background.pivot_offset = background.size * 0.5
+
+
+# Logo 与按键说明一起淡入
+func _fade_in_decor():
+	for node in [game_title, input_hint]:
+		node.modulate = Color(1, 1, 1, 0)
+		var tween = create_tween()
+		tween.tween_property(node, "modulate", Color(1, 1, 1, 1), 0.4).set_delay(0.15).set_ease(Tween.EASE_OUT)
+
+
+# Logo 与按键说明一起淡出（设置页有自己的说明条，避免两条重叠）
+func _fade_out_decor():
+	for node in [game_title, input_hint]:
+		var tween = create_tween()
+		tween.tween_property(node, "modulate", Color(1, 1, 1, 0), 0.3).set_delay(0.1).set_ease(Tween.EASE_IN)
 
 
 # 设置/清除背景模糊强度（被 tween_method 调用）
@@ -59,9 +73,8 @@ func _play_exit_animation():
 		tween.tween_property(btn, "position", btn.position + Vector2(300, 0), 0.2).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 		tween.tween_property(btn, "modulate", Color(1, 1, 1, 0), 0.18).set_ease(Tween.EASE_IN)
 	
-	# 2) Logo 淡出
-	var logo_tween = create_tween()
-	logo_tween.tween_property(game_title, "modulate", Color(1, 1, 1, 0), 0.3).set_delay(0.1).set_ease(Tween.EASE_IN)
+	# 2) Logo 与按键说明淡出
+	_fade_out_decor()
 	
 	# 3) 背景图轻微缩放 + 同步模糊
 	var bg_tween = create_tween()
@@ -90,10 +103,8 @@ func _on_settings_closed():
 	buttons.process_mode = Node.PROCESS_MODE_INHERIT
 	buttons.restore_and_play_entrance()
 	
-	# 恢复 Logo
-	game_title.modulate = Color(1, 1, 1, 0)
-	var logo_tween = create_tween()
-	logo_tween.tween_property(game_title, "modulate", Color(1, 1, 1, 1), 0.4).set_delay(0.15).set_ease(Tween.EASE_OUT)
+	# 恢复 Logo 与按键说明
+	_fade_in_decor()
 	
 	# 恢复背景缩放 + 清除模糊
 	var bg_tween = create_tween()

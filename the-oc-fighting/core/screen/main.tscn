@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://c2lifp8ge6n37" path="res://core/screen/选择框.gd" id="4_15ld6"]
 [ext_resource type="Texture2D" uid="uid://dk875cw43o8kx" path="res://asset/screen/Sprite-0003.png" id="5_enr81"]
 [ext_resource type="Texture2D" uid="uid://dukuy06qx1dn2" path="res://asset/screen/Sprite-0004.png" id="5_p18fe"]
+[ext_resource type="PackedScene" path="res://core/ui/input_hint.tscn" id="6_hint"]
 
 [node name="Main" type="Control" unique_id=655942731]
 layout_mode = 3
@@ -176,3 +177,9 @@ flat = true
 clip_text = true
 icon_alignment = 1
 expand_icon = true
+
+[node name="InputHint" parent="." instance=ExtResource("6_hint")]
+layout_mode = 1
+offset_left = 42.0
+offset_right = 42.0
+hints = Array[String](["W / S|选择", "Enter|确认", "Esc|退出"])

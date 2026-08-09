@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://dtfwhw1fqwg3t"]
+[gd_scene load_steps=5 format=3 uid="uid://dtfwhw1fqwg3t"]
 
 [ext_resource type="Script" uid="uid://k3gmbp3lf5il" path="res://core/screen/setting.gd" id="1_gtfcx"]
+[ext_resource type="PackedScene" path="res://core/ui/input_hint.tscn" id="2_hint"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row"]
 content_margin_left = 24.0
@@ -264,9 +265,8 @@ theme_override_font_sizes/font_size = 26
 text = "返回"
 vertical_alignment = 1
 
-[node name="Hint" type="Label" parent="Root/VBox"]
-layout_mode = 2
-size_flags_horizontal = 0
-theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 0.7)
-theme_override_font_sizes/font_size = 18
-text = "W / S 选择      A / D 调整      Enter 确认      Esc 返回"
+[node name="InputHint" parent="." instance=ExtResource("2_hint")]
+layout_mode = 1
+offset_left = 72.0
+offset_right = 72.0
+hints = Array[String](["W / S|选择", "A / D|调整", "Enter|确认", "Esc|返回"])

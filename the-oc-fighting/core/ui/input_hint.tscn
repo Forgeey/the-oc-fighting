@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/ui/input_hint.gd" id="1_hint"]
+
+[node name="InputHint" type="HBoxContainer"]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -24.0
+offset_right = 48.0
+offset_bottom = -24.0
+grow_horizontal = 1
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 28
+script = ExtResource("1_hint")
