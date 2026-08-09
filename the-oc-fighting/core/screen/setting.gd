@@ -11,6 +11,8 @@ const RESOLUTIONS: Array[Vector2i] = [
 
 const VOLUME_STEP := 0.05
 
+const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
 
@@ -39,6 +41,8 @@ var resolution: Vector2i = Vector2i(1920, 1080)
 var _index: int = 0
 var _resolution_index: int = 0
 var _closing: bool = false
+var _dirty: bool = false
+var _dialog_active: bool = false
 
 var _selected_style: StyleBoxFlat
 
@@ -92,7 +96,7 @@ func _load_current_settings():
 	resolution = RESOLUTIONS[_resolution_index]
 
 func _input(event: InputEvent) -> void:
-	if _closing:
+	if _closing or _dialog_active:
 		return
 
 	if event.is_action_pressed("ui_cancel"):
@@ -162,12 +166,20 @@ func _activate() -> void:
 
 # 以下 _set_* 只缓存改动并刷新界面，真正写入系统在点「应用」后的 _apply_settings()
 func _set_master_volume(value: float) -> void:
-	master_volume = clampf(value, 0.0, 1.0)
+	var v := clampf(value, 0.0, 1.0)
+	if v == master_volume:
+		return
+	master_volume = v
+	_dirty = true
 	_refresh_master_volume()
 
 
 func _set_music_volume(value: float) -> void:
-	music_volume = clampf(value, 0.0, 1.0)
+	var v := clampf(value, 0.0, 1.0)
+	if v == music_volume:
+		return
+	music_volume = v
+	_dirty = true
 	_refresh_music_volume()
 
 
@@ -175,12 +187,16 @@ func _set_fullscreen(value: bool) -> void:
 	if fullscreen == value:
 		return
 	fullscreen = value
+	_dirty = true
 	_refresh_fullscreen()
 
 
 func _set_resolution_index(index: int) -> void:
+	if index == _resolution_index:
+		return
 	_resolution_index = index
 	resolution = RESOLUTIONS[_resolution_index]
+	_dirty = true
 	_refresh_resolution()
 
 func _refresh_all() -> void:
@@ -242,11 +258,37 @@ func _apply_settings():
 		DisplayServer.window_set_size(resolution)
 	# 保存设置
 	_save_settings()
+	_dirty = false
 
 
 func _on_back_pressed():
-	# 返回主菜单
+	# 有未保存的更改先弹确认框，否则直接退出
+	if _dirty:
+		_show_exit_confirm()
+	else:
+		_play_exit_animation()
+
+
+# 弹出通用确认框，确认后丢弃更改退出
+func _show_exit_confirm():
+	_dialog_active = true
+	var dialog = CONFIRM_DIALOG_SCENE.instantiate()
+	dialog.title_text = "未保存的更改"
+	dialog.message_text = "有设置尚未应用，退出后更改将丢失，是否继续退出？"
+	dialog.confirm_text = "退出"
+	dialog.cancel_text = "留下"
+	add_child(dialog)
+	dialog.confirmed.connect(_on_exit_confirmed)
+	dialog.cancelled.connect(_on_exit_cancelled)
+
+
+func _on_exit_confirmed():
+	_dialog_active = false
 	_play_exit_animation()
+
+
+func _on_exit_cancelled():
+	_dialog_active = false
 
 
 func _play_exit_animation():
