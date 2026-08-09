@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dtfwhw1fqwg3t"]
+[gd_scene format=3 uid="uid://dtfwhw1fqwg3t"]
 
 [ext_resource type="Script" uid="uid://k3gmbp3lf5il" path="res://core/screen/setting.gd" id="1_gtfcx"]
 [ext_resource type="PackedScene" path="res://core/ui/input_hint.tscn" id="2_hint"]
@@ -19,9 +19,7 @@ content_margin_left = 24.0
 content_margin_top = 10.0
 content_margin_right = 24.0
 content_margin_bottom = 10.0
-bg_color = Color(1, 1, 1, 0.2)
-border_width_left = 5
-border_color = Color(1, 1, 1, 0.85)
+bg_color = Color(1, 1, 1, 0.28)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -47,7 +45,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.45882353)
 
-[node name="Root" type="MarginContainer" parent="."]
+[node name="Root" type="MarginContainer" parent="." unique_id=2117016105]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -60,7 +58,7 @@ theme_override_constants/margin_top = 48
 theme_override_constants/margin_right = 72
 theme_override_constants/margin_bottom = 40
 
-[node name="VBox" type="VBoxContainer" parent="Root"]
+[node name="VBox" type="VBoxContainer" parent="Root" unique_id=155024592]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 22
@@ -84,7 +82,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="MasterVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings"]
+[node name="MasterVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings" unique_id=1276166548]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
@@ -92,19 +90,19 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MasterVolume"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MasterVolume" unique_id=696075653]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 20
 
-[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox" unique_id=1419239051]
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "主音量"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox" unique_id=1954551583]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -115,7 +113,7 @@ step = 0.05
 value = 1.0
 scrollable = false
 
-[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox" unique_id=1121568623]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
@@ -123,7 +121,7 @@ text = "100%"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="MusicVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings"]
+[node name="MusicVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings" unique_id=1668170180]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
@@ -131,19 +129,19 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MusicVolume"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MusicVolume" unique_id=1760500583]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 20
 
-[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox" unique_id=1898649381]
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "音乐音量"
 vertical_alignment = 1
 
-[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox" unique_id=424631217]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -154,7 +152,7 @@ step = 0.05
 value = 1.0
 scrollable = false
 
-[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox" unique_id=875346139]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
@@ -168,7 +166,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Fullscreen" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting"]
+[node name="Fullscreen" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting" unique_id=1244064694]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
@@ -176,19 +174,19 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen" unique_id=88792624]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 20
 
-[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox" unique_id=1124272546]
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "全屏"
 vertical_alignment = 1
 
-[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox"]
+[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox" unique_id=193044115]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
@@ -196,7 +194,7 @@ text = "‹ 关 ›"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Resolution" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting"]
+[node name="Resolution" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting" unique_id=1721434264]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
@@ -204,19 +202,19 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Resolution"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Resolution" unique_id=484580260]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 20
 
-[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox" unique_id=726553733]
 custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "分辨率"
 vertical_alignment = 1
 
-[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox"]
+[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox" unique_id=468869932]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
@@ -224,7 +222,7 @@ text = "‹ 1920 x 1080 ›"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="Actions" type="VBoxContainer" parent="Root/VBox"]
+[node name="Actions" type="VBoxContainer" parent="Root/VBox" unique_id=1147313541]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
@@ -237,11 +235,11 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Apply"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Apply" unique_id=1031436568]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Name" type="Label" parent="Root/VBox/Actions/Apply/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Actions/Apply/HBox" unique_id=1291272344]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "应用"
@@ -255,18 +253,19 @@ size_flags_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
 
-[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Back"]
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Back" unique_id=1852638454]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Name" type="Label" parent="Root/VBox/Actions/Back/HBox"]
+[node name="Name" type="Label" parent="Root/VBox/Actions/Back/HBox" unique_id=1444585264]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "返回"
 vertical_alignment = 1
 
-[node name="InputHint" parent="." instance=ExtResource("2_hint")]
+[node name="InputHint" parent="." unique_id=261227782 instance=ExtResource("2_hint")]
 layout_mode = 1
-offset_left = 72.0
-offset_right = 72.0
+offset_left = 42.0
+offset_top = -50.0
+offset_right = 463.0
 hints = Array[String](["W / S|选择", "A / D|调整", "Enter|确认", "Esc|返回"])

@@ -19,9 +19,12 @@ const RESOLUTIONS: Array[Vector2i] = [
 
 const VOLUME_STEP := 0.05
 
+const PULSE_ALPHA_MIN := 0.12
+const PULSE_DURATION := 0.6
+
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
-@export var row_style_selected: StyleBox
+@export var row_style_selected: StyleBoxFlat
 
 enum Row { MASTER_VOLUME, MUSIC_VOLUME, FULLSCREEN, RESOLUTION, APPLY, BACK }
 
@@ -45,10 +48,15 @@ var _index: int = 0
 var _resolution_index: int = 0
 var _closing: bool = false
 
+var _selected_style: StyleBoxFlat
+
 
 func _ready():
 	# 加载当前设置
 	_load_current_settings()
+
+	# 选中行背景的循环呼吸
+	_start_pulse()
 
 	# 把设置值刷到界面上，并选中第一行
 	_refresh_all()
@@ -58,6 +66,20 @@ func _ready():
 	modulate = Color(1, 1, 1, 0)
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT)
+
+
+func _start_pulse():
+	if row_style_selected == null:
+		return
+
+	_selected_style = row_style_selected.duplicate()
+	var alpha_max: float = _selected_style.bg_color.a
+
+	var pulse = create_tween().set_loops()
+	pulse.tween_property(_selected_style, "bg_color:a", PULSE_ALPHA_MIN, PULSE_DURATION) \
+		.set_trans(Tween.TRANS_LINEAR)
+	pulse.tween_property(_selected_style, "bg_color:a", alpha_max, PULSE_DURATION) \
+		.set_trans(Tween.TRANS_LINEAR)
 
 
 func _load_current_settings():
@@ -206,7 +228,7 @@ func _refresh_selection() -> void:
 	for i in range(_rows.size()):
 		var row: Control = _rows[i]
 		var selected: bool = i == _index
-		row.add_theme_stylebox_override("panel", row_style_selected if selected else row_style)
+		row.add_theme_stylebox_override("panel", _selected_style if selected else row_style)
 		row.modulate = Color(1, 1, 1, 1) if selected else Color(1, 1, 1, 0.65)
 
 

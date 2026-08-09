@@ -30,7 +30,6 @@ stretch_mode = 6
 
 [node name="GameTitle" type="TextureRect" parent="." unique_id=1229707452]
 layout_mode = 1
-anchors_preset = 0
 offset_left = 42.0
 offset_top = 32.0
 offset_right = 536.0
@@ -41,7 +40,6 @@ stretch_mode = 5
 
 [node name="Buttons" type="Control" parent="." unique_id=128934446]
 layout_mode = 1
-anchors_preset = -1
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
@@ -55,9 +53,9 @@ mouse_filter = 2
 script = ExtResource("4_15ld6")
 
 [node name="训练场" type="Button" parent="Buttons" unique_id=932042848]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
+layout_mode = 0
 offset_left = 940.0
 offset_top = 195.0
 offset_right = 1140.0
@@ -73,9 +71,9 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="自定义" type="Button" parent="Buttons" unique_id=1316700135]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
+layout_mode = 0
 offset_left = 910.0
 offset_top = 245.0
 offset_right = 1145.0
@@ -91,9 +89,9 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="故事" type="Button" parent="Buttons" unique_id=1303267308]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
+layout_mode = 0
 offset_left = 885.0
 offset_top = 300.0
 offset_right = 1145.0
@@ -109,8 +107,8 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="双人对战" type="Button" parent="Buttons" unique_id=309582068]
-layout_mode = 0
 clip_contents = true
+layout_mode = 0
 offset_left = 860.0
 offset_top = 360.0
 offset_right = 1145.0
@@ -125,9 +123,9 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="设置" type="Button" parent="Buttons" unique_id=1786086070]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
+layout_mode = 0
 offset_left = 885.0
 offset_top = 422.0
 offset_right = 1145.0
@@ -143,9 +141,9 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="退出" type="Button" parent="Buttons" unique_id=1681651206]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
+layout_mode = 0
 offset_left = 910.0
 offset_top = 478.0
 offset_right = 1145.0
@@ -161,9 +159,9 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="角色库" type="Button" parent="Buttons" unique_id=1391071419]
-layout_mode = 0
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
+layout_mode = 0
 offset_left = 940.0
 offset_top = 526.0
 offset_right = 1140.0
@@ -178,8 +176,9 @@ clip_text = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="InputHint" parent="." instance=ExtResource("6_hint")]
+[node name="InputHint" parent="." unique_id=1150293578 instance=ExtResource("6_hint")]
 layout_mode = 1
 offset_left = 42.0
-offset_right = 42.0
+offset_top = -50.0
+offset_right = 349.0
 hints = Array[String](["W / S|选择", "Enter|确认", "Esc|退出"])
