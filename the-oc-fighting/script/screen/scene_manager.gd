@@ -11,6 +11,9 @@ const SCENES = {
 # 信号
 signal scene_changed(scene_name: String)
 
+func _ready():
+	DisplayServer.window_set_min_size(Vector2i(640, 360))
+
 func change_scene(scene_name: String):
 	if scene_name in SCENES:
 		get_tree().change_scene_to_file(SCENES[scene_name])

@@ -9,36 +9,52 @@
 
 [node name="Main" type="Control" unique_id=655942731]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_4esqw")
 
 [node name="BackGround" type="TextureRect" parent="." unique_id=542266071]
 layout_mode = 1
-offset_left = -384.0
-offset_top = -175.0
-offset_right = 1536.0
-offset_bottom = 825.0
-pivot_offset = Vector2(960, 500)
-scale = Vector2(0.65, 0.65)
-texture = ExtResource("2_005n7")
-
-[node name="GameTitle" type="TextureRect" parent="." unique_id=1229707452]
-layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_005n7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="GameTitle" type="TextureRect" parent="." unique_id=1229707452]
+layout_mode = 1
+anchors_preset = 0
 offset_left = 42.0
 offset_top = 32.0
 offset_right = 536.0
 offset_bottom = 321.0
-grow_horizontal = 2
-grow_vertical = 2
 texture = ExtResource("3_005n7")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Buttons" type="Sprite2D" parent="." unique_id=128934446]
+[node name="Buttons" type="Control" parent="." unique_id=128934446]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -1152.0
+offset_top = -324.0
+offset_bottom = 324.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("4_15ld6")
 
 [node name="训练场" type="Button" parent="Buttons" unique_id=932042848]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
 offset_left = 940.0
@@ -56,6 +72,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="自定义" type="Button" parent="Buttons" unique_id=1316700135]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
 offset_left = 910.0
@@ -73,6 +90,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="故事" type="Button" parent="Buttons" unique_id=1303267308]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
 offset_left = 885.0
@@ -90,6 +108,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="双人对战" type="Button" parent="Buttons" unique_id=309582068]
+layout_mode = 0
 clip_contents = true
 offset_left = 860.0
 offset_top = 360.0
@@ -105,6 +124,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="设置" type="Button" parent="Buttons" unique_id=1786086070]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.784314)
 clip_contents = true
 offset_left = 885.0
@@ -122,6 +142,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="退出" type="Button" parent="Buttons" unique_id=1681651206]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0.666667)
 clip_contents = true
 offset_left = 910.0
@@ -139,6 +160,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="角色库" type="Button" parent="Buttons" unique_id=1391071419]
+layout_mode = 0
 self_modulate = Color(1, 1, 1, 0)
 clip_contents = true
 offset_left = 940.0

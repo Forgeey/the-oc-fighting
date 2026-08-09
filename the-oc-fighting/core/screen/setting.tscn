@@ -1,6 +1,30 @@
-[gd_scene format=3 uid="uid://dtfwhw1fqwg3t"]
+[gd_scene load_steps=4 format=3 uid="uid://dtfwhw1fqwg3t"]
 
 [ext_resource type="Script" uid="uid://k3gmbp3lf5il" path="res://core/screen/setting.gd" id="1_gtfcx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 1, 1, 0.0588235)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_selected"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 1, 1, 0.2)
+border_width_left = 5
+border_color = Color(1, 1, 1, 0.85)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="Setting" type="Control" unique_id=316146726]
 layout_mode = 3
@@ -10,53 +34,239 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gtfcx")
+row_style = SubResource("StyleBoxFlat_row")
+row_style_selected = SubResource("StyleBoxFlat_row_selected")
 
 [node name="Overlay" type="ColorRect" parent="." unique_id=17578621]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -48.0
-offset_top = -41.0
-offset_right = 48.0
-offset_bottom = 43.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45882353)
+
+[node name="Root" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.45882353)
+theme_override_constants/margin_left = 72
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 72
+theme_override_constants/margin_bottom = 40
 
-[node name="Label" type="Label" parent="." unique_id=589271620]
-layout_mode = 0
-offset_left = 45.0
-offset_top = 46.0
-offset_right = 237.0
-offset_bottom = 113.0
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+[node name="VBox" type="VBoxContainer" parent="Root"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 22
+
+[node name="Title" type="Label" parent="Root/VBox" unique_id=589271620]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0.92, 0.92, 0.92, 1)
 theme_override_font_sizes/font_size = 48
-text = "设置界面"
+text = "设置"
 
-[node name="Settings" type="VBoxContainer" parent="." unique_id=1175593265]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="ControlsSettings" type="VBoxContainer" parent="Settings" unique_id=1372277209]
+[node name="Settings" type="VBoxContainer" parent="Root/VBox" unique_id=1175593265]
+unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
 
-[node name="GraphicsSetting" type="VBoxContainer" parent="Settings" unique_id=1401529883]
+[node name="ControlsSettings" type="VBoxContainer" parent="Root/VBox/Settings" unique_id=1372277209]
+unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1768645349]
-layout_mode = 0
-offset_left = 526.0
-offset_top = 526.0
-offset_right = 610.0
-offset_bottom = 566.0
-
-[node name="Apply" type="Button" parent="HBoxContainer" unique_id=800892755]
+[node name="MasterVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MasterVolume"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "主音量"
+vertical_alignment = 1
+
+[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
+mouse_filter = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+scrollable = false
+
+[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MasterVolume/HBox"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MusicVolume" type="PanelContainer" parent="Root/VBox/Settings/ControlsSettings"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/ControlsSettings/MusicVolume"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Name" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "音乐音量"
+vertical_alignment = 1
+
+[node name="Slider" type="HSlider" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
+mouse_filter = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+scrollable = false
+
+[node name="Value" type="Label" parent="Root/VBox/Settings/ControlsSettings/MusicVolume/HBox"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="GraphicsSetting" type="VBoxContainer" parent="Root/VBox/Settings" unique_id=1401529883]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Fullscreen" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "全屏"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Fullscreen/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "‹ 关 ›"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Resolution" type="PanelContainer" parent="Root/VBox/Settings/GraphicsSetting"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Settings/GraphicsSetting/Resolution"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Name" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox"]
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "分辨率"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="Root/VBox/Settings/GraphicsSetting/Resolution/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "‹ 1920 x 1080 ›"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Actions" type="VBoxContainer" parent="Root/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Apply" type="PanelContainer" parent="Root/VBox/Actions" unique_id=800892755]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Apply"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Root/VBox/Actions/Apply/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "应用"
+vertical_alignment = 1
 
-[node name="Back" type="Button" parent="HBoxContainer" unique_id=2024696385]
+[node name="Back" type="PanelContainer" parent="Root/VBox/Actions" unique_id=2024696385]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 56)
 layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/Actions/Back"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Root/VBox/Actions/Back/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "返回"
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="Root/VBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 0.7)
+theme_override_font_sizes/font_size = 18
+text = "W / S 选择      A / D 调整      Enter 确认      Esc 返回"

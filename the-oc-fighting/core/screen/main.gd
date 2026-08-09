@@ -1,4 +1,8 @@
 extends Control
+
+# 背景在设置页打开时的放大倍率（沿用改造前 0.72 / 0.65 的观感）
+const BG_ZOOM := 1.108
+
 @onready var buttons = $Buttons
 @onready var combat_button = $Buttons/双人对战
 @onready var settings_button = $Buttons/设置
@@ -11,18 +15,27 @@ func _ready():
 	combat_button.pressed.connect(_on_combat_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_game.pressed.connect(_on_quit_pressed)
-	
+
+	# 背景铺满整个视口，缩放动画始终绕视口中心
+	background.resized.connect(_update_bg_pivot)
+	_update_bg_pivot()
+
 	# 初始化背景模糊材质
 	var blur_shader = load("res://asset/shader/blur.gdshader")
 	var blur_mat = ShaderMaterial.new()
 	blur_mat.shader = blur_shader
 	blur_mat.set_shader_parameter("blur_strength", 0.0)
 	background.material = blur_mat
-	
+
 	# Logo 入场淡入（配合按钮入场动画）
 	game_title.modulate = Color(1, 1, 1, 0)
 	var logo_tween = create_tween()
 	logo_tween.tween_property(game_title, "modulate", Color(1, 1, 1, 1), 0.4).set_delay(0.15).set_ease(Tween.EASE_OUT)
+
+
+# 窗口尺寸变化时把缩放中心重新对到背景正中
+func _update_bg_pivot():
+	background.pivot_offset = background.size * 0.5
 
 
 # 设置/清除背景模糊强度（被 tween_method 调用）
@@ -53,7 +66,7 @@ func _play_exit_animation():
 	# 3) 背景图轻微缩放 + 同步模糊
 	var bg_tween = create_tween()
 	bg_tween.set_parallel(true)
-	bg_tween.tween_property(background, "scale", Vector2(0.72, 0.72), 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	bg_tween.tween_property(background, "scale", Vector2(BG_ZOOM, BG_ZOOM), 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	bg_tween.tween_method(_set_blur, 0.0, 0.8, 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	
 	# 等待动画完成
@@ -85,7 +98,7 @@ func _on_settings_closed():
 	# 恢复背景缩放 + 清除模糊
 	var bg_tween = create_tween()
 	bg_tween.set_parallel(true)
-	bg_tween.tween_property(background, "scale", Vector2(0.65, 0.65), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	bg_tween.tween_property(background, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	bg_tween.tween_method(_set_blur, 0.8, 0.0, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	
 	# 恢复输入

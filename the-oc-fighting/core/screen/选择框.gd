@@ -1,4 +1,4 @@
-extends Sprite2D
+extends Control
 
 var 当前选择框: Node
 
