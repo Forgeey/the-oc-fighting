@@ -32,7 +32,7 @@ const ANIM_OUT := 0.12
 @onready var confirm_btn: Button = %ConfirmBtn
 @onready var cancel_btn: Button = %CancelBtn
 
-var _focus: int = 0
+var _focus: int = -1  # -1=未选中 0=确认 1=取消
 var _dismissing: bool = false
 
 
@@ -52,9 +52,15 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("1p_left") or event.is_action_pressed("2p_left") \
 			or event.is_action_pressed("1p_right") or event.is_action_pressed("2p_right"):
 		accept_event()
-		_focus = 1 - _focus
+		var dir := -1 if (event.is_action_pressed("1p_left") or event.is_action_pressed("2p_left")) else 1
+		if _focus < 0:
+			_focus = 0 if dir < 0 else 1
+		else:
+			_focus = 1 - _focus
 		_refresh_focus()
 	elif event.is_action_pressed("ui_accept"):
+		if _focus < 0:
+			return
 		accept_event()
 		_dismiss(_focus == 0)
 

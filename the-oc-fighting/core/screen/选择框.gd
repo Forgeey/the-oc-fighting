@@ -43,7 +43,9 @@ func _ready() -> void:
 	# 收集按钮节点
 	按钮列表 = []
 	for i in range(7):
-		按钮列表.append(get_child(i))
+		var btn = get_child(i)
+		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		按钮列表.append(btn)
 	
 	# 初始槽位: 按钮0→槽0, 按钮1→槽1, ...
 	计数器列表 = [0, 1, 2, 3, 4, 5, 6]

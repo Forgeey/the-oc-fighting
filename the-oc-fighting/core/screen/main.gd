@@ -3,6 +3,8 @@ extends Control
 # 背景在设置页打开时的放大倍率（沿用改造前 0.72 / 0.65 的观感）
 const BG_ZOOM := 1.108
 
+const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+
 @onready var buttons = $Buttons
 @onready var combat_button = $Buttons/双人对战
 @onready var settings_button = $Buttons/设置
@@ -10,6 +12,8 @@ const BG_ZOOM := 1.108
 @onready var background = $BackGround
 @onready var game_title = $GameTitle
 @onready var input_hint = $InputHint
+
+var _dialog_active: bool = false
 
 func _ready():
 	# 连接按钮信号
@@ -115,11 +119,38 @@ func _on_settings_pressed():
 
 func _on_quit_pressed():
 	print("退出")
+	_show_quit_confirm()
+
+
+# 弹出确认框，确认后才退出游戏
+func _show_quit_confirm():
+	if _dialog_active:
+		return
+	_dialog_active = true
+	var dialog = CONFIRM_DIALOG_SCENE.instantiate()
+	dialog.title_text = "退出游戏"
+	dialog.message_text = "确定要退出游戏吗？"
+	dialog.confirm_text = "退出"
+	dialog.cancel_text = "留下"
+	add_child(dialog)
+	dialog.confirmed.connect(_on_quit_confirmed)
+	dialog.cancelled.connect(_on_quit_cancelled)
+
+
+func _on_quit_confirmed():
+	_dialog_active = false
 	get_tree().quit()
 
+
+func _on_quit_cancelled():
+	_dialog_active = false
+
 func _input(event):
-	# 按ESC键退出游戏
+	# 弹窗打开期间不响应主菜单按键
+	if _dialog_active:
+		return
+	# 按ESC键退出游戏（带确认）
 	if event.is_action_pressed("ui_cancel"):
-		get_tree().quit()
+		_show_quit_confirm()
 	if event.is_action_pressed("ui_accept"):
 		buttons.当前选择框.emit_signal("pressed")
