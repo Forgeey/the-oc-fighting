@@ -20,7 +20,7 @@ const RESOLUTIONS: Array[Vector2i] = [
 const VOLUME_STEP := 0.05
 
 const PULSE_ALPHA_MIN := 0.12
-const PULSE_DURATION := 0.6
+const PULSE_DURATION := 0.3
 
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
