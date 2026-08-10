@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://klw8lpvodj54"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"air_light"
+guard_type = 3
+duration_frames = 42
+startup_frames = 8
+active_frames = 11
+cancel_target_states = PackedStringArray("air_medium")
+damage = 6
+hitstun_frames = 14
+blockstun_frames = 8
+hitstop_frames = 3
+knockback = 175.0
+cancel_start_frame = 11
+cancel_requirement = 1
+cancel_end_frame = 30
+airborne_launch_y_velocity = -150.0

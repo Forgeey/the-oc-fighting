@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://wbm46je2wi0e"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"heavy_attack"
+duration_frames = 31
+startup_frames = 5
+active_frames = 4
+cancel_start_frame = 10
+cancel_end_frame = 21
+damage = 13
+block_damage = 3
+hitstun_frames = 20
+blockstun_frames = 11
+juggle_increment = 2
+air_hitstun_decay = 0.88
+knockback = 300.0
+lunge_frames = 4
+lunge_speed = 95.0

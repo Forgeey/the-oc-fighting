@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"axe_kick"
+guard_type = 2
+duration_frames = 31
+startup_frames = 7
+active_frames = 4
+cancel_start_frame = 12
+cancel_end_frame = 23
+damage = 13
+block_damage = 4
+hitstun_frames = 21
+blockstun_frames = 12
+hitstop_frames = 5
+juggle_increment = 2
+juggle_limit = 6
+knockback = 335.0
+lunge_frames = 5
+lunge_speed = 135.0

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"front_elbow"
+duration_frames = 25
+startup_frames = 5
+active_frames = 4
+cancel_start_frame = 10
+cancel_end_frame = 19
+damage = 9
+block_damage = 2
+hitstun_frames = 19
+blockstun_frames = 10
+juggle_limit = 5
+knockback = 220.0
+lunge_frames = 4
+lunge_speed = 105.0

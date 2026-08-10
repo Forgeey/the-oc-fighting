@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"shadow_kick"
+duration_frames = 34
+startup_frames = 7
+active_frames = 5
+damage = 18
+block_damage = 4
+hitstun_frames = 22
+blockstun_frames = 13
+hitstop_frames = 6
+screen_shake_strength = 4.0
+screen_shake_frames = 5
+combo_initial_scale = 0.9
+juggle_increment = 2
+juggle_limit = 7
+knockdown_type = 1
+knockdown_frames = 30
+untechable_frames = 12
+knockback = 440.0
+lunge_frames = 12
+lunge_speed = 360.0

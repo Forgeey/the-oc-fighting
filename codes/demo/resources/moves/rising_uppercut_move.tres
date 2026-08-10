@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://bgojqwwf67rd7"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"rising_uppercut"
+display_name = "Rising Uppercut"
+state_tags = PackedStringArray("ground_attack", "command_move", "special_move")
+cancel_target_move_ids = PackedStringArray()

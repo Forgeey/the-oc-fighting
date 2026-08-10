@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"arc_bolt_enhanced"
+guard_type = 1
+is_projectile = true
+projectile_cast_duration_frames = 36
+projectile_spawn_frame = 14
+projectile_speed = 520.0
+duration_frames = 120
+startup_frames = 0
+active_frames = 120
+damage = 12
+block_damage = 2
+hitstun_frames = 19
+blockstun_frames = 11
+hitstop_frames = 4
+blockstop_frames = 2
+combo_initial_scale = 0.9
+attacker_meter_gain_hit = 140
+attacker_meter_gain_block = 70
+defender_meter_gain_hit = 90
+defender_meter_gain_block = 45
+juggle_increment = 1
+juggle_limit = 6
+knockback = 220.0
+airborne_launch_y_velocity = -175.0
+color = Color(1, 0.55, 0.1, 0.5)

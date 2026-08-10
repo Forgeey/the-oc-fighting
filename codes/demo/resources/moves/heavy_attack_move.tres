@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://by1435iys7oyd"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"heavy_attack"
+display_name = "Heavy Attack"
+state_tags = PackedStringArray("ground_attack", "combo_stage_2", "combo_ender")
+cancel_target_move_ids = PackedStringArray("rising_uppercut", "ground_wave", "shadow_kick")
+combo_parent_move_id = &"light_attack"
+move_list_name = "Two-Hit Verdict"

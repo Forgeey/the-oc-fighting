@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://hw7qo4kg323u"]
+
+[ext_resource type="Script" uid="uid://ds0djwwrr15e" path="res://scripts/fighter/foundation_fighter.gd" id="1_fighter"]
+[ext_resource type="Script" uid="uid://bi2nk2bml3itp" path="res://addons/fray/src/input/controller.gd" id="3_controller"]
+[ext_resource type="Script" uid="uid://d0nvf4ic81v4p" path="res://addons/fray/src/state_mgmt/state_machine.gd" id="4_state_machine"]
+[ext_resource type="Script" uid="uid://d1hvyulxbwo3k" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="5_advancer"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_stand_light_hit_state.tscn" id="6_stand_light"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_stand_heavy_hit_state.tscn" id="7_stand_heavy"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_crouch_light_hit_state.tscn" id="8_crouch_light"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_crouch_heavy_hit_state.tscn" id="9_crouch_heavy"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_air_light_hit_state.tscn" id="10_air_light"]
+[ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_air_heavy_hit_state.tscn" id="11_air_heavy"]
+[ext_resource type="Resource" path="res://resources/attacks/foundation_debug_knockdown.tres" id="12_debug_knockdown"]
+[ext_resource type="Resource" path="res://resources/attacks/foundation_debug_reaction.tres" id="12_debug_reaction"]
+[ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="13_hit_state"]
+[ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="14_hitbox"]
+[ext_resource type="Resource" path="res://resources/combat/foundation_hurtbox.tres" id="15_hurtbox"]
+[ext_resource type="Script" uid="uid://boe4oe8kln68m" path="res://addons/fray/src/hit/2d/hit_state_manager_2d.gd" id="16_hit_state_manager"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fighter"]
+size = Vector2(64, 96)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(58, 92)
+
+[node name="FighterFoundation" type="CharacterBody2D" unique_id=418366519]
+process_physics_priority = -10
+collision_layer = 2
+floor_snap_length = 8.0
+safe_margin = 0.05
+script = ExtResource("1_fighter")
+debug_reaction_attribute = ExtResource("12_debug_reaction")
+debug_knockdown_attribute = ExtResource("12_debug_knockdown")
+
+[node name="Visual" type="Polygon2D" parent="." unique_id=1139525763]
+color = Color(0.2, 0.65, 1, 1)
+polygon = PackedVector2Array(-32, -48, 32, -48, 32, 48, -32, 48)
+
+[node name="FacingIndicator" type="Polygon2D" parent="." unique_id=1534224327]
+color = Color(1, 0.85, 0.2, 1)
+polygon = PackedVector2Array(18, -8, 42, 0, 18, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=949133574]
+shape = SubResource("RectangleShape2D_fighter")
+
+[node name="HurtState" type="Node2D" parent="." unique_id=852413547]
+script = ExtResource("13_hit_state")
+active_hitboxes = 1
+metadata/_editor_prop_ptr_source = NodePath("")
+
+[node name="Hurtbox" type="Area2D" parent="HurtState" unique_id=120297552]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("14_hitbox")
+attribute = ExtResource("15_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtState/Hurtbox" unique_id=839945394]
+shape = SubResource("RectangleShape2D_hurtbox")
+debug_color = Color(0.15, 0.65, 1, 0.34)
+
+[node name="AttackHitStateManager" type="Node2D" parent="." unique_id=1663256351]
+script = ExtResource("16_hit_state_manager")
+metadata/_editor_prop_ptr_source = NodePath("")
+
+[node name="stand_light" parent="AttackHitStateManager" unique_id=1093363243 instance=ExtResource("6_stand_light")]
+
+[node name="stand_heavy" parent="AttackHitStateManager" unique_id=617400412 instance=ExtResource("7_stand_heavy")]
+
+[node name="crouch_light" parent="AttackHitStateManager" unique_id=1895402967 instance=ExtResource("8_crouch_light")]
+
+[node name="crouch_heavy" parent="AttackHitStateManager" unique_id=124209915 instance=ExtResource("9_crouch_heavy")]
+
+[node name="air_light" parent="AttackHitStateManager" unique_id=314911610 instance=ExtResource("10_air_light")]
+
+[node name="air_heavy" parent="AttackHitStateManager" unique_id=1844300708 instance=ExtResource("11_air_heavy")]
+
+[node name="FrayController" type="Node" parent="." unique_id=1169230]
+script = ExtResource("3_controller")
+
+[node name="FrayStateMachine" type="Node" parent="." unique_id=1903751311]
+script = ExtResource("4_state_machine")
+advance_mode = 1
+
+[node name="FrayBufferedInputAdvancer" type="Node" parent="FrayStateMachine" unique_id=1640703471]
+process_physics_priority = 10
+script = ExtResource("5_advancer")
+max_buffer_time = 0.083333
+advance_mode = 1

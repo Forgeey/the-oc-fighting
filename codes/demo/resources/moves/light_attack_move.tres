@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://cw4byu3fm2axl"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"light_attack"
+display_name = "Light Attack"
+state_tags = PackedStringArray("ground_attack", "combo_starter", "combo_stage_1")
+cancel_target_move_ids = PackedStringArray("heavy_attack", "straight_punch")

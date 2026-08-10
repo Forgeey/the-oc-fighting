@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://dvditgr8ia3id"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"stand_medium"
+guard_type = 0
+duration_frames = 49
+startup_frames = 15
+active_frames = 7
+cancel_target_states = PackedStringArray()
+damage = 9
+hitstun_frames = 18
+blockstun_frames = 10
+knockback = 210.0
+lunge_frames = 4
+lunge_speed = 110.0
+airborne_launch_y_velocity = -165.0

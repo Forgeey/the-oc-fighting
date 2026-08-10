@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"shadow_kick"
+display_name = "Shadow Kick"
+description = "Fast advancing special move and kombo ender."
+activation_context = "ground"
+state_tags = PackedStringArray("ground_attack", "command_move", "special_move")
+priority = 12
+cancel_target_move_ids = PackedStringArray()

@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(960, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(32, 540)
+
+[node name="TrainingStage" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 960.0
+offset_bottom = 540.0
+color = Color(0.09, 0.1, 0.12, 1)
+
+[node name="BackWall" type="ColorRect" parent="."]
+offset_top = 270.0
+offset_right = 960.0
+offset_bottom = 520.0
+color = Color(0.17, 0.17, 0.18, 1)
+
+[node name="FloorVisual" type="ColorRect" parent="."]
+offset_top = 500.0
+offset_right = 960.0
+offset_bottom = 540.0
+color = Color(0.22, 0.23, 0.22, 1)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(480, 520)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(0, 270)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(960, 270)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(480, 270)
+enabled = true
+limit_left = 0
+limit_top = 0
+limit_right = 960
+limit_bottom = 540
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+position = Vector2(300, 500)
+
+[node name="OpponentSpawn" type="Marker2D" parent="."]
+position = Vector2(660, 500)
+
+[node name="Fighters" type="Node2D" parent="."]
+

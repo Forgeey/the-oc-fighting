@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://bwelh57navrlf"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"stand_light"
+guard_type = 0
+duration_frames = 42
+startup_frames = 11
+active_frames = 7
+cancel_start_frame = 21
+cancel_end_frame = 32
+cancel_target_states = PackedStringArray("stand_combo_medium")
+damage = 7
+hitstun_frames = 22
+blockstun_frames = 7
+hitstop_frames = 3
+juggle_limit = 5
+knockback = 145.0
+lunge_frames = 2
+lunge_speed = 80.0
+airborne_launch_y_velocity = -125.0

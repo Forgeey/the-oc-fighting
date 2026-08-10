@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"knee_ender"
+duration_frames = 28
+startup_frames = 5
+active_frames = 4
+cancel_start_frame = 10
+cancel_end_frame = 21
+damage = 11
+block_damage = 3
+hitstun_frames = 19
+blockstun_frames = 11
+hitstop_frames = 4
+juggle_increment = 2
+juggle_limit = 6
+knockback = 285.0
+lunge_frames = 5
+lunge_speed = 125.0

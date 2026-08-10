@@ -1,0 +1,219 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/foundation_debug_overlay.gd" id="1_overlay"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.025, 0.04, 0.065, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.22, 0.58, 0.92, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.035, 0.055, 0.09, 0.91)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.17, 0.28, 0.42, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="FoundationDebugOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_overlay")
+
+[node name="HeaderPanel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 14.0
+offset_right = 1264.0
+offset_bottom = 60.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="MarginContainer" type="MarginContainer" parent="HeaderPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 7.0
+offset_right = -14.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HeaderPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="HeaderPanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 21
+text = "FRAY FIGHTER FOUNDATION  ·  DEBUG DASHBOARD"
+vertical_alignment = 1
+
+[node name="Controls" type="Label" parent="HeaderPanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.82, 0.9, 1)
+theme_override_font_sizes/font_size = 13
+text = "A/D 移动  ·  S 下蹲  ·  W 跳跃  ·  66/44 冲刺  ·  R 重置  ·  L 锁定  ·  P/H 暂停"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Dashboard" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 72.0
+offset_right = 1264.0
+offset_bottom = 330.0
+theme_override_constants/separation = 12
+
+[node name="StatusPanel" type="Panel" parent="Dashboard"]
+custom_minimum_size = Vector2(392, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="MarginContainer" type="MarginContainer" parent="Dashboard/StatusPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Dashboard/StatusPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SectionTitle" type="Label" parent="Dashboard/StatusPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "状态与实时输入  /  STATE"
+
+[node name="StateLabel" type="Label" parent="Dashboard/StatusPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "状态初始化中……"
+
+[node name="Separator" type="HSeparator" parent="Dashboard/StatusPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="InputLabel" type="Label" parent="Dashboard/StatusPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.9, 0.96, 1)
+theme_override_font_sizes/font_size = 12
+text = "输入初始化中……"
+
+[node name="InputPanel" type="Panel" parent="Dashboard"]
+custom_minimum_size = Vector2(392, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="MarginContainer" type="MarginContainer" parent="Dashboard/InputPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Dashboard/InputPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SectionTitle" type="Label" parent="Dashboard/InputPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.9, 0.68, 1)
+theme_override_font_sizes/font_size = 15
+text = "缓冲与输入历史  /  INPUT"
+
+[node name="BufferLabel" type="Label" parent="Dashboard/InputPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "缓冲初始化中……"
+
+[node name="Separator" type="HSeparator" parent="Dashboard/InputPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="InputHistoryLabel" type="Label" parent="Dashboard/InputPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.82, 0.9, 0.86, 1)
+theme_override_font_sizes/font_size = 11
+text = "输入历史初始化中……"
+
+[node name="OutputPanel" type="Panel" parent="Dashboard"]
+custom_minimum_size = Vector2(392, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="MarginContainer" type="MarginContainer" parent="Dashboard/OutputPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Dashboard/OutputPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SectionTitle" type="Label" parent="Dashboard/OutputPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
+theme_override_font_sizes/font_size = 15
+text = "招式与状态输出  /  OUTPUT"
+
+[node name="MoveLabel" type="Label" parent="Dashboard/OutputPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "招式初始化中……"
+
+[node name="Separator" type="HSeparator" parent="Dashboard/OutputPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StateHistoryLabel" type="Label" parent="Dashboard/OutputPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.92, 0.84, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "状态历史初始化中……"

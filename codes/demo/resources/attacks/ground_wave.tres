@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="DemoProjectileAttackAttribute" format=3 uid="uid://d0jc1ttqh13mc"]
+
+[ext_resource type="Script" uid="uid://d35hdu2yi8i8g" path="res://scripts/resources/combat/demo_projectile_attack_attribute.gd" id="1_projectile_attack"]
+
+[resource]
+script = ExtResource("1_projectile_attack")
+projectile_speed = 560.0
+projectile_lifetime = 1.35
+projectile_spawn_offset = Vector2(78, -34)
+projectile_size = Vector2(82, 36)
+id = &"ground_wave"
+is_projectile = true
+duration_frames = 32
+startup_frames = 9
+active_frames = 0
+damage = 16
+block_damage = 4
+hitstun_frames = 17
+blockstun_frames = 12
+combo_initial_scale = 0.9
+juggle_increment = 2
+air_hitstun_decay = 0.85
+gravity_scale_on_hit = 1.1
+knockback = 360.0

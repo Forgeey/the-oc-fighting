@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"knee_ender"
+display_name = "Knee Ender"
+description = "Advancing knee that completes a three-hit string."
+activation_context = "ground"
+state_tags = PackedStringArray("ground_attack", "combo_followup", "combo_ender", "combo_stage_3")
+cancel_target_move_ids = PackedStringArray("rising_uppercut", "ground_wave", "shadow_kick")
+neutral_available = false
+combo_parent_move_id = &"straight_punch"
+move_list_name = "Broken Oath"

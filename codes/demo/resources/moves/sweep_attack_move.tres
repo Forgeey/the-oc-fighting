@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://b6uk23dd8l8dr"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"sweep_attack"
+display_name = "Sweep Attack"
+activation_context = "crouch"
+state_tags = PackedStringArray("ground_attack")
+cancel_target_move_ids = PackedStringArray()
+neutral_available = null
+combo_parent_move_id = null
+move_list_name = null
