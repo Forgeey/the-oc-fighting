@@ -127,6 +127,7 @@ func _show_quit_confirm():
 	if _dialog_active:
 		return
 	_dialog_active = true
+	buttons.process_mode = Node.PROCESS_MODE_DISABLED
 	var dialog = CONFIRM_DIALOG_SCENE.instantiate()
 	dialog.title_text = "退出游戏"
 	dialog.message_text = "确定要退出游戏吗？"
@@ -144,6 +145,7 @@ func _on_quit_confirmed():
 
 func _on_quit_cancelled():
 	_dialog_active = false
+	buttons.process_mode = Node.PROCESS_MODE_INHERIT
 
 func _input(event):
 	# 弹窗打开期间不响应主菜单按键

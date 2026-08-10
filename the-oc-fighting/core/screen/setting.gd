@@ -15,6 +15,7 @@ const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
 
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
+const DISABLED_ROW_MODULATE := Color(0.45, 0.45, 0.45, 0.55)
 
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
@@ -135,8 +136,13 @@ func _is_right(event: InputEvent) -> bool:
 	return event.is_action_pressed("1p_right") or event.is_action_pressed("2p_right")
 
 func _move_selection(direction: int) -> void:
-	_index = wrapi(_index + direction, 0, _rows.size())
-	_refresh_selection()
+	var next_index := _index
+	for _attempt in range(_rows.size()):
+		next_index = wrapi(next_index + direction, 0, _rows.size())
+		if _is_row_enabled(next_index):
+			_index = next_index
+			_refresh_selection()
+			return
 
 
 # A / D：连续量增减，开关左关右开，分辨率上一项/下一项
@@ -149,7 +155,8 @@ func _adjust(direction: int) -> void:
 		Row.FULLSCREEN:
 			_set_fullscreen(direction > 0)
 		Row.RESOLUTION:
-			_set_resolution_index(wrapi(_resolution_index + direction, 0, RESOLUTIONS.size()))
+			if not fullscreen:
+				_set_resolution_index(wrapi(_resolution_index + direction, 0, RESOLUTIONS.size()))
 
 
 # Enter：开关翻转、分辨率下一项、执行动作行
@@ -158,7 +165,8 @@ func _activate() -> void:
 		Row.FULLSCREEN:
 			_set_fullscreen(not fullscreen)
 		Row.RESOLUTION:
-			_set_resolution_index(wrapi(_resolution_index + 1, 0, RESOLUTIONS.size()))
+			if not fullscreen:
+				_set_resolution_index(wrapi(_resolution_index + 1, 0, RESOLUTIONS.size()))
 		Row.APPLY:
 			_on_apply_pressed()
 		Row.BACK:
@@ -189,10 +197,11 @@ func _set_fullscreen(value: bool) -> void:
 	fullscreen = value
 	_dirty = true
 	_refresh_fullscreen()
+	_refresh_selection()
 
 
 func _set_resolution_index(index: int) -> void:
-	if index == _resolution_index:
+	if fullscreen or index == _resolution_index:
 		return
 	_resolution_index = index
 	resolution = RESOLUTIONS[_resolution_index]
@@ -228,7 +237,14 @@ func _refresh_selection() -> void:
 		var row: Control = _rows[i]
 		var selected: bool = i == _index
 		row.add_theme_stylebox_override("panel", _selected_style if selected else row_style)
-		row.modulate = Color(1, 1, 1, 1) if selected else Color(1, 1, 1, 0.65)
+		if not _is_row_enabled(i):
+			row.modulate = DISABLED_ROW_MODULATE
+		else:
+			row.modulate = Color(1, 1, 1, 1) if selected else Color(1, 1, 1, 0.65)
+
+
+func _is_row_enabled(row_index: int) -> bool:
+	return row_index != Row.RESOLUTION or not fullscreen
 
 
 func _row_slider(row_index: int) -> HSlider:
