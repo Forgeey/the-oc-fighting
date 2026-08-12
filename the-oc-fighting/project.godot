@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="The oc fighting"
 run/main_scene="uid://dltcxk8psuajk"
-config/features=PackedStringArray("4.6", "Forward Plus")
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -27,9 +27,6 @@ SceneManager="*res://script/screen/scene_manager.gd"
 
 [display]
 
-window/size/viewport_width=1152
-window/size/viewport_height=648
-window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
