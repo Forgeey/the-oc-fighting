@@ -16,6 +16,11 @@ const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
 const DISABLED_ROW_MODULATE := Color(0.45, 0.45, 0.45, 0.55)
+const TITLE_DROP_OFFSET := 120.0
+const TITLE_ENTRANCE_DURATION := 0.3
+const ROW_ENTRANCE_STAGGER := 0.06
+const ROW_ENTRANCE_DURATION := 0.25
+const ROW_SLIDE_OFFSET := 40.0
 
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
@@ -63,6 +68,32 @@ func _ready():
 	modulate = Color(1, 1, 1, 0)
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT)
+	_play_content_entrance()
+
+
+func _play_content_entrance() -> void:
+	await get_tree().process_frame
+
+	var title: Control = $Root/VBox/Title
+	var title_position: Vector2 = title.position
+	title.position = title_position - Vector2(0.0, TITLE_DROP_OFFSET)
+
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(title, "position", title_position, TITLE_ENTRANCE_DURATION) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+	for i in range(_rows.size()):
+		var row: Control = _rows[i]
+		var row_position: Vector2 = row.global_position
+		row.global_position = _get_row_offscreen_position(row)
+		tween.tween_property(row, "global_position", row_position, ROW_ENTRANCE_DURATION) \
+			.set_delay(i * ROW_ENTRANCE_STAGGER).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+
+
+func _get_row_offscreen_position(row: Control) -> Vector2:
+	var row_position: Vector2 = row.global_position
+	var slide_distance: float = row_position.x + float(row.size.x) + ROW_SLIDE_OFFSET
+	return row_position - Vector2(slide_distance, 0.0)
 
 
 func _start_pulse():
@@ -312,9 +343,20 @@ func _play_exit_animation():
 	_closing = true
 	set_process_input(false)
 
-	# 淡出
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.2).set_ease(Tween.EASE_IN)
+	# 内容反向滑出：标题向上，设置项向左
+	var title: Control = $Root/VBox/Title
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(title, "position", title.position - Vector2(0.0, TITLE_DROP_OFFSET), TITLE_ENTRANCE_DURATION) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	var overlay_fade_duration: float = ROW_ENTRANCE_DURATION + ROW_ENTRANCE_STAGGER * float(_rows.size() - 1)
+	tween.tween_property($Overlay, "color:a", 0.0, overlay_fade_duration) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+
+	for i in range(_rows.size()):
+		var row: Control = _rows[i]
+		tween.tween_property(row, "global_position", _get_row_offscreen_position(row), ROW_ENTRANCE_DURATION) \
+			.set_delay((_rows.size() - 1 - i) * ROW_ENTRANCE_STAGGER) \
+			.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 
 	await tween.finished
 	closed.emit()
