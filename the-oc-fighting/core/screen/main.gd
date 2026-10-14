@@ -65,7 +65,7 @@ func _set_blur(value: float):
 # 主菜单退出动画：按钮依次划出淡出 → Logo淡出 → 叠加设置页面
 func _play_exit_animation():
 	set_process_input(false)
-	buttons.process_mode = Node.PROCESS_MODE_DISABLED
+	buttons.set_process_input(false)
 	
 	for i in range(MENU_BUTTON_COUNT):
 		var btn = buttons.get_child(i)
@@ -103,7 +103,7 @@ func _on_settings_closing(transition_duration: float):
 
 # 设置页退场完成后，再播放主菜单入场动画
 func _on_settings_closed():
-	buttons.process_mode = Node.PROCESS_MODE_INHERIT
+	buttons.set_process_input(true)
 	buttons.restore_and_play_entrance()
 	_fade_in_decor()
 	set_process_input(true)
