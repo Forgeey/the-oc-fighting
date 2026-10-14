@@ -1,5 +1,7 @@
 extends Control
 
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+
 signal confirmed
 signal cancelled
 
@@ -78,14 +80,12 @@ func _refresh_focus() -> void:
 
 
 func _play_enter() -> void:
-	var panel_position: Vector2 = panel.global_position
 	dim.modulate = Color(1, 1, 1, 0)
 	panel.modulate = Color(1, 1, 1, 0)
-	panel.global_position = panel_position + Vector2(0.0, PANEL_SLIDE_OFFSET)
+	SLIDE_TRANSITION.slide_in(panel, SLIDE_TRANSITION.Direction.UP, 0.0, ANIM_IN, PANEL_SLIDE_OFFSET)
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(dim, "modulate:a", 1.0, ANIM_IN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(panel, "modulate:a", 1.0, ANIM_IN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(panel, "global_position", panel_position, ANIM_IN).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func _dismiss(result: bool) -> void:
@@ -93,10 +93,10 @@ func _dismiss(result: bool) -> void:
 		return
 	_dismissing = true
 	set_process_input(false)
+	SLIDE_TRANSITION.slide_out(panel, SLIDE_TRANSITION.Direction.DOWN, 0.0, ANIM_OUT, PANEL_SLIDE_OFFSET)
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(dim, "modulate:a", 0.0, ANIM_OUT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_property(panel, "modulate:a", 0.0, ANIM_OUT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(panel, "global_position", panel.global_position + Vector2(0.0, PANEL_SLIDE_OFFSET), ANIM_OUT).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	await tween.finished
 	if result:
 		confirmed.emit()

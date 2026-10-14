@@ -1,14 +1,13 @@
 extends Control
 
 const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
 const MENU_EXIT_STAGGER := 0.04
 const MENU_EXIT_DURATION := 0.2
 const MENU_ENTRANCE_STAGGER := 0.06
 const MENU_ENTRANCE_DURATION := 0.25
 const MENU_BUTTON_COUNT := 7
 const SETTINGS_TRANSITION_DURATION := 0.45
-const HINT_SLIDE_OFFSET := 72.0
-const HINT_ANIMATION_DURATION := 0.3
 
 @onready var buttons = $Buttons
 @onready var combat_button = $Buttons/双人对战
@@ -19,17 +18,12 @@ const HINT_ANIMATION_DURATION := 0.3
 @onready var input_hint = $InputHint
 
 var _dialog_active: bool = false
-var _game_title_start_position: Vector2
-var _input_hint_start_position: Vector2
 
 func _ready():
 	# 连接按钮信号
 	combat_button.pressed.connect(_on_combat_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_game.pressed.connect(_on_quit_pressed)
-	_game_title_start_position = game_title.position
-	_input_hint_start_position = input_hint.position
-
 	# 初始化背景模糊材质
 	var blur_shader = load("res://asset/shader/blur.gdshader")
 	var blur_mat = ShaderMaterial.new()
@@ -44,26 +38,14 @@ func _ready():
 
 # Logo 滑入，按键提示从下方滑入
 func _fade_in_decor():
-	var slide_distance: float = _get_game_title_slide_distance()
-	game_title.position = _game_title_start_position - Vector2(slide_distance, 0)
-	var title_tween = create_tween()
-	title_tween.tween_property(game_title, "position", _game_title_start_position, _get_menu_entrance_duration()).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-
-	input_hint.modulate = Color.WHITE
-	input_hint.position = _input_hint_start_position + Vector2(0.0, HINT_SLIDE_OFFSET)
-	var hint_tween = create_tween()
-	hint_tween.tween_property(input_hint, "position", _input_hint_start_position, HINT_ANIMATION_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	SLIDE_TRANSITION.slide_in(game_title, SLIDE_TRANSITION.Direction.RIGHT, 0.0, _get_menu_entrance_duration())
+	input_hint.play_entrance(SLIDE_TRANSITION.Direction.UP)
 
 
 # Logo 滑出，按键提示向下滑出（设置页有自己的说明条，避免两条重叠）
 func _fade_out_decor():
-	var slide_distance: float = _get_game_title_slide_distance()
-	var title_tween = create_tween()
-	title_tween.tween_property(game_title, "position", _game_title_start_position - Vector2(slide_distance, 0), _get_menu_exit_duration()).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-
-	input_hint.modulate = Color.WHITE
-	var hint_tween = create_tween()
-	hint_tween.tween_property(input_hint, "position", _input_hint_start_position + Vector2(0.0, HINT_SLIDE_OFFSET), HINT_ANIMATION_DURATION).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	SLIDE_TRANSITION.slide_out(game_title, SLIDE_TRANSITION.Direction.LEFT, 0.0, _get_menu_exit_duration())
+	input_hint.play_exit(SLIDE_TRANSITION.Direction.DOWN)
 
 
 func _get_menu_entrance_duration() -> float:
@@ -72,10 +54,6 @@ func _get_menu_entrance_duration() -> float:
 
 func _get_menu_exit_duration() -> float:
 	return MENU_EXIT_DURATION + MENU_EXIT_STAGGER * float(MENU_BUTTON_COUNT - 1)
-
-
-func _get_game_title_slide_distance() -> float:
-	return _game_title_start_position.x + float(game_title.size.x) + 16.0
 
 
 # 设置/清除背景模糊强度（被 tween_method 调用）
@@ -91,10 +69,12 @@ func _play_exit_animation():
 	
 	for i in range(MENU_BUTTON_COUNT):
 		var btn = buttons.get_child(i)
-		var tween = create_tween()
-		tween.tween_interval(i * MENU_EXIT_STAGGER)
-		tween.set_parallel(true)
-		tween.tween_property(btn, "position", btn.position + Vector2(300, 0), MENU_EXIT_DURATION).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+		SLIDE_TRANSITION.slide_out(
+			btn,
+			SLIDE_TRANSITION.Direction.RIGHT,
+			i * MENU_EXIT_STAGGER,
+			MENU_EXIT_DURATION
+		)
 	
 	_fade_out_decor()
 	

@@ -1,5 +1,7 @@
 extends Control
 
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+
 var 当前选择框: Node
 
 var 尺寸列表 = [
@@ -113,20 +115,19 @@ func _apply_instant():
 
 # 入场动画：所有按钮从右侧依次划入
 func _play_entrance():
-	# 先把按钮移到右侧，保持原有层级透明度
+	# 保持选择框当前的透明度状态
 	for i in range(7):
 		var btn = 按钮列表[i]
-		var slot = 计数器列表[i]
 		btn.modulate = Color.WHITE
-		btn.position = 位置列表[slot] + Vector2(300, 0)
-	
-	# 用单个Tween + PropertyTweener.set_delay 实现依次划入
-	var tween = create_tween()
-	tween.set_parallel(true)
+
 	for i in range(7):
 		var btn = 按钮列表[i]
-		var slot = 计数器列表[i]
-		tween.tween_property(btn, "position", 位置列表[slot], 入场时长).set_delay(i * 入场间隔).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		SLIDE_TRANSITION.slide_in(
+			btn,
+			SLIDE_TRANSITION.Direction.LEFT,
+			i * 入场间隔,
+			入场时长
+		)
 
 
 # 从设置页返回时：恢复按钮到正确状态并播放入场动画

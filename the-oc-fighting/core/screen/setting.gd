@@ -13,17 +13,14 @@ const RESOLUTIONS: Array[Vector2i] = [
 const VOLUME_STEP := 0.05
 
 const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
 
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
 const DISABLED_ROW_MODULATE := Color(0.45, 0.45, 0.45, 0.55)
-const TITLE_DROP_OFFSET := 120.0
 const TITLE_ENTRANCE_DURATION := 0.3
 const ROW_ENTRANCE_STAGGER := 0.06
 const ROW_ENTRANCE_DURATION := 0.25
-const ROW_SLIDE_OFFSET := 40.0
-const HINT_SLIDE_OFFSET := 72.0
-const HINT_ANIMATION_DURATION := 0.3
 
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
@@ -54,7 +51,6 @@ var _dirty: bool = false
 var _dialog_active: bool = false
 
 var _selected_style: StyleBoxFlat
-var _input_hint_start_position: Vector2
 
 
 func _ready():
@@ -79,29 +75,17 @@ func _play_content_entrance() -> void:
 	await get_tree().process_frame
 
 	var title: Control = $Root/VBox/Title
-	var title_position: Vector2 = title.position
-	title.position = title_position - Vector2(0.0, TITLE_DROP_OFFSET)
-	_input_hint_start_position = $InputHint.position
-	$InputHint.position = _input_hint_start_position + Vector2(0.0, HINT_SLIDE_OFFSET)
-
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(title, "position", title_position, TITLE_ENTRANCE_DURATION) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property($InputHint, "position", _input_hint_start_position, HINT_ANIMATION_DURATION) \
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	SLIDE_TRANSITION.slide_in(title, SLIDE_TRANSITION.Direction.DOWN, 0.0, TITLE_ENTRANCE_DURATION)
+	$InputHint.play_entrance(SLIDE_TRANSITION.Direction.UP)
 
 	for i in range(_rows.size()):
 		var row: Control = _rows[i]
-		var row_position: Vector2 = row.global_position
-		row.global_position = _get_row_offscreen_position(row)
-		tween.tween_property(row, "global_position", row_position, ROW_ENTRANCE_DURATION) \
-			.set_delay(i * ROW_ENTRANCE_STAGGER).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-
-
-func _get_row_offscreen_position(row: Control) -> Vector2:
-	var row_position: Vector2 = row.global_position
-	var slide_distance: float = row_position.x + float(row.size.x) + ROW_SLIDE_OFFSET
-	return row_position - Vector2(slide_distance, 0.0)
+		SLIDE_TRANSITION.slide_in(
+			row,
+			SLIDE_TRANSITION.Direction.RIGHT,
+			i * ROW_ENTRANCE_STAGGER,
+			ROW_ENTRANCE_DURATION
+		)
 
 
 func _start_pulse():
@@ -355,21 +339,22 @@ func _play_exit_animation():
 	var title: Control = $Root/VBox/Title
 	var overlay_fade_duration: float = ROW_ENTRANCE_DURATION + ROW_ENTRANCE_STAGGER * float(_rows.size() - 1)
 	closing.emit(overlay_fade_duration)
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(title, "position", title.position - Vector2(0.0, TITLE_DROP_OFFSET), TITLE_ENTRANCE_DURATION) \
+	SLIDE_TRANSITION.slide_out(title, SLIDE_TRANSITION.Direction.UP, 0.0, TITLE_ENTRANCE_DURATION)
+	var overlay_tween := create_tween()
+	overlay_tween.tween_property($Overlay, "color:a", 0.0, overlay_fade_duration) \
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property($Overlay, "color:a", 0.0, overlay_fade_duration) \
-		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property($InputHint, "position", _input_hint_start_position + Vector2(0.0, HINT_SLIDE_OFFSET), HINT_ANIMATION_DURATION) \
-		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	$InputHint.play_exit(SLIDE_TRANSITION.Direction.DOWN)
 
 	for i in range(_rows.size()):
 		var row: Control = _rows[i]
-		tween.tween_property(row, "global_position", _get_row_offscreen_position(row), ROW_ENTRANCE_DURATION) \
-			.set_delay((_rows.size() - 1 - i) * ROW_ENTRANCE_STAGGER) \
-			.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+		SLIDE_TRANSITION.slide_out(
+			row,
+			SLIDE_TRANSITION.Direction.LEFT,
+			(_rows.size() - 1 - i) * ROW_ENTRANCE_STAGGER,
+			ROW_ENTRANCE_DURATION
+		)
 
-	await tween.finished
+	await overlay_tween.finished
 	closed.emit()
 	queue_free()
 
