@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"front_elbow"
+display_name = "Advancing Elbow"
+description = "Forward advancing kombo starter."
+activation_context = "ground"
+state_tags = PackedStringArray("ground_attack", "combo_starter")
+cancel_target_move_ids = PackedStringArray("axe_kick", "rising_uppercut", "ground_wave", "shadow_kick")
+priority = 8

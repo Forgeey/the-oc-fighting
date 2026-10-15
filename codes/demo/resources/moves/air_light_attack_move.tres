@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://lmj2iwt553vv"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"air_light_attack"
+display_name = "Air Light"
+activation_context = "air"
+state_tags = PackedStringArray("air_attack")
+cancel_target_move_ids = PackedStringArray()
+neutral_available = null
+combo_parent_move_id = null
+move_list_name = null

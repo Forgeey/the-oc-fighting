@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bdie7bja6cnjt"]
+
+[ext_resource type="Script" uid="uid://cuig8klkhqutb" path="res://scripts/stage/core/demo_stage.gd" id="1_stage"]
+[ext_resource type="PackedScene" path="res://scenes/demo_training_stage.tscn" id="2_training_stage"]
+[ext_resource type="PackedScene" path="res://scenes/demo_hud.tscn" id="3_hud"]
+
+[node name="FrayFighterDemo" type="Node2D" unique_id=1935275243]
+script = ExtResource("1_stage")
+
+[node name="TrainingStage" parent="." unique_id=457017443 instance=ExtResource("2_training_stage")]
+
+[node name="HUD" parent="." unique_id=1650256848 instance=ExtResource("3_hud")]

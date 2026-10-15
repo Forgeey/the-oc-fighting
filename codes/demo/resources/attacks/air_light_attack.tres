@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://bv35po3jsxfyu"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"air_light_attack"
+guard_type = 2
+duration_frames = 20
+startup_frames = 4
+active_frames = 5
+damage = 6
+blockstun_frames = 6
+juggle_limit = 5
+knockback = 190.0

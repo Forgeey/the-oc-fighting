@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://crj14pbk7awbo"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"sweep_attack"
+guard_type = 1
+duration_frames = 28
+startup_frames = 6
+active_frames = 5
+block_damage = 2
+hitstun_frames = 13
+blockstun_frames = 8
+juggle_increment = 2
+juggle_limit = 5
+knockdown_type = 1
+knockdown_frames = 26
+untechable_frames = 10
+knockback = 260.0
+lunge_frames = 5
+lunge_speed = 130.0

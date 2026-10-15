@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://ce3mcytvy1jan"]
+
+[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"rising_uppercut"
+duration_frames = 38
+startup_frames = 4
+active_frames = 7
+damage = 18
+block_damage = 5
+hitstun_frames = 20
+blockstun_frames = 11
+juggle_start = 2
+juggle_increment = 3
+juggle_limit = 7
+air_hitstun_decay = 0.82
+gravity_scale_on_hit = 1.12
+knockdown_type = 2
+knockdown_frames = 34
+hard_knockdown = true
+untechable_frames = 34
+knockback = 380.0
+lunge_frames = 8
+lunge_speed = 230.0
+launch_y_velocity = -430.0

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FrayAttackAttribute" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+
+[resource]
+script = ExtResource("1_attack")
+id = &"crouch_heavy"
+guard_type = 1
+duration_frames = 31
+startup_frames = 11
+active_frames = 5
+damage = 11
+block_damage = 2
+hitstun_frames = 22
+blockstun_frames = 13
+hitstop_frames = 5
+juggle_limit = 6
+knockdown_type = 1
+knockdown_frames = 48
+untechable_frames = 14
+knockback = 310.0
+lunge_frames = 4
+lunge_speed = 95.0

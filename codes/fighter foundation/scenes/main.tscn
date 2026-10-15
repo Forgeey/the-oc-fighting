@@ -1,0 +1,64 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/fighter_foundation.tscn" id="1_fighter_scene"]
+[ext_resource type="PackedScene" path="res://scenes/foundation_debug_overlay.tscn" id="2_overlay_scene"]
+[ext_resource type="Script" path="res://scripts/debug/foundation_main_controls.gd" id="3_controls"]
+[ext_resource type="Resource" path="res://resources/environment/default_fighter_environment.tres" id="4_environment"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(1280, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(40, 720)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("3_controls")
+
+[node name="Background" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 1280, 0, 1280, 720, 0, 720)
+color = Color(0.055, 0.07, 0.105, 1)
+
+[node name="GridLine1" type="Line2D" parent="."]
+points = PackedVector2Array(0, 560, 1280, 560)
+width = 2.0
+default_color = Color(0.18, 0.23, 0.32, 1)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(640, 680)
+
+[node name="Visual" type="Polygon2D" parent="Floor"]
+polygon = PackedVector2Array(-640, -30, 640, -30, 640, 30, -640, 30)
+color = Color(0.16, 0.2, 0.28, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(-20, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(1300, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="OpponentMarker2D" type="Marker2D" parent="."]
+position = Vector2(960, 602)
+
+[node name="MarkerVisual" type="Polygon2D" parent="OpponentMarker2D"]
+polygon = PackedVector2Array(0, -18, 18, 0, 0, 18, -18, 0)
+color = Color(1, 0.35, 0.35, 0.9)
+
+[node name="FighterFoundation" parent="." instance=ExtResource("1_fighter_scene")]
+position = Vector2(640, 602)
+environment = ExtResource("4_environment")
+opponent_marker_path = NodePath("../OpponentMarker2D")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="FoundationDebugOverlay" parent="CanvasLayer" instance=ExtResource("2_overlay_scene")]
+fighter_path = NodePath("../../FighterFoundation")
+

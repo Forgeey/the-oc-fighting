@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3 uid="uid://bb5d7ja2om681"]
+
+[ext_resource type="Script" uid="uid://bwrbqaiasdidc" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+[ext_resource type="Resource" uid="uid://d0jc1ttqh13mc" path="res://resources/attacks/ground_wave.tres" id="2_attack"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"ground_wave"
+display_name = "Ground Wave"
+attack_attribute = ExtResource("2_attack")
+state_tags = PackedStringArray("ground_attack", "command_move", "special_move", "projectile")
+cancel_target_move_ids = PackedStringArray()

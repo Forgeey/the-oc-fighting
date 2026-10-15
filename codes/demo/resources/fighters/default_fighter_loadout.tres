@@ -1,0 +1,240 @@
+[gd_resource type="Resource" script_class="DemoFighterLoadout" format=3 uid="uid://r8fctloe3yb0"]
+
+[ext_resource type="Script" uid="uid://d2uek24nknq72" path="res://scripts/resources/fighter/demo_fighter_loadout.gd" id="1_loadout"]
+[ext_resource type="Script" uid="uid://b8amu76piaper" path="res://scripts/resources/moves/demo_move_loadout_entry.gd" id="2_entry"]
+[ext_resource type="Script" uid="uid://gcx4mqyq3vw3" path="res://scripts/resources/moves/demo_move_command.gd" id="3_command"]
+[ext_resource type="Script" uid="uid://oo1vvaakcnfo" path="res://scripts/resources/moves/demo_move_command_step.gd" id="4_step"]
+[ext_resource type="Resource" uid="uid://cw4byu3fm2axl" path="res://resources/moves/light_attack_move.tres" id="10_light"]
+[ext_resource type="Resource" uid="uid://by1435iys7oyd" path="res://resources/moves/heavy_attack_move.tres" id="11_heavy"]
+[ext_resource type="Resource" uid="uid://nqx41pg73801" path="res://resources/moves/special_attack_move.tres" id="12_special"]
+[ext_resource type="Resource" uid="uid://b6uk23dd8l8dr" path="res://resources/moves/sweep_attack_move.tres" id="13_sweep"]
+[ext_resource type="Resource" uid="uid://dp6ai6nc58mrw" path="res://resources/moves/launcher_attack_move.tres" id="14_launcher"]
+[ext_resource type="Resource" uid="uid://lmj2iwt553vv" path="res://resources/moves/air_light_attack_move.tres" id="15_air_light"]
+[ext_resource type="Resource" uid="uid://belhdlsunpys" path="res://resources/moves/air_heavy_attack_move.tres" id="16_air_heavy"]
+[ext_resource type="Resource" uid="uid://bg6fib3c7ku23" path="res://resources/moves/air_special_attack_move.tres" id="17_air_special"]
+[ext_resource type="Resource" uid="uid://bgojqwwf67rd7" path="res://resources/moves/rising_uppercut_move.tres" id="18_uppercut"]
+[ext_resource type="Resource" uid="uid://bb5d7ja2om681" path="res://resources/moves/ground_wave_move.tres" id="19_wave"]
+[ext_resource type="Resource" path="res://resources/moves/straight_punch_move.tres" id="21_straight_punch"]
+[ext_resource type="Resource" path="res://resources/moves/knee_ender_move.tres" id="22_knee_ender"]
+[ext_resource type="Resource" path="res://resources/moves/front_elbow_move.tres" id="23_front_elbow"]
+[ext_resource type="Resource" path="res://resources/moves/axe_kick_move.tres" id="24_axe_kick"]
+[ext_resource type="Resource" path="res://resources/moves/shadow_kick_move.tres" id="25_shadow_kick"]
+
+[sub_resource type="Resource" id="Step_light"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("light")
+
+[sub_resource type="Resource" id="Command_light"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_light")])
+
+[sub_resource type="Resource" id="Entry_light"]
+script = ExtResource("2_entry")
+move = ExtResource("10_light")
+command = SubResource("Command_light")
+
+[sub_resource type="Resource" id="Step_heavy"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("heavy")
+
+[sub_resource type="Resource" id="Command_heavy"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_heavy")])
+
+[sub_resource type="Resource" id="Entry_heavy"]
+script = ExtResource("2_entry")
+move = ExtResource("11_heavy")
+command = SubResource("Command_heavy")
+
+[sub_resource type="Resource" id="Step_special"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("special")
+
+[sub_resource type="Resource" id="Command_special"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_special")])
+
+[sub_resource type="Resource" id="Entry_special"]
+script = ExtResource("2_entry")
+move = ExtResource("12_special")
+command = SubResource("Command_special")
+
+[sub_resource type="Resource" id="Step_sweep"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down", "heavy")
+
+[sub_resource type="Resource" id="Command_sweep"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_sweep")])
+
+[sub_resource type="Resource" id="Entry_sweep"]
+script = ExtResource("2_entry")
+move = ExtResource("13_sweep")
+command = SubResource("Command_sweep")
+
+[sub_resource type="Resource" id="Step_launcher"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down", "special")
+
+[sub_resource type="Resource" id="Command_launcher"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_launcher")])
+
+[sub_resource type="Resource" id="Entry_launcher"]
+script = ExtResource("2_entry")
+move = ExtResource("14_launcher")
+command = SubResource("Command_launcher")
+
+[sub_resource type="Resource" id="Step_air_light"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("light")
+
+[sub_resource type="Resource" id="Command_air_light"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_air_light")])
+
+[sub_resource type="Resource" id="Entry_air_light"]
+script = ExtResource("2_entry")
+move = ExtResource("15_air_light")
+command = SubResource("Command_air_light")
+
+[sub_resource type="Resource" id="Step_air_heavy"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("heavy")
+
+[sub_resource type="Resource" id="Command_air_heavy"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_air_heavy")])
+
+[sub_resource type="Resource" id="Entry_air_heavy"]
+script = ExtResource("2_entry")
+move = ExtResource("16_air_heavy")
+command = SubResource("Command_air_heavy")
+
+[sub_resource type="Resource" id="Step_air_special"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("special")
+
+[sub_resource type="Resource" id="Command_air_special"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_air_special")])
+
+[sub_resource type="Resource" id="Entry_air_special"]
+script = ExtResource("2_entry")
+move = ExtResource("17_air_special")
+command = SubResource("Command_air_special")
+
+[sub_resource type="Resource" id="Step_uppercut_1"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("forward")
+
+[sub_resource type="Resource" id="Step_uppercut_2"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down")
+
+[sub_resource type="Resource" id="Step_uppercut_3"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down", "forward", "light")
+
+[sub_resource type="Resource" id="Command_uppercut"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_uppercut_1"), SubResource("Step_uppercut_2"), SubResource("Step_uppercut_3")])
+
+[sub_resource type="Resource" id="Entry_uppercut"]
+script = ExtResource("2_entry")
+move = ExtResource("18_uppercut")
+command = SubResource("Command_uppercut")
+
+[sub_resource type="Resource" id="Step_wave_1"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down")
+
+[sub_resource type="Resource" id="Step_wave_2"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("down", "forward")
+
+[sub_resource type="Resource" id="Step_wave_3"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("forward", "special")
+
+[sub_resource type="Resource" id="Command_wave"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_wave_1"), SubResource("Step_wave_2"), SubResource("Step_wave_3")])
+
+[sub_resource type="Resource" id="Entry_wave"]
+script = ExtResource("2_entry")
+move = ExtResource("19_wave")
+command = SubResource("Command_wave")
+
+[sub_resource type="Resource" id="Step_straight_punch"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("light")
+
+[sub_resource type="Resource" id="Command_straight_punch"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_straight_punch")])
+
+[sub_resource type="Resource" id="Entry_straight_punch"]
+script = ExtResource("2_entry")
+move = ExtResource("21_straight_punch")
+command = SubResource("Command_straight_punch")
+
+[sub_resource type="Resource" id="Step_knee_ender"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("heavy")
+
+[sub_resource type="Resource" id="Command_knee_ender"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_knee_ender")])
+
+[sub_resource type="Resource" id="Entry_knee_ender"]
+script = ExtResource("2_entry")
+move = ExtResource("22_knee_ender")
+command = SubResource("Command_knee_ender")
+
+[sub_resource type="Resource" id="Step_front_elbow"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("forward", "light")
+
+[sub_resource type="Resource" id="Command_front_elbow"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_front_elbow")])
+
+[sub_resource type="Resource" id="Entry_front_elbow"]
+script = ExtResource("2_entry")
+move = ExtResource("23_front_elbow")
+command = SubResource("Command_front_elbow")
+
+[sub_resource type="Resource" id="Step_axe_kick"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("heavy")
+
+[sub_resource type="Resource" id="Command_axe_kick"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_axe_kick")])
+
+[sub_resource type="Resource" id="Entry_axe_kick"]
+script = ExtResource("2_entry")
+move = ExtResource("24_axe_kick")
+command = SubResource("Command_axe_kick")
+
+[sub_resource type="Resource" id="Step_shadow_kick_1"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("back")
+
+[sub_resource type="Resource" id="Step_shadow_kick_2"]
+script = ExtResource("4_step")
+inputs = PackedStringArray("forward", "heavy")
+
+[sub_resource type="Resource" id="Command_shadow_kick"]
+script = ExtResource("3_command")
+steps = Array[ExtResource("4_step")]([SubResource("Step_shadow_kick_1"), SubResource("Step_shadow_kick_2")])
+
+[sub_resource type="Resource" id="Entry_shadow_kick"]
+script = ExtResource("2_entry")
+move = ExtResource("25_shadow_kick")
+command = SubResource("Command_shadow_kick")
+
+[resource]
+script = ExtResource("1_loadout")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_light"), SubResource("Entry_heavy"), SubResource("Entry_special"), SubResource("Entry_sweep"), SubResource("Entry_launcher"), SubResource("Entry_air_light"), SubResource("Entry_air_heavy"), SubResource("Entry_air_special"), SubResource("Entry_uppercut"), SubResource("Entry_wave"), SubResource("Entry_straight_punch"), SubResource("Entry_knee_ender"), SubResource("Entry_front_elbow"), SubResource("Entry_axe_kick"), SubResource("Entry_shadow_kick")])

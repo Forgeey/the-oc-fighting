@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DemoMoveDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/moves/demo_move_definition.gd" id="1_move"]
+
+[resource]
+script = ExtResource("1_move")
+id = &"straight_punch"
+display_name = "Straight Punch"
+description = "Second punch in the light string."
+activation_context = "ground"
+state_tags = PackedStringArray("ground_attack", "combo_followup", "combo_stage_2")
+cancel_target_move_ids = PackedStringArray("knee_ender", "rising_uppercut", "ground_wave", "shadow_kick")
+neutral_available = false
+combo_parent_move_id = &"light_attack"

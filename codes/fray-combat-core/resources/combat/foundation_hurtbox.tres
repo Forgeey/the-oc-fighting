@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FrayHurtboxAttribute" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/hurtbox_attribute.gd" id="1_hurt"]
+
+[resource]
+script = ExtResource("1_hurt")
+color = Color(0.15, 0.65, 1, 0.34)

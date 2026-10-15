@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://d2pkgqr7dk88p"]
+
+[ext_resource type="Script" uid="uid://c0o74yl43rvbr" path="res://scripts/projectile/combat_core_projectile.gd" id="1_projectile"]
+[ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="2_hit_state"]
+[ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="3_hitbox"]
+[ext_resource type="Resource" uid="uid://d8k1xodsigij" path="res://resources/attacks/combat_arc_bolt.tres" id="4_attack"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_strike"]
+size = Vector2(38, 22)
+
+[node name="CombatCoreProjectile" type="Node2D" unique_id=450368199]
+script = ExtResource("1_projectile")
+
+[node name="Visual" type="Polygon2D" parent="." unique_id=2052261779]
+color = Color(1, 0.62, 0.12, 0.9)
+polygon = PackedVector2Array(-18, -9, 18, -9, 24, 0, 18, 9, -18, 9, -24, 0)
+
+[node name="HitState" type="Node2D" parent="." unique_id=842062332]
+script = ExtResource("2_hit_state")
+active_hitboxes = 0
+metadata/_editor_prop_ptr_source = NodePath("")
+
+[node name="Strike" type="Area2D" parent="HitState" unique_id=1765748368]
+collision_layer = 4
+collision_mask = 8
+script = ExtResource("3_hitbox")
+attribute = ExtResource("4_attack")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitState/Strike" unique_id=905299298]
+shape = SubResource("RectangleShape2D_strike")
+debug_color = Color(1, 0.55, 0.1, 0.5)

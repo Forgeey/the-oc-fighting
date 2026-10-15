@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="1_hit_state"]
+[ext_resource type="Script" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="2_hitbox"]
+[ext_resource type="Resource" path="res://resources/attacks/straight_punch.tres" id="3_attack"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_strike"]
+size = Vector2(48, 24)
+
+[node name="straight_punch" type="Node2D"]
+script = ExtResource("1_hit_state")
+active_hitboxes = 0
+metadata/_editor_prop_ptr_source = NodePath("")
+
+[node name="StraightStrike" type="Area2D" parent="."]
+position = Vector2(60, -54)
+collision_layer = 2
+collision_mask = 2
+script = ExtResource("2_hitbox")
+attribute = ExtResource("3_attack")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StraightStrike"]
+shape = SubResource("RectangleShape2D_strike")
+debug_color = Color(1, 0.18, 0.12, 0.45)

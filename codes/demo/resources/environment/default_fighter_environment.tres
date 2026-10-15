@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="DemoFighterEnvironment" format=3 uid="uid://vvqa04q8xb5j"]
+
+[ext_resource type="Script" uid="uid://bqtenq85kcfr3" path="res://scripts/resources/fighter/demo_fighter_environment.gd" id="1_environment"]
+
+[resource]
+script = ExtResource("1_environment")

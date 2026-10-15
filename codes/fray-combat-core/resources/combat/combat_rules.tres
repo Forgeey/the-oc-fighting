@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CombatRuleSet" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/combat_rule_set.gd" id="1_rules"]
+
+[resource]
+script = ExtResource("1_rules")
+max_health = 100
+max_meter = 3000
+combo_decay = 0.9
+minimum_damage_scale = 0.2
+repeated_move_scale = 0.9
+combo_timeout_frames = 90
+gameplay_fps = 60
