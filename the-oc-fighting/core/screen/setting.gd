@@ -1,6 +1,7 @@
 extends Control
 
 signal closed
+signal opening(transition_duration: float)
 signal closing(transition_duration: float)
 
 const RESOLUTIONS: Array[Vector2i] = [
@@ -18,6 +19,7 @@ const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
 const DISABLED_ROW_MODULATE := Color(0.45, 0.45, 0.45, 0.55)
+const OVERLAY_ENTRANCE_DURATION := 0.25
 const TITLE_ENTRANCE_DURATION := 0.3
 const ROW_ENTRANCE_STAGGER := 0.06
 const ROW_ENTRANCE_DURATION := 0.25
@@ -67,7 +69,8 @@ func _ready():
 	# 入场动画
 	modulate = Color(1, 1, 1, 0)
 	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), OVERLAY_ENTRANCE_DURATION).set_ease(Tween.EASE_OUT)
+	opening.emit(OVERLAY_ENTRANCE_DURATION)
 	_play_content_entrance()
 
 

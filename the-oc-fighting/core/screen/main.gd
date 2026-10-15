@@ -62,7 +62,6 @@ func _set_blur(value: float):
 		background.material.set_shader_parameter("blur_strength", value)
 
 
-# 主菜单退出动画：按钮依次划出淡出 → Logo淡出 → 叠加设置页面
 func _play_exit_animation():
 	set_process_input(false)
 	buttons.set_process_input(false)
@@ -78,9 +77,6 @@ func _play_exit_animation():
 	
 	_fade_out_decor()
 	
-	var bg_tween = create_tween()
-	bg_tween.tween_method(_set_blur, 0.0, 0.8, SETTINGS_TRANSITION_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	
 	await get_tree().create_timer(SETTINGS_TRANSITION_DURATION).timeout
 	
 	_load_settings_overlay()
@@ -89,10 +85,15 @@ func _play_exit_animation():
 # 加载设置页面并叠加在主页面上方
 func _load_settings_overlay():
 	var setting_scene = load("res://core/screen/setting.tscn").instantiate()
-	get_tree().root.add_child(setting_scene)
-	# 监听设置页关闭信号
+	setting_scene.opening.connect(_on_settings_opening)
 	setting_scene.closed.connect(_on_settings_closed)
 	setting_scene.closing.connect(_on_settings_closing)
+	get_tree().root.add_child(setting_scene)
+
+
+func _on_settings_opening(transition_duration: float):
+	var bg_tween = create_tween()
+	bg_tween.tween_method(_set_blur, 0.0, 0.8, transition_duration).set_ease(Tween.EASE_OUT)
 
 
 # 设置页开始关闭：与遮罩淡出同步恢复背景清晰度
