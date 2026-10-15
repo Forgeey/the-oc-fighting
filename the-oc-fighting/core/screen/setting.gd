@@ -1,6 +1,8 @@
 extends Control
 
 signal closed
+signal opening(transition_duration: float)
+signal closing(transition_duration: float)
 
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
@@ -12,10 +14,15 @@ const RESOLUTIONS: Array[Vector2i] = [
 const VOLUME_STEP := 0.05
 
 const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
 
 const PULSE_ALPHA_MIN := 0.12
 const PULSE_DURATION := 0.3
 const DISABLED_ROW_MODULATE := Color(0.45, 0.45, 0.45, 0.55)
+const OVERLAY_ENTRANCE_DURATION := 0.25
+const TITLE_ENTRANCE_DURATION := 0.3
+const ROW_ENTRANCE_STAGGER := 0.06
+const ROW_ENTRANCE_DURATION := 0.25
 
 # 未选中 / 选中状态下的行样式（在 setting.tscn 里配好）
 @export var row_style: StyleBox
@@ -62,7 +69,26 @@ func _ready():
 	# 入场动画
 	modulate = Color(1, 1, 1, 0)
 	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "modulate", Color(1, 1, 1, 1), OVERLAY_ENTRANCE_DURATION).set_ease(Tween.EASE_OUT)
+	opening.emit(OVERLAY_ENTRANCE_DURATION)
+	_play_content_entrance()
+
+
+func _play_content_entrance() -> void:
+	await get_tree().process_frame
+
+	var title: Control = $Root/VBox/Title
+	SLIDE_TRANSITION.slide_in(title, SLIDE_TRANSITION.Direction.DOWN, 0.0, TITLE_ENTRANCE_DURATION)
+	$InputHint.play_entrance(SLIDE_TRANSITION.Direction.UP)
+
+	for i in range(_rows.size()):
+		var row: Control = _rows[i]
+		SLIDE_TRANSITION.slide_in(
+			row,
+			SLIDE_TRANSITION.Direction.RIGHT,
+			i * ROW_ENTRANCE_STAGGER,
+			ROW_ENTRANCE_DURATION
+		)
 
 
 func _start_pulse():
@@ -312,11 +338,26 @@ func _play_exit_animation():
 	_closing = true
 	set_process_input(false)
 
-	# 淡出
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color(1, 1, 1, 0), 0.2).set_ease(Tween.EASE_IN)
+	# 内容反向滑出：标题向上，设置项向左
+	var title: Control = $Root/VBox/Title
+	var overlay_fade_duration: float = ROW_ENTRANCE_DURATION + ROW_ENTRANCE_STAGGER * float(_rows.size() - 1)
+	closing.emit(overlay_fade_duration)
+	SLIDE_TRANSITION.slide_out(title, SLIDE_TRANSITION.Direction.UP, 0.0, TITLE_ENTRANCE_DURATION)
+	var overlay_tween := create_tween()
+	overlay_tween.tween_property($Overlay, "color:a", 0.0, overlay_fade_duration) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+	$InputHint.play_exit(SLIDE_TRANSITION.Direction.DOWN)
 
-	await tween.finished
+	for i in range(_rows.size()):
+		var row: Control = _rows[i]
+		SLIDE_TRANSITION.slide_out(
+			row,
+			SLIDE_TRANSITION.Direction.LEFT,
+			(_rows.size() - 1 - i) * ROW_ENTRANCE_STAGGER,
+			ROW_ENTRANCE_DURATION
+		)
+
+	await overlay_tween.finished
 	closed.emit()
 	queue_free()
 

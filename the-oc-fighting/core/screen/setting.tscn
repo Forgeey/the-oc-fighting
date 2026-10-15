@@ -9,10 +9,10 @@ content_margin_top = 10.0
 content_margin_right = 24.0
 content_margin_bottom = 10.0
 bg_color = Color(1, 1, 1, 0.0588235)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_selected"]
 content_margin_left = 24.0
@@ -20,10 +20,10 @@ content_margin_top = 10.0
 content_margin_right = 24.0
 content_margin_bottom = 10.0
 bg_color = Color(1, 1, 1, 0.28)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [node name="Setting" type="Control" unique_id=316146726]
 layout_mode = 3

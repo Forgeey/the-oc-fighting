@@ -1,12 +1,13 @@
 extends Control
 
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+
 signal confirmed
 signal cancelled
 
-const ENTER_SCALE := Vector2(0.9, 0.9)
 const ANIM_IN := 0.2
-const ANIM_ENTER_SCALE := 0.25
 const ANIM_OUT := 0.12
+const PANEL_SLIDE_OFFSET := 56.0
 
 @export var title_text: String = "提示":
 	set(v):
@@ -37,11 +38,11 @@ var _dismissing: bool = false
 
 
 func _ready():
-	panel.resized.connect(func(): panel.pivot_offset = panel.size * 0.5)
 	confirm_btn.pressed.connect(func(): _dismiss(true))
 	cancel_btn.pressed.connect(func(): _dismiss(false))
 	_apply_texts()
 	_refresh_focus()
+	get_viewport().size_changed.connect(_center_panel)
 	_play_enter.call_deferred()
 
 
@@ -79,15 +80,26 @@ func _refresh_focus() -> void:
 	cancel_btn.modulate = Color(1, 1, 1, 1) if _focus == 1 else Color(1, 1, 1, 0.55)
 
 
+func _center_panel() -> void:
+	panel.reset_size()
+	panel.anchor_left = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -panel.size.x * 0.5
+	panel.offset_top = -panel.size.y * 0.5
+	panel.offset_right = panel.size.x * 0.5
+	panel.offset_bottom = panel.size.y * 0.5
+
+
 func _play_enter() -> void:
-	panel.pivot_offset = panel.size * 0.5
+	_center_panel()
 	dim.modulate = Color(1, 1, 1, 0)
 	panel.modulate = Color(1, 1, 1, 0)
-	panel.scale = ENTER_SCALE
+	SLIDE_TRANSITION.slide_in(panel, SLIDE_TRANSITION.Direction.UP, 0.0, ANIM_IN, PANEL_SLIDE_OFFSET)
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(dim, "modulate:a", 1.0, ANIM_IN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(panel, "modulate:a", 1.0, ANIM_IN).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(panel, "scale", Vector2.ONE, ANIM_ENTER_SCALE).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _dismiss(result: bool) -> void:
@@ -95,10 +107,10 @@ func _dismiss(result: bool) -> void:
 		return
 	_dismissing = true
 	set_process_input(false)
+	SLIDE_TRANSITION.slide_out(panel, SLIDE_TRANSITION.Direction.DOWN, 0.0, ANIM_OUT, PANEL_SLIDE_OFFSET)
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(dim, "modulate:a", 0.0, ANIM_OUT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_property(panel, "modulate:a", 0.0, ANIM_OUT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(panel, "scale", ENTER_SCALE, ANIM_OUT).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tween.finished
 	if result:
 		confirmed.emit()

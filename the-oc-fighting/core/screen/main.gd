@@ -1,9 +1,13 @@
 extends Control
 
-# 背景在设置页打开时的放大倍率（沿用改造前 0.72 / 0.65 的观感）
-const BG_ZOOM := 1.108
-
 const CONFIRM_DIALOG_SCENE := preload("res://core/ui/confirm_dialog.tscn")
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+const MENU_EXIT_STAGGER := 0.04
+const MENU_EXIT_DURATION := 0.2
+const MENU_ENTRANCE_STAGGER := 0.06
+const MENU_ENTRANCE_DURATION := 0.25
+const MENU_BUTTON_COUNT := 7
+const SETTINGS_TRANSITION_DURATION := 0.45
 
 @onready var buttons = $Buttons
 @onready var combat_button = $Buttons/双人对战
@@ -20,11 +24,6 @@ func _ready():
 	combat_button.pressed.connect(_on_combat_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_game.pressed.connect(_on_quit_pressed)
-
-	# 背景铺满整个视口，缩放动画始终绕视口中心
-	background.resized.connect(_update_bg_pivot)
-	_update_bg_pivot()
-
 	# 初始化背景模糊材质
 	var blur_shader = load("res://asset/shader/blur.gdshader")
 	var blur_mat = ShaderMaterial.new()
@@ -32,28 +31,29 @@ func _ready():
 	blur_mat.set_shader_parameter("blur_strength", 0.0)
 	background.material = blur_mat
 
-	# Logo 与按键说明入场淡入（配合按钮入场动画）
+	# Logo 与按键提示入场（配合按钮入场动画）
 	_fade_in_decor()
 
 
-# 窗口尺寸变化时把缩放中心重新对到背景正中
-func _update_bg_pivot():
-	background.pivot_offset = background.size * 0.5
 
-
-# Logo 与按键说明一起淡入
+# Logo 滑入，按键提示从下方滑入
 func _fade_in_decor():
-	for node in [game_title, input_hint]:
-		node.modulate = Color(1, 1, 1, 0)
-		var tween = create_tween()
-		tween.tween_property(node, "modulate", Color(1, 1, 1, 1), 0.4).set_delay(0.15).set_ease(Tween.EASE_OUT)
+	SLIDE_TRANSITION.slide_in(game_title, SLIDE_TRANSITION.Direction.RIGHT, 0.0, _get_menu_entrance_duration())
+	input_hint.play_entrance(SLIDE_TRANSITION.Direction.UP)
 
 
-# Logo 与按键说明一起淡出（设置页有自己的说明条，避免两条重叠）
+# Logo 滑出，按键提示向下滑出（设置页有自己的说明条，避免两条重叠）
 func _fade_out_decor():
-	for node in [game_title, input_hint]:
-		var tween = create_tween()
-		tween.tween_property(node, "modulate", Color(1, 1, 1, 0), 0.3).set_delay(0.1).set_ease(Tween.EASE_IN)
+	SLIDE_TRANSITION.slide_out(game_title, SLIDE_TRANSITION.Direction.LEFT, 0.0, _get_menu_exit_duration())
+	input_hint.play_exit(SLIDE_TRANSITION.Direction.DOWN)
+
+
+func _get_menu_entrance_duration() -> float:
+	return MENU_ENTRANCE_DURATION + MENU_ENTRANCE_STAGGER * float(MENU_BUTTON_COUNT - 1)
+
+
+func _get_menu_exit_duration() -> float:
+	return MENU_EXIT_DURATION + MENU_EXIT_STAGGER * float(MENU_BUTTON_COUNT - 1)
 
 
 # 设置/清除背景模糊强度（被 tween_method 调用）
@@ -62,27 +62,22 @@ func _set_blur(value: float):
 		background.material.set_shader_parameter("blur_strength", value)
 
 
-# 主菜单退出动画：按钮依次划出淡出 → Logo淡出 → 叠加设置页面
 func _play_exit_animation():
 	set_process_input(false)
-	buttons.process_mode = Node.PROCESS_MODE_DISABLED
+	buttons.set_process_input(false)
 	
-	for i in range(7):
+	for i in range(MENU_BUTTON_COUNT):
 		var btn = buttons.get_child(i)
-		var tween = create_tween()
-		tween.tween_interval(i * 0.06)
-		tween.set_parallel(true)
-		tween.tween_property(btn, "position", btn.position + Vector2(300, 0), 0.2).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-		tween.tween_property(btn, "modulate", Color(1, 1, 1, 0), 0.18).set_ease(Tween.EASE_IN)
+		SLIDE_TRANSITION.slide_out(
+			btn,
+			SLIDE_TRANSITION.Direction.RIGHT,
+			i * MENU_EXIT_STAGGER,
+			MENU_EXIT_DURATION
+		)
 	
 	_fade_out_decor()
 	
-	var bg_tween = create_tween()
-	bg_tween.set_parallel(true)
-	bg_tween.tween_property(background, "scale", Vector2(BG_ZOOM, BG_ZOOM), 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	bg_tween.tween_method(_set_blur, 0.0, 0.8, 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	
-	await get_tree().create_timer(0.7).timeout
+	await get_tree().create_timer(SETTINGS_TRANSITION_DURATION).timeout
 	
 	_load_settings_overlay()
 
@@ -90,23 +85,28 @@ func _play_exit_animation():
 # 加载设置页面并叠加在主页面上方
 func _load_settings_overlay():
 	var setting_scene = load("res://core/screen/setting.tscn").instantiate()
-	get_tree().root.add_child(setting_scene)
-	# 监听设置页关闭信号
+	setting_scene.opening.connect(_on_settings_opening)
 	setting_scene.closed.connect(_on_settings_closed)
+	setting_scene.closing.connect(_on_settings_closing)
+	get_tree().root.add_child(setting_scene)
 
 
-# 设置页关闭：恢复主菜单
-func _on_settings_closed():
-	buttons.process_mode = Node.PROCESS_MODE_INHERIT
-	buttons.restore_and_play_entrance()
-	
-	_fade_in_decor()
-	
+func _on_settings_opening(transition_duration: float):
 	var bg_tween = create_tween()
-	bg_tween.set_parallel(true)
-	bg_tween.tween_property(background, "scale", Vector2.ONE, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	bg_tween.tween_method(_set_blur, 0.8, 0.0, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	
+	bg_tween.tween_method(_set_blur, 0.0, 0.8, transition_duration).set_ease(Tween.EASE_OUT)
+
+
+# 设置页开始关闭：与遮罩淡出同步恢复背景清晰度
+func _on_settings_closing(transition_duration: float):
+	var bg_tween = create_tween()
+	bg_tween.tween_method(_set_blur, 0.8, 0.0, transition_duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+
+
+# 设置页退场完成后，再播放主菜单入场动画
+func _on_settings_closed():
+	buttons.set_process_input(true)
+	buttons.restore_and_play_entrance()
+	_fade_in_decor()
 	set_process_input(true)
 
 func _on_combat_pressed():

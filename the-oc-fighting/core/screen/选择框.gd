@@ -1,5 +1,7 @@
 extends Control
 
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+
 var 当前选择框: Node
 
 var 尺寸列表 = [
@@ -38,6 +40,9 @@ var 计数器列表: Array    # 每个按钮的槽位索引 (0-6)
 var 动画时长: float = 0.2  # 所有按钮统一动画时长（秒）
 var _tween: Tween        # 当前运行的动画
 
+const 入场间隔 := 0.06
+const 入场时长 := 0.25
+
 
 func _ready() -> void:
 	# 收集按钮节点
@@ -53,7 +58,7 @@ func _ready() -> void:
 	# 设置初始状态
 	_apply_instant()
 	
-	# 入场动画：按钮从右侧依次划入淡入
+	# 入场动画：按钮从右侧依次划入
 	_play_entrance()
 
 
@@ -108,23 +113,21 @@ func _apply_instant():
 	_更新当前选择框()
 
 
-# 入场动画：所有按钮从右侧依次划入淡入
+# 入场动画：所有按钮从右侧依次划入
 func _play_entrance():
-	# 先把按钮移到右侧并透明（覆盖 _apply_instant 的位置）
+	# 保持选择框当前的透明度状态
 	for i in range(7):
 		var btn = 按钮列表[i]
-		var slot = 计数器列表[i]
-		btn.modulate = Color(1, 1, 1, 0)
-		btn.position = 位置列表[slot] + Vector2(300, 0)
-	
-	# 用单个Tween + PropertyTweener.set_delay 实现依次划入
-	var tween = create_tween()
-	tween.set_parallel(true)
+		btn.modulate = Color.WHITE
+
 	for i in range(7):
 		var btn = 按钮列表[i]
-		var slot = 计数器列表[i]
-		tween.tween_property(btn, "position", 位置列表[slot], 0.25).set_delay(i * 0.06).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-		tween.tween_property(btn, "modulate", Color(1, 1, 1, 1), 0.25).set_delay(i * 0.06).set_ease(Tween.EASE_OUT)
+		SLIDE_TRANSITION.slide_in(
+			btn,
+			SLIDE_TRANSITION.Direction.LEFT,
+			i * 入场间隔,
+			入场时长
+		)
 
 
 # 从设置页返回时：恢复按钮到正确状态并播放入场动画

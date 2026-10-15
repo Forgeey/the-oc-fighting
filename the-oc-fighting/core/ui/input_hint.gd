@@ -1,6 +1,10 @@
 @tool
 extends HBoxContainer
 
+const SLIDE_TRANSITION := preload("res://core/ui/slide_transition.gd")
+const SLIDE_DISTANCE := 72.0
+const SLIDE_DURATION := 0.3
+
 ## 按键操作说明条（主菜单、设置页等界面共用）。
 ##
 ## hints 每一项的格式为 "按键|说明"，例如 "W / S|选择"。
@@ -33,6 +37,14 @@ const ENTRY_SEPARATION := 8
 
 func _ready() -> void:
 	_rebuild()
+
+
+func play_entrance(direction: int = SLIDE_TRANSITION.Direction.UP, delay: float = 0.0) -> Tween:
+	return SLIDE_TRANSITION.slide_in(self, direction, delay, SLIDE_DURATION, SLIDE_DISTANCE)
+
+
+func play_exit(direction: int = SLIDE_TRANSITION.Direction.DOWN, delay: float = 0.0) -> Tween:
+	return SLIDE_TRANSITION.slide_out(self, direction, delay, SLIDE_DURATION, SLIDE_DISTANCE)
 
 
 func _rebuild() -> void:
