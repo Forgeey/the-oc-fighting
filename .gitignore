@@ -1,3 +1,7 @@
 .workbuddy
 .vscode
 .output
+
+# Godot 4+ specific ignores (the-oc-fighting project)
+/the-oc-fighting/**/.godot/
+/the-oc-fighting/android/

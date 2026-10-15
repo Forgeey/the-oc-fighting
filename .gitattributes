@@ -1,0 +1,2 @@
+# Normalize EOL for text files in the Godot project.
+/the-oc-fighting/** text=auto eol=lf
