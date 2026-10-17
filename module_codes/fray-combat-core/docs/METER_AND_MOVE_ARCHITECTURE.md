@@ -4,7 +4,7 @@
 - 适用项目：`codes/fray-combat-core`
 - 状态：设计建议，尚未替代当前固定 Demo 实现
 - 日期：2026-08-09
-- 相关实现：`scripts/fighter/`、`scripts/input/`、`addons/fray/src/hit/attack_attribute.gd`
+- 相关实现：`scripts/fighter/`、`scripts/input/`、`scripts/resources/combat/combat_attack_attribute.gd`
 
 ---
 
@@ -69,7 +69,7 @@ scripts/fighter/combat_core_fighter.gd:417-439
 
 ### 2.2 特殊技强化已有原型
 
-`FrayAttackAttribute` 当前已经拥有：
+`CombatAttackAttribute` 当前已经拥有：
 
 ```gdscript
 amplify_target_state
@@ -81,7 +81,7 @@ amplify_meter_cost
 位置：
 
 ```text
-addons/fray/src/hit/attack_attribute.gd:42-52
+scripts/resources/combat/combat_attack_attribute.gd:42-52
 ```
 
 当前普通波强化流程为：
@@ -108,7 +108,7 @@ scripts/fighter/states/combat_core_projectile_attack_state.gd:33-90
 
 ### 2.3 数据化取消已经存在
 
-`FrayAttackAttribute` 当前已经提供：
+`CombatAttackAttribute` 当前已经提供：
 
 ```gdscript
 cancel_start_frame
@@ -129,7 +129,7 @@ ON_HIT_OR_BLOCK
 位置：
 
 ```text
-addons/fray/src/hit/attack_attribute.gd:66-87
+scripts/resources/combat/combat_attack_attribute.gd:66-87
 ```
 
 `FighterStateMachineBuilder` 会读取攻击资源并生成 Fray press/sequence transition，当前的 `J → K → L` 和普通波路线就是这个机制的应用。
@@ -142,7 +142,7 @@ scripts/fighter/fighter_state_machine_builder.gd:163-227
 
 ### 2.4 当前基础攻击状态已经遵循 Fray-first
 
-`FoundationAttackState` 只保存攻击状态 ID，并从实际 `FrayHitState2D` 的 strike 读取 `FrayAttackAttribute`。
+`FoundationAttackState` 只保存攻击状态 ID，并从实际 `FrayHitState2D` 的 strike 读取 `CombatAttackAttribute`。
 
 它不负责保存 damage、hitstun 或 knockback 等独立数值。
 
@@ -318,9 +318,9 @@ launch
 meter gain
 ```
 
-这些字段仍然只来自实际 strike 上的 `FrayAttackAttribute`。
+这些字段仍然只来自实际 strike 上的 `CombatAttackAttribute`。
 
-### 4.3 `FrayAttackAttribute`
+### 4.3 `CombatAttackAttribute`
 
 实际攻击属性继续保持唯一来源：
 
@@ -329,7 +329,7 @@ CombatMoveDefinition
         ↓ 装配
 FrayHitState2D
         ↓ 实际 strike.attribute
-FrayAttackAttribute
+CombatAttackAttribute
 ```
 
 `CombatCoreMatch` 仍然只读取：
@@ -363,7 +363,7 @@ extends Resource
 @export var end_frame: int = -1
 
 ## 该路线所需的命中/格挡接触条件。
-@export var contact_requirement: int = FrayAttackAttribute.CancelRequirement.ALWAYS
+@export var contact_requirement: int = CombatAttackAttribute.CancelRequirement.ALWAYS
 
 ## 该路线的气条成本；0 表示免费路线。
 @export var meter_cost: int = 0
@@ -375,7 +375,7 @@ extends Resource
 @export var max_uses_per_combo: int = -1
 ```
 
-然后在 `FrayAttackAttribute` 中增加：
+然后在 `CombatAttackAttribute` 中增加：
 
 ```gdscript
 @export var cancel_routes: Array[FrayCancelRoute] = []
@@ -590,8 +590,9 @@ special_amplify_count
 
 - Fray 状态机；
 - 运动推进；
-- `FrayBufferedInputAdvancer` 的输入消费；
-- 输入缓冲时钟。
+- `FrayBufferedInputAdvancer` 的输入消费。
+
+原版 Fray 的缓冲时间戳使用 `Time.get_ticks_msec()`；暂停消费不会冻结缓冲年龄，输入仍会按 `max_buffer_time` 过期。
 
 相关实现：
 
@@ -699,7 +700,7 @@ FrayState / FrayHitState2D
         ↓
 实际 strike.attribute
         ↓
-FrayAttackAttribute
+CombatAttackAttribute
         ↓
 CombatCoreMatch
         ├── damage
@@ -724,7 +725,7 @@ FrayCancelRoute
 
 - 输入使用 Fray；
 - 状态拓扑使用 Fray；
-- 攻击和受击数值只来自 `FrayAttackAttribute`；
+- 攻击和受击数值只来自 `CombatAttackAttribute`；
 - 状态内行为由 `FrayState` 负责；
 - 跨角色的通用规则放在资源或 Builder；
 - 角色特殊行为保持薄层；
@@ -757,4 +758,4 @@ FrayCancelRoute
 
 > **统一气条驱动的多用途进攻资源系统。**
 
-其中强化特殊技和绿冲取消都是 `FrayAttackAttribute` 声明的、可由 Fray transition 触发的付费路线；区别只在于目标状态、时间轴策略、接触条件和资源成本。
+其中强化特殊技和绿冲取消都是 `CombatAttackAttribute` 声明的、可由 Fray transition 触发的付费路线；区别只在于目标状态、时间轴策略、接触条件和资源成本。

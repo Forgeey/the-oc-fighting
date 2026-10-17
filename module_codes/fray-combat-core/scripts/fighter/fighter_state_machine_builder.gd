@@ -102,7 +102,13 @@ func build_root(context: Dictionary) -> FrayCompoundState:
 	_register_reaction_transitions(builder)
 	_register_lock_transition(builder)
 	_register_global_transition_rules(builder)
-	builder.start_at(&"idle")
+	# 当前 Fray 版本不会在 root 初始化时自动进入 atomic start state；
+	# 通过一次自动 transition 让 idle 的 _enter_impl() 按正常路径执行。
+	builder.transition(&"_bootstrap", &"idle", {
+		"auto_advance": true,
+		"switch_mode": SWITCH_IMMEDIATE,
+	})
+	builder.start_at(&"_bootstrap")
 	return builder.build()
 
 
@@ -113,6 +119,7 @@ func _add_states(
 	projectile_state: CombatCoreProjectileAttackState,
 	enhanced_projectile_state: CombatCoreProjectileAttackState
 ) -> void:
+	builder.add_state(&"_bootstrap", FrayState.new())
 	builder.add_state(&"idle", FoundationIdleState.new())
 	builder.add_state(&"walk_forward", FoundationWalkState.new())
 	builder.add_state(&"walk_back", FoundationWalkState.new())
@@ -150,7 +157,7 @@ func _add_states(
 
 ## 创建近战攻击状态，并从攻击资源的序列取消目标推导接触失败时需要清理的 Fray sequence。
 func _create_attack_state(fighter, state_id: StringName, airborne: bool) -> FoundationAttackState:
-	var attribute := fighter.get_attack_attribute(state_id) as FrayAttackAttribute
+	var attribute := fighter.get_attack_attribute(state_id) as CombatAttackAttribute
 	var discard_sequences := PackedStringArray()
 	if attribute != null and attribute.cancel_requires_contact():
 		for target_value in attribute.cancel_target_states:
@@ -163,7 +170,7 @@ func _create_attack_state(fighter, state_id: StringName, airborne: bool) -> Foun
 ## 校验每条资源取消目标都能映射到现有 Fray press/sequence 转移及实际目标攻击资源。
 func _validate_cancel_rules(fighter) -> bool:
 	for source_state in fighter.get_attack_state_ids():
-		var attribute := fighter.get_attack_attribute(source_state) as FrayAttackAttribute
+		var attribute := fighter.get_attack_attribute(source_state) as CombatAttackAttribute
 		if attribute == null:
 			continue
 		for target_value in attribute.cancel_target_states:
@@ -198,7 +205,7 @@ func _register_cancel_conditions(conditions: Dictionary, fighter) -> void:
 ## 为攻击资源声明的目标生成 Fray local transition；序列取消优先于普通按键取消。
 func _register_data_driven_cancel_transitions(builder, fighter) -> void:
 	for source_state in fighter.get_attack_state_ids():
-		var attribute := fighter.get_attack_attribute(source_state) as FrayAttackAttribute
+		var attribute := fighter.get_attack_attribute(source_state) as CombatAttackAttribute
 		if attribute == null:
 			continue
 		for target_value in attribute.cancel_target_states:

@@ -8,9 +8,9 @@ extends FoundationFighter
 signal combat_contact_requested(defender, hurt_hitbox: FrayHitbox2D, strike_hitbox: FrayHitbox2D)
 signal health_changed(fighter, old_value: int, new_value: int, reason: StringName, attribute_id: StringName)
 signal meter_changed(fighter, old_value: int, new_value: int, reason: StringName, attribute_id: StringName)
-signal knocked_out(fighter, attribute: FrayAttackAttribute)
+signal knocked_out(fighter, attribute: CombatAttackAttribute)
 signal animation_event(fighter, event_name: StringName, animation_name: StringName, play_position: float)
-signal projectile_requested(fighter, attribute: FrayAttackAttribute)
+signal projectile_requested(fighter, attribute: CombatAttackAttribute)
 
 const ATTACK_STATES := [&"stand_light", &"stand_medium", &"stand_heavy", &"stand_combo_medium", &"crouch_light", &"crouch_medium", &"crouch_heavy", &"air_light", &"air_medium", &"air_heavy"]
 const AIR_STATES := [&"jump", &"double_jump", &"fall", &"air_light", &"air_medium", &"air_heavy", &"air_hitstun"]
@@ -31,11 +31,11 @@ const INITIAL_METER: int = 1000
 ## 本角色使用的共享战斗规则。
 @export var combat_rules: CombatRuleSet
 
-## 普通波施放状态和投射物 strike 共用的唯一 FrayAttackAttribute。
-@export var projectile_attack_attribute: FrayAttackAttribute
+## 普通波施放状态和投射物 strike 共用的唯一 CombatAttackAttribute。
+@export var projectile_attack_attribute: CombatAttackAttribute
 
-## 强化波施放状态和投射物 strike 共用的唯一 FrayAttackAttribute。
-@export var enhanced_projectile_attack_attribute: FrayAttackAttribute
+## 强化波施放状态和投射物 strike 共用的唯一 CombatAttackAttribute。
+@export var enhanced_projectile_attack_attribute: CombatAttackAttribute
 
 ## 为 true 时只禁用 Fray 玩家输入；中立、受击、击退、倒地、起身与 KO 状态仍正常运行。
 @export var training_dummy: bool = false
@@ -219,9 +219,9 @@ func _apply_pushbox_pose(state_name: StringName) -> void:
 
 
 ## 校验场景装配的普通波或强化波资源；速度也必须由同一攻击属性提供。
-func _validate_projectile_attribute(state_id: StringName, attribute: FrayAttackAttribute) -> bool:
+func _validate_projectile_attribute(state_id: StringName, attribute: CombatAttackAttribute) -> bool:
 	if attribute == null or not attribute.is_projectile:
-		push_error("CombatCoreFighter %s 的 %s 缺少有效投射物 FrayAttackAttribute。" % [fighter_id, state_id])
+		push_error("CombatCoreFighter %s 的 %s 缺少有效投射物 CombatAttackAttribute。" % [fighter_id, state_id])
 		return false
 	if attribute.projectile_spawn_frame > attribute.projectile_cast_duration_frames:
 		push_error("CombatCoreFighter %s 的 %s 生成帧晚于施放动作结束帧。" % [fighter_id, state_id])
@@ -266,7 +266,7 @@ func _validate_projectile_amplify() -> bool:
 
 
 ## 返回攻击资源是否为 fighter 场景实际装配的普通波或强化波资源。
-func _is_configured_projectile_attribute(attribute: FrayAttackAttribute) -> bool:
+func _is_configured_projectile_attribute(attribute: CombatAttackAttribute) -> bool:
 	return (
 		attribute != null
 		and attribute.is_projectile
@@ -280,7 +280,7 @@ func get_combat_id() -> StringName:
 
 
 ## 按施放状态返回普通波或强化波与投射物 strike 共用的唯一攻击资源。
-func get_projectile_attack_attribute(state_id: StringName = &"projectile") -> FrayAttackAttribute:
+func get_projectile_attack_attribute(state_id: StringName = &"projectile") -> CombatAttackAttribute:
 	match state_id:
 		&"projectile":
 			return projectile_attack_attribute
@@ -291,7 +291,7 @@ func get_projectile_attack_attribute(state_id: StringName = &"projectile") -> Fr
 
 
 ## 由 Fray 投射物施放状态请求 Match 生成投射物，不直接实例化场景。
-func request_projectile_spawn(attribute: FrayAttackAttribute) -> void:
+func request_projectile_spawn(attribute: CombatAttackAttribute) -> void:
 	if not _is_configured_projectile_attribute(attribute):
 		push_error("%s 拒绝了与场景装配不一致的投射物攻击资源。" % fighter_id)
 		return
@@ -316,7 +316,7 @@ func get_combat_attack_token(strike_hitbox: FrayHitbox2D) -> StringName:
 
 
 ## 记录当前近战攻击实例的实际命中或格挡结果；旧 token、投射物和错误 attribute 均会被拒绝。
-func confirm_current_attack_contact(token: StringName, attribute: FrayAttackAttribute, blocked: bool) -> bool:
+func confirm_current_attack_contact(token: StringName, attribute: CombatAttackAttribute, blocked: bool) -> bool:
 	if token.is_empty() or token != _current_attack_token or attribute == null:
 		return false
 	if attribute.id != get_combat_state():
@@ -327,7 +327,7 @@ func confirm_current_attack_contact(token: StringName, attribute: FrayAttackAttr
 
 
 ## 兼容只关心 clean hit 的调用方，并转交统一攻击接触记录。
-func confirm_current_attack_hit(token: StringName, attribute: FrayAttackAttribute) -> bool:
+func confirm_current_attack_hit(token: StringName, attribute: CombatAttackAttribute) -> bool:
 	return confirm_current_attack_contact(token, attribute, false)
 
 
@@ -337,7 +337,7 @@ func has_confirmed_current_attack_hit() -> bool:
 
 
 ## 返回当前攻击接触结果是否满足指定攻击资源的数据化取消条件。
-func is_current_attack_cancel_contact_allowed(attribute: FrayAttackAttribute = null) -> bool:
+func is_current_attack_cancel_contact_allowed(attribute: CombatAttackAttribute = null) -> bool:
 	var current_attribute := attribute
 	if current_attribute == null:
 		current_attribute = get_attack_attribute(get_combat_state())
@@ -369,10 +369,10 @@ func is_airborne_for_combat() -> bool:
 
 
 ## 返回攻击属性是否能接触当前姿态；高段攻击会被主动下蹲姿态闪避。
-func can_be_hit_by(attribute: FrayAttackAttribute) -> bool:
+func can_be_hit_by(attribute: CombatAttackAttribute) -> bool:
 	if attribute == null:
 		return false
-	if attribute.guard_type != FrayAttackAttribute.GuardType.HIGH or is_airborne_for_combat():
+	if attribute.guard_type != CombatAttackAttribute.GuardType.HIGH or is_airborne_for_combat():
 		return true
 	var state_name := get_combat_state()
 	return not (
@@ -382,7 +382,7 @@ func can_be_hit_by(attribute: FrayAttackAttribute) -> bool:
 
 
 ## 根据 Fray 防御状态与 attribute.guard_type 判断本次攻击是否被挡住。
-func is_guarding_against(attribute: FrayAttackAttribute) -> bool:
+func is_guarding_against(attribute: CombatAttackAttribute) -> bool:
 	if attribute == null:
 		return false
 	var state_name := get_combat_state()
@@ -392,22 +392,22 @@ func is_guarding_against(attribute: FrayAttackAttribute) -> bool:
 	if is_airborne_for_combat() and not attribute.can_air_block:
 		return false
 	match attribute.guard_type:
-		FrayAttackAttribute.GuardType.HIGH:
+		CombatAttackAttribute.GuardType.HIGH:
 			return _last_guard_posture == &"stand"
-		FrayAttackAttribute.GuardType.MID:
+		CombatAttackAttribute.GuardType.MID:
 			return true
-		FrayAttackAttribute.GuardType.LOW:
+		CombatAttackAttribute.GuardType.LOW:
 			return _last_guard_posture == &"crouch"
-		FrayAttackAttribute.GuardType.OVERHEAD:
+		CombatAttackAttribute.GuardType.OVERHEAD:
 			return _last_guard_posture == &"stand"
-		FrayAttackAttribute.GuardType.THROW, FrayAttackAttribute.GuardType.UNBLOCKABLE:
+		CombatAttackAttribute.GuardType.THROW, CombatAttackAttribute.GuardType.UNBLOCKABLE:
 			return false
 		_:
 			return false
 
 
 ## 原子修改生命并发出只读事件；KO 状态由协调器统一提交。
-func apply_health_delta(amount: int, reason: StringName, attribute: FrayAttackAttribute) -> void:
+func apply_health_delta(amount: int, reason: StringName, attribute: CombatAttackAttribute) -> void:
 	var old_value := health
 	health = clampi(health + amount, 0, combat_rules.max_health)
 	if old_value != health:
@@ -423,7 +423,7 @@ func can_spend_meter(amount: int) -> bool:
 func try_spend_meter(
 	amount: int,
 	reason: StringName,
-	attribute: FrayAttackAttribute
+	attribute: CombatAttackAttribute
 ) -> bool:
 	if amount <= 0 or not can_spend_meter(amount):
 		return false
@@ -432,7 +432,7 @@ func try_spend_meter(
 
 
 ## 修改统一气条并限制在 0 到规则上限。
-func add_meter(amount: int, reason: StringName, attribute: FrayAttackAttribute) -> void:
+func add_meter(amount: int, reason: StringName, attribute: CombatAttackAttribute) -> void:
 	var old_value := meter
 	meter = clampi(meter + amount, 0, combat_rules.max_meter)
 	if old_value != meter:
@@ -441,14 +441,14 @@ func add_meter(amount: int, reason: StringName, attribute: FrayAttackAttribute) 
 
 ## 在完整交互批次提交后集中请求 blockstun、hitstun、air hitstun、knockdown 或 KO。
 func commit_combat_reaction(
-	attribute: FrayAttackAttribute,
+	attribute: CombatAttackAttribute,
 	blocked: bool,
 	attacker_direction: int,
 	combo_context: Dictionary = {},
 	defender_was_airborne: bool = false
 ) -> void:
 	if attribute == null:
-		push_error("%s 收到缺少 FrayAttackAttribute 的反应请求。" % fighter_id)
+		push_error("%s 收到缺少 CombatAttackAttribute 的反应请求。" % fighter_id)
 		return
 	facing_direction = -1 if attacker_direction > 0 else 1
 	_sync_facing_visual()
@@ -538,8 +538,8 @@ func get_combat_snapshot() -> Dictionary:
 func _on_attack_hitbox_intersected(strike_hitbox: FrayHitbox2D, hurt_hitbox: FrayHitbox2D) -> void:
 	if strike_hitbox == null or hurt_hitbox == null:
 		return
-	if not (strike_hitbox.attribute is FrayAttackAttribute):
-		push_error("%s 的 strike 缺少 FrayAttackAttribute。" % fighter_id)
+	if not (strike_hitbox.attribute is CombatAttackAttribute):
+		push_error("%s 的 strike 缺少 CombatAttackAttribute。" % fighter_id)
 		return
 	var defender := hurt_hitbox.source as CombatCoreFighter
 	if defender == null or defender == self:

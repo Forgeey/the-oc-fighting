@@ -87,10 +87,9 @@ func _update_input_text(snapshot: Dictionary) -> void:
 	)
 
 
-## 更新缓冲项名称、类型和 pause-aware 年龄。
+## 更新缓冲项名称、类型和基于真实时间的年龄。
 func _update_buffer_text(snapshot: Dictionary) -> void:
 	var lines := PackedStringArray()
-	var current_clock := int(snapshot.get("buffer_clock_msec", 0))
 	var buffer: Array = snapshot.get("buffer", [])
 	for item in buffer:
 		var input_name := "unknown"
@@ -98,14 +97,10 @@ func _update_buffer_text(snapshot: Dictionary) -> void:
 			input_name = "press:%s" % _format_input_name(item.input)
 		elif item is FrayBufferedInputAdvancer.BufferedInputSequence:
 			input_name = "sequence:%s" % _format_input_name(item.sequence_name)
-		var age: int = int(item.calc_elapsed_time_msec(current_clock))
+		var age: int = int(item.calc_elapsed_time_msec())
 		lines.append("%s  age=%dms" % [input_name, age])
-	_buffer_label.text = (
-		"Fray 缓冲（5F / 83.333ms，clock_frozen=%s）：\n%s"
-		% [
-			snapshot.get("buffer_clock_paused", false),
-			"<空>" if lines.is_empty() else "\n".join(lines),
-		]
+	_buffer_label.text = "Fray 缓冲（5F / 83.333ms）：\n%s" % (
+		"<空>" if lines.is_empty() else "\n".join(lines)
 	)
 
 

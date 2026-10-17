@@ -1,6 +1,6 @@
 class_name FoundationHitstunState
 extends FoundationState
-## 地面或空中受击硬直状态；反应帧数与击退只读取 FrayAttackAttribute。
+## 地面或空中受击硬直状态；反应帧数与击退只读取 CombatAttackAttribute。
 
 var _airborne: bool = false
 var _elapsed_frames: int = 0
@@ -12,10 +12,10 @@ func _init(airborne: bool = false) -> void:
 	_airborne = airborne
 
 
-## 进入状态时读取 fighter 集中缓存的 FrayAttackAttribute 并启动击退。
+## 进入状态时读取 fighter 集中缓存的 CombatAttackAttribute 并启动击退。
 func _enter_impl(args: Dictionary) -> void:
 	_elapsed_frames = 0
-	var attribute: FrayAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
+	var attribute: CombatAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
 	var airborne_hit_count := maxi(int(args.get("combo_air_hits", 0)), 0)
 	var duration_scale := 1.0
 	if _airborne:

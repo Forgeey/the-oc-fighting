@@ -94,7 +94,7 @@ func _draw_rectangle_hitbox(hitbox: FrayHitbox2D, collision_shape: CollisionShap
 	for point in local_points:
 		var world_point := collision_shape.global_transform * point
 		points.append(to_local(world_point))
-	var is_strike := hitbox.attribute is FrayAttackAttribute
+	var is_strike := hitbox.attribute is CombatAttackAttribute
 	var fill := Color(1.0, 0.12, 0.08, 0.22) if is_strike else Color(0.1, 0.55, 1.0, 0.16)
 	var outline := Color(1.0, 0.25, 0.18, 0.95) if is_strike else Color(0.2, 0.7, 1.0, 0.9)
 	draw_colored_polygon(points, fill)

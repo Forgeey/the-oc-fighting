@@ -2,6 +2,10 @@
 .vscode
 .output
 
+# folds ignore
+/addons/fray_demo
+/addons/fray_godot3
+
 # Godot 4+ specific ignores (the-oc-fighting project)
 /the-oc-fighting/**/.godot/
 /the-oc-fighting/android/

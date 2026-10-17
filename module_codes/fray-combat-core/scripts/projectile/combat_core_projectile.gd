@@ -9,7 +9,7 @@ signal combat_contact_requested(defender, hurt_hitbox: FrayHitbox2D, strike_hitb
 @onready var _hit_state: FrayHitState2D = $HitState
 
 var _owner_fighter: CombatCoreFighter
-var _configured_attribute: FrayAttackAttribute
+var _configured_attribute: CombatAttackAttribute
 var _direction: int = 1
 var _elapsed_frames: int = 0
 var _consumed: bool = false
@@ -17,7 +17,7 @@ var _attack_token: StringName = &"uninitialized"
 
 
 ## 在加入场景前缓存 owner、方向与实际攻击资源，确保 _ready 可直接配置 Fray strike。
-func setup(owner_fighter: CombatCoreFighter, direction: int, attribute: FrayAttackAttribute) -> void:
+func setup(owner_fighter: CombatCoreFighter, direction: int, attribute: CombatAttackAttribute) -> void:
 	_owner_fighter = owner_fighter
 	_configured_attribute = attribute
 	_direction = 1 if direction >= 0 else -1
@@ -62,8 +62,8 @@ func _physics_process(delta: float) -> void:
 func _on_strike_hitbox_intersected(strike_hitbox: FrayHitbox2D, hurt_hitbox: FrayHitbox2D) -> void:
 	if _consumed or strike_hitbox == null or hurt_hitbox == null:
 		return
-	if not (strike_hitbox.attribute is FrayAttackAttribute):
-		push_error("CombatCoreProjectile 的 strike 缺少 FrayAttackAttribute。")
+	if not (strike_hitbox.attribute is CombatAttackAttribute):
+		push_error("CombatCoreProjectile 的 strike 缺少 CombatAttackAttribute。")
 		return
 	var defender := hurt_hitbox.source as CombatCoreFighter
 	if defender == null or defender == _owner_fighter:
@@ -72,13 +72,13 @@ func _on_strike_hitbox_intersected(strike_hitbox: FrayHitbox2D, hurt_hitbox: Fra
 
 
 ## 返回实际 strike 上的唯一投射物攻击资源。
-func get_attack_attribute() -> FrayAttackAttribute:
+func get_attack_attribute() -> CombatAttackAttribute:
 	if _hit_state == null:
 		return null
 	var hitboxes := _hit_state.get_hitboxes()
 	if hitboxes.is_empty():
 		return null
-	return hitboxes[0].attribute as FrayAttackAttribute
+	return hitboxes[0].attribute as CombatAttackAttribute
 
 
 ## 返回批量命中协调器需要的实际 fighter owner。

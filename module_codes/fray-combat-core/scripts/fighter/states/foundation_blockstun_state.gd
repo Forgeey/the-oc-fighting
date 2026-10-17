@@ -1,6 +1,6 @@
 class_name FoundationBlockstunState
 extends FoundationState
-## 格挡硬直状态；持续时间与推退只读取 FrayAttackAttribute。
+## 格挡硬直状态；持续时间与推退只读取 CombatAttackAttribute。
 
 var _elapsed_frames: int = 0
 var _duration_frames: int = 1
@@ -9,7 +9,7 @@ var _duration_frames: int = 1
 ## 进入状态时读取攻击资源并启动较轻的格挡推退。
 func _enter_impl(args: Dictionary) -> void:
 	_elapsed_frames = 0
-	var attribute: FrayAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
+	var attribute: CombatAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
 	_duration_frames = maxi(attribute.blockstun_frames, 1)
 	movement.start_block_reaction(attribute)
 

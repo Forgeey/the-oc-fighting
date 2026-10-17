@@ -78,12 +78,19 @@ func build_root(context: Dictionary) -> FrayCompoundState:
 	_register_reaction_transitions(builder)
 	_register_lock_transition(builder)
 	_register_global_transition_rules(builder)
-	builder.start_at(&"idle")
+	# 当前 Fray 版本不会在 root 初始化时自动进入 atomic start state；
+	# 通过一次自动 transition 让 idle 的 _enter_impl() 按正常路径执行。
+	builder.transition(&"_bootstrap", &"idle", {
+		"auto_advance": true,
+		"switch_mode": SWITCH_IMMEDIATE,
+	})
+	builder.start_at(&"_bootstrap")
 	return builder.build()
 
 
 ## 添加基础移动、攻防、受击、倒地与终止状态。
 func _add_states(builder) -> void:
+	builder.add_state(&"_bootstrap", FrayState.new())
 	builder.add_state(&"idle", FoundationIdleState.new())
 	builder.add_state(&"walk_forward", FoundationWalkState.new())
 	builder.add_state(&"walk_back", FoundationWalkState.new())

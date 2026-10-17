@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://c0o74yl43rvbr" path="res://scripts/projectile/combat_core_projectile.gd" id="1_projectile"]
 [ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="2_hit_state"]
 [ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="3_hitbox"]
-[ext_resource type="Resource" uid="uid://d8k1xodsigij" path="res://resources/attacks/combat_arc_bolt.tres" id="4_attack"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_strike"]
 size = Vector2(38, 22)
@@ -24,7 +23,6 @@ metadata/_editor_prop_ptr_source = NodePath("")
 collision_layer = 4
 collision_mask = 8
 script = ExtResource("3_hitbox")
-attribute = ExtResource("4_attack")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitState/Strike" unique_id=905299298]
 shape = SubResource("RectangleShape2D_strike")

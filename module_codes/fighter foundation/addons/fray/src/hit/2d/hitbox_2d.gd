@@ -20,6 +20,7 @@ signal hitbox_exited(hitbox: FrayHitbox2D)
 @export var attribute: FrayHitboxAttribute = null:
 	set(value):
 		attribute = value
+		
 		if attribute != null:
 			_update_collision_colors()
 		
@@ -41,7 +42,7 @@ func _ready() -> void:
 					_update_collision_colors()
 				)
 		return
-
+		
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 

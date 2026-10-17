@@ -1,6 +1,6 @@
 class_name CombatCoreProjectileAttackState
 extends FoundationState
-## 使用 FrayAttackAttribute 施放帧数据驱动的投射物攻击状态。
+## 使用 CombatAttackAttribute 施放帧数据驱动的投射物攻击状态。
 ##
 ## 普通波与强化波状态共享一次施法运行时；Amplify 仍由 Fray press transition 驱动，
 ## 状态只负责延续施法计时、支付资源和发出生成请求。
@@ -10,7 +10,7 @@ const STATE_ENHANCED_PROJECTILE: StringName = &"enhanced_projectile"
 
 var _state_id: StringName
 var _cast_runtime: Dictionary
-var _attribute: FrayAttackAttribute
+var _attribute: CombatAttackAttribute
 
 
 ## 创建供普通波与强化波状态共享的单次施法运行时。
@@ -47,9 +47,9 @@ func can_amplify_to(target_state: StringName) -> bool:
 
 ## 进入普通波时开始新施法；进入强化波时继承原计时、支付气条并替换攻击资源。
 func _enter_impl(_args: Dictionary) -> void:
-	var next_attribute := fighter.get_projectile_attack_attribute(_state_id) as FrayAttackAttribute
+	var next_attribute := fighter.get_projectile_attack_attribute(_state_id) as CombatAttackAttribute
 	if next_attribute == null or not next_attribute.is_projectile:
-		push_error("投射物施放状态缺少有效的 FrayAttackAttribute。")
+		push_error("投射物施放状态缺少有效的 CombatAttackAttribute。")
 		_attribute = null
 		return
 	if _state_id == STATE_ENHANCED_PROJECTILE:
@@ -61,8 +61,8 @@ func _enter_impl(_args: Dictionary) -> void:
 
 
 ## 延续普通波的共享施法计时，并在成功支付资源后切换为强化攻击资源。
-func _enter_amplified_cast(next_attribute: FrayAttackAttribute) -> void:
-	var source_attribute := _cast_runtime.get("attribute") as FrayAttackAttribute
+func _enter_amplified_cast(next_attribute: CombatAttackAttribute) -> void:
+	var source_attribute := _cast_runtime.get("attribute") as CombatAttackAttribute
 	var elapsed_frames := int(_cast_runtime.get("elapsed_frames", 0))
 	if (
 		not bool(_cast_runtime.get("active", false))
@@ -91,7 +91,7 @@ func _enter_amplified_cast(next_attribute: FrayAttackAttribute) -> void:
 
 
 ## 清理旧施法并从第 0 帧开始一次普通投射物施放。
-func _begin_cast(attribute: FrayAttackAttribute) -> void:
+func _begin_cast(attribute: CombatAttackAttribute) -> void:
 	_reset_cast_runtime()
 	_cast_runtime["active"] = true
 	_cast_runtime["attribute"] = attribute
@@ -110,7 +110,7 @@ func _physics_process_impl(delta: float) -> void:
 		fighter.request_projectile_spawn(_attribute)
 
 
-## 施放动作总时长完全读取当前普通或强化 FrayAttackAttribute 的施放帧字段。
+## 施放动作总时长完全读取当前普通或强化 CombatAttackAttribute 的施放帧字段。
 func _is_done_processing_impl() -> bool:
 	return (
 		_attribute == null

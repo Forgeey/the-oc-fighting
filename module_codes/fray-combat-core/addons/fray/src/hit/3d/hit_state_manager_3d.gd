@@ -45,14 +45,14 @@ func _ready() -> void:
 		if child is FrayHitState3D:
 			child.set_hitbox_source(source)
 			child.hitbox_intersected.connect(_on_Hitstate_hitbox_intersected)
-			child.hitbox_separated.connect(_on_Hitstate_hitbox_separated)
+			child.hitbox_intersected.connect(_on_Hitstate_hitbox_separated)
 			child.active_hitboxes_changed.connect(_on_HitState_active_hitboxes_changed.bind(child))
 
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings: PackedStringArray = []
 	
-	if not get_children().any(func(node): return node is FrayHitState3D):
+	if get_children().any(func(node): node is FrayHitState3D):
 		warnings.append("This node has no hit states so there is nothing to manage. Consider adding a FrayHitState3D as a child.")
 	
 	return warnings
@@ -120,4 +120,4 @@ func _on_Hitstate_hitbox_separated(detector_hitbox: FrayHitbox3D, detected_hitbo
 func _on_HitState_active_hitboxes_changed(hitstate: FrayHitState3D) -> void:
 	if hitstate.active_hitboxes != 0:
 		_set_current_state(hitstate.name)
-		hitstate.activate()
+	hitstate.activate()

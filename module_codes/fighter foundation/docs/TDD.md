@@ -1,4 +1,4 @@
-# Fighter Foundation 技术设计文档
+﻿# Fighter Foundation 技术设计文档
 
 ## 1. 目标
 
@@ -9,7 +9,7 @@
 1. 状态类全部继承 `FrayState`。
 2. 状态拓扑只允许出现在 `FighterStateMachineBuilder`。
 3. 输入转移使用 Fray press/sequence transition 和 `FrayBufferedInputAdvancer`。
-4. 攻击与受击反应数据只来自 `FrayAttackAttribute`。
+4. 攻击与受击反应数据只来自项目层 `FrayAttackAttribute`；该类型在 `scripts/resources/combat/fray_attack_attribute.gd` 中扩展官方 `FrayHitboxAttribute`。
 5. `FoundationMovement` 只实现物理动作，不实现平行状态机。
 6. 外部战斗事件集中进入 `FoundationFighter.request_external_state()`。
 
@@ -143,9 +143,9 @@ damage、hitstun、blockstun、knockback、launch、knockdown 等攻击/受击�
 
 ## 8. 暂停、重置和调试
 
-- `P`：停止状态机与 advancer 消费，但缓冲时钟继续。
-- `H`：同时冻结缓冲时钟，模拟 hitstop。
-- `R`：清缓冲、速度、临时反应资源、受身窗口与调试历史，并回到 start state。
+- `P`：停止状态机与 advancer 消费；原版 Fray 缓冲年龄继续按真实时间增长。
+- `H`：暂停相同的状态机与 advancer 消费来模拟 hitstop；原版 Fray 不提供可冻结的独立缓冲时钟。
+- `R`：清缓冲、速度、临时反应资源、受身窗口与调试历史，并直接回到 idle。
 - `L`：通过集中 API 进入/退出 locked。
 - 数字 `1`～`5`：通过外部状态 API 演示硬直、倒地、起身与 KO。
 

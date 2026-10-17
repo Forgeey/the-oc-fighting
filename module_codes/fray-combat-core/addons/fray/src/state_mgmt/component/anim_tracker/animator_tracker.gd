@@ -75,7 +75,7 @@ func emit_anim_started(animation: StringName) -> void:
 
 ## Used to emit an animation finished signal. Emits both built-in signal and per-animation user signal.
 func emit_anim_finished(animation: StringName) -> void:
-	animation_finished.emit(animation)
+	animation_started.emit(animation)
 
 	if has_user_signal(format_usignal_finished(animation)):
 		emit_signal(format_usignal_finished(animation))

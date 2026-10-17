@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://66p07h2m1ba7"]
+
+[ext_resource type="Script" uid="uid://coabuaqq51qd5" path="res://scripts/fighter.gd" id="1_65vn2"]
+[ext_resource type="Script" uid="uid://bi2nk2bml3itp" path="res://addons/fray/src/input/controller.gd" id="1_w2163"]
+[ext_resource type="Script" uid="uid://d0nvf4ic81v4p" path="res://addons/fray/src/state_mgmt/state_machine.gd" id="2_65vn2"]
+[ext_resource type="Script" uid="uid://d1hvyulxbwo3k" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="3_7p24r"]
+[ext_resource type="Script" uid="uid://boe4oe8kln68m" path="res://addons/fray/src/hit/2d/hit_state_manager_2d.gd" id="4_p8ut5"]
+[ext_resource type="Script" uid="uid://bbqr3ljlbwda8" path="res://addons/fray/src/input/input_buffer.gd" id="5_cu12w"]
+
+[node name="Fighter" type="CharacterBody2D" unique_id=1909154529]
+script = ExtResource("1_65vn2")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=12884665]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=826580046]
+
+[node name="FrayController" type="Node" parent="." unique_id=1738780246]
+script = ExtResource("1_w2163")
+metadata/_custom_type_script = "uid://bi2nk2bml3itp"
+
+[node name="FrayInputBuffer" type="Node" parent="." unique_id=1102224255]
+script = ExtResource("5_cu12w")
+metadata/_custom_type_script = "uid://bbqr3ljlbwda8"
+
+[node name="FrayStateMachine" type="Node" parent="." unique_id=820798234]
+script = ExtResource("2_65vn2")
+metadata/_custom_type_script = "uid://d0nvf4ic81v4p"
+
+[node name="FrayBufferedInputAdvancer" type="Node" parent="FrayStateMachine" unique_id=1006423525]
+script = ExtResource("3_7p24r")
+metadata/_custom_type_script = "uid://d1hvyulxbwo3k"
+
+[node name="FrayHitStateManager2D" type="Node2D" parent="." unique_id=59463164]
+script = ExtResource("4_p8ut5")
+metadata/_custom_type_script = "uid://boe4oe8kln68m"

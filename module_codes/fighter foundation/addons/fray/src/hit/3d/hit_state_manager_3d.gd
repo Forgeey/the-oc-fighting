@@ -52,7 +52,7 @@ func _ready() -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings: PackedStringArray = []
 	
-	if not get_children().any(func(node): return node is FrayHitState3D):
+	if get_children().any(func(node): node is FrayHitState3D):
 		warnings.append("This node has no hit states so there is nothing to manage. Consider adding a FrayHitState3D as a child.")
 	
 	return warnings

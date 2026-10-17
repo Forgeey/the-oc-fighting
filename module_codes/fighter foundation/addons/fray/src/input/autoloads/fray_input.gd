@@ -152,7 +152,7 @@ func is_just_released(input: StringName, device: int = DEVICE_KBM_JOY1) -> bool:
 				)
 			else:
 				return (
-					not input_state.is_pressed
+					not input_state.ispressed
 					and input_state.process_frame == Engine.get_process_frames()
 				)
 		null:
@@ -184,15 +184,10 @@ func get_axis(
 ## Returns an array of all connected devices.
 ## This array always contains device 0 as this represents the keyboard and mouse.
 func get_connected_devices() -> Array[int]:
-	var connected_joypads: Array[int] = []
-	connected_joypads.assign(Input.get_connected_joypads())
+	var connected_joypads := Input.get_connected_joypads()
 
-	if not connected_joypads.has(DEVICE_KBM_JOY1):
+	if connected_joypads.is_empty():
 		connected_joypads.append(DEVICE_KBM_JOY1)
-
-	for device in _device_state_by_id:
-		if device < 0 and not connected_joypads.has(device):
-			connected_joypads.append(device)
 
 	return connected_joypads
 
@@ -200,17 +195,13 @@ func get_connected_devices() -> Array[int]:
 ## Returns a newly created virtual device.
 ## By convention all virtual devices are assigned a negative number.
 func create_virtual_device() -> FrayVirtualDevice:
-	var id := -1
-	while _device_state_by_id.has(id):
-		id -= 1
+	# WARN: If I understand correctly hash is not truly unique so perhaps this could be an issue? Future me problem.
+	var id := -_device_state_by_id.hash()
 	var vd := FrayVirtualDevice.new(_connect_device(id), id)
 	return vd
 
 
 func _update_bind_input_states(device: int) -> void:
-	if device < 0:
-		return
-
 	var device_state := _get_device_state(device)
 
 	for bind_name in _input_map.get_bind_names():

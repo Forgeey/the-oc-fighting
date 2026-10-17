@@ -1,10 +1,10 @@
 class_name FoundationAttackState
 extends FoundationState
-## 由 FrayHitbox2D.attribute 中的 FrayAttackAttribute 驱动的基础攻击状态。
+## 由 FrayHitbox2D.attribute 中的 CombatAttackAttribute 驱动的基础攻击状态。
 ##
 ## 状态只保存攻击状态 ID；帧数、位移和 strike 激活窗口统一读取实际 hitbox attribute。
 
-var _attack: FrayAttackAttribute
+var _attack: CombatAttackAttribute
 var _state_id: StringName
 var _airborne: bool = false
 var _elapsed_frames: int = 0
@@ -45,17 +45,17 @@ func _enter_impl(_args: Dictionary) -> void:
 	_active_hitbox_mask = _all_hitbox_bits(_hit_state)
 
 
-## 退出攻击状态时关闭该 Fray hit state，并恢复 Fray 输入缓冲的正常消费与时钟。
-## 接触条件失败时会丢弃由资源取消目标推导出的 sequence；外部 hitstop 暂停权仍由 fighter 集中管理。
+## 退出攻击状态时关闭该 Fray hit state，并恢复 Fray 输入缓冲的正常消费。
+## 原版 advancer 不支持按 sequence 删除；接触条件失败时清空本地缓冲，避免失败取消延后触发。
 func _exit_impl() -> void:
 	if (
 		_attack != null
 		and _attack.cancel_requires_contact()
+		and not _contact_failure_discard_sequences.is_empty()
 		and not fighter.is_current_attack_cancel_contact_allowed(_attack)
 		and fighter.input_advancer != null
 	):
-		for sequence_name in _contact_failure_discard_sequences:
-			fighter.input_advancer.discard_sequence(StringName(sequence_name))
+		fighter.input_advancer.clear_buffer()
 	if _manages_cancel_buffer and not fighter.is_simulation_paused():
 		_set_cancel_buffer_open(true)
 	if _hit_state != null:
@@ -104,12 +104,9 @@ func _is_cancel_buffer_open(frame: int) -> bool:
 	return fighter.is_current_attack_cancel_contact_allowed(_attack)
 
 
-## 在取消条件未满足时保留预输入，在窗口开放后交回 FrayBufferedInputAdvancer 消费。
-## ALWAYS 规则冻结缓冲时钟以支持提前拨号；接触型取消保持时钟推进，让挥空输入正常过期。
+## 在取消条件未满足时暂停消费，在窗口开放后交回 FrayBufferedInputAdvancer。
+## 原版 Fray 始终按真实时间计算缓冲年龄，因此预输入仍会按 max_buffer_time 过期。
 func _set_cancel_buffer_open(open: bool) -> void:
 	if fighter == null or fighter.input_advancer == null or fighter.is_simulation_paused():
 		return
 	fighter.input_advancer.paused = not open
-	fighter.input_advancer.buffer_clock_paused = (
-		not open and (_attack == null or not _attack.cancel_requires_contact())
-	)

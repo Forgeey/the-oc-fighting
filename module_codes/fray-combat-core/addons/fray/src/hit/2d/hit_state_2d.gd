@@ -44,6 +44,7 @@ var active_hitboxes: int = 0:
 				else:
 					child.deactivate()
 				i += 1
+
 		active_hitboxes_changed.emit()
 
 var _is_active: bool
@@ -146,11 +147,12 @@ func is_hitbox_active(index: int) -> bool:
 
 ## Sets whether the hitbox at the given [kbd]index[/kbd] is active or not.
 func set_hitbox_active(index: int, is_active: bool) -> void:
-	if index < 0 or index >= get_hitboxes().size():
+	var flag = 1 << index
+	
+	if flag > active_hitboxes:
 		push_warning("Index out of bounds.")
 		return
-	var flag := 1 << index
-
+	
 	if is_active:
 		active_hitboxes |= flag
 	else:
@@ -158,7 +160,7 @@ func set_hitbox_active(index: int, is_active: bool) -> void:
 
 ## Returns a list of all hitbox children belonging to this hit state.
 func get_hitboxes() -> Array[FrayHitbox2D]:
-	var array: Array[FrayHitbox2D]
+	var array: Array
 
 	for child in get_children():
 		if child is FrayHitbox2D:

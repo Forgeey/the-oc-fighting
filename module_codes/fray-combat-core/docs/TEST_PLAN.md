@@ -45,7 +45,7 @@
 - fighter `CharacterBody2D` 只碰撞 World；Fighter/Fighter pushbox 由 `CombatCoreMatch` 统一解析，判定框覆盖层可显示 push/hurt/strike；
 - 所有 `.gd/.tres/.tscn/.godot/.cfg` 为 UTF-8 无 BOM；
 - `.tres/.tscn` 第一个字节是 `[`；
-- strike 场景的 `attribute` 为 `FrayAttackAttribute` 资源；
+- strike 场景的 `attribute` 为 `CombatAttackAttribute` 资源；
 - `GuardType` 数值迁移一致：HIGH=0、MID=1、LOW=2、OVERHEAD=3、THROW=4、UNBLOCKABLE=5；
 - `stand_light` 仅声明 `stand_combo_medium`；`stand_combo_medium` 以 `ON_HIT` 声明 `stand_heavy` 与普通波 `projectile`，不直接声明 `enhanced_projectile`；
 - 普通波 sequence 为 `后 → 前 → J`；`projectile -> enhanced_projectile` 由 Fray guard press transition 和普通波 attribute 的 `0..11F` Amplify 窗口表达；

@@ -11,7 +11,7 @@
 本项目在 Godot 4.7 中使用 Fray 2.0.0-alpha 建立固定 60 Hz 的双角色战斗闭环。系统设计遵循以下边界：
 
 1. 输入、状态拓扑、命中空间检测和动画观察优先使用 Fray；
-2. `FrayAttackAttribute` 是单招攻击与受击反应数据的唯一来源；
+2. 项目层 `CombatAttackAttribute` 是单招攻击与受击反应数据的唯一来源；它扩展官方 `FrayHitboxAttribute`，但不修改 Fray 插件；
 3. 项目层仅补充 Fray 未提供的同帧批量结算、连段上下文、统一气条、KO、pushbox、投射物生命周期与诊断；
 4. 动画以 34 FPS 表现，攻击判定和战斗规则以 60 Hz 物理帧运行，二者不互相充当时钟；
 5. 同一物理帧的接触必须先完整收集，再以稳定顺序提交，避免场景树遍历顺序改变结果。
@@ -23,7 +23,7 @@
 ```mermaid
 flowchart LR
 	Player["玩家输入 / 训练木偶配置"]
-	AttackData["FrayAttackAttribute<br/>resources/attacks/*.tres"]
+	AttackData["CombatAttackAttribute<br/>resources/attacks/*.tres"]
 	SharedRules["CombatRuleSet<br/>resources/combat/combat_rules.tres"]
 
 	subgraph MainScene["Main 场景"]
@@ -68,7 +68,7 @@ flowchart LR
 | `FoundationAttackState` / `CombatCoreProjectileAttackState` | 按 attribute 固定帧推进攻击窗口或施法过程 | 不决定伤害缩放、KO 或最终受击反应 |
 | `CombatCoreMatch` | pushbox 分离、接触批次排序/去重、防御与连段裁决、分阶段提交、KO 与快照 | 不拥有单招 damage、硬直、击退等数值 |
 | `CombatCoreProjectile` | 投射物 owner、固定方向、移动、实例 token、strike 生命周期 | 不复制投射物攻击参数 |
-| `FrayAttackAttribute` | 单招帧数据、伤害、硬直、击退、浮空、取消、防御段位、气条收益和投射物参数 | 不保存跨招式的比赛级规则 |
+| `CombatAttackAttribute` | 单招帧数据、伤害、硬直、击退、浮空、取消、防御段位、气条收益和投射物参数 | 不保存跨招式的比赛级规则 |
 | `CombatRuleSet` | 生命/气条上限、连段衰减、重复招式缩放、超时和 gameplay FPS | 不保存单招数据 |
 | 调试节点 | 消费只读事件、快照和 hitbox 状态并可视化 | 不反向修改战斗真值 |
 
@@ -111,7 +111,7 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-	Resource["FrayAttackAttribute 资源"]
+	Resource["CombatAttackAttribute 资源"]
 	Strike["实际 strike.attribute"]
 	Contact["接触上下文<br/>attacker / defender / token / hit_id"]
 	Resolver["CombatCoreMatch 裁决"]
@@ -134,7 +134,7 @@ flowchart LR
 
 约束如下：
 
-- 运行时交互保留 `FrayAttackAttribute` 引用，不把 damage、hitstun、knockback 等拆成重复参数表；
+- 运行时交互保留 `CombatAttackAttribute` 引用，不把 damage、hitstun、knockback 等拆成重复参数表；
 - `ComboContext`、接触 ledger 和 interaction result 都是运行时派生数据，不是第二套招式配置；
 - 投射物在 `setup()` 后把最终普通/强化 attribute 直接配置到自身 strike；
 - 调试 HUD 只读取快照，不能写回 fighter、attribute 或协调器内部状态。
@@ -144,7 +144,7 @@ flowchart LR
 | 质量属性 | 设计决策 | 预期结果 |
 |---|---|---|
 | 确定性 | 同帧接触完整缓存、稳定排序、token/hit id 去重、分阶段提交 | 支持互击和双 KO，结果不依赖节点遍历顺序 |
-| 可维护性 | Fray 状态机集中构建；单招数据集中在 `FrayAttackAttribute` | 新增招式主要通过资源和 Fray 状态扩展完成 |
+| 可维护性 | Fray 状态机集中构建；单招数据集中在 `CombatAttackAttribute` | 新增招式主要通过资源和 Fray 状态扩展完成 |
 | 可测试性 | `CombatCoreMatch` 发布 interaction/combo/KO/snapshot 只读事件 | 测试与诊断可观察结果而无需侵入战斗逻辑 |
 | 表现解耦 | 34 FPS 动画观察与 60 Hz 判定分离 | 替换动画不会改变 startup/active/recovery 判定 |
 | 长稳性 | ledger 600F 回收、投射物命中后关闭 strike 并释放 | 避免训练长跑中的重复命中和无界增长 |

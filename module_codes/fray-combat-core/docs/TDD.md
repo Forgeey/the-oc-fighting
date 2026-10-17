@@ -8,7 +8,7 @@
 
 ## 1. 实现目标
 
-用 Fray hitbox、Fray state machine 和 Fray animation observer 建立双 fighter 最小战斗闭环。所有攻击与受击反应数值必须从接触到的 `FrayAttackAttribute` 读取；项目层只实现 Fray 未提供的批量格斗结算、ComboContext、统一气条、KO 提交和诊断。
+用 Fray hitbox、Fray state machine 和 Fray animation observer 建立双 fighter 最小战斗闭环。所有攻击与受击反应数值必须从接触到的项目层 `CombatAttackAttribute` 读取；该类型在 `scripts/resources/combat/combat_attack_attribute.gd` 中扩展官方 `FrayHitboxAttribute`。项目层同时实现 Fray 未提供的攻击数据、批量格斗结算、ComboContext、统一气条、KO 提交和诊断。
 
 ## 2. 核心结构
 
@@ -35,7 +35,7 @@ Main
 |---|---|
 | 语义输入与缓冲 | `FrayController`、Fray 输入映射、`FrayBufferedInputAdvancer` |
 | fighter 流程 | `FrayStateMachine` + `FighterStateMachineBuilder` + `FrayState` 子类 |
-| 攻击窗口 | `FoundationAttackState` 按 `FrayAttackAttribute.startup_frames/active_frames/duration_frames` 控制 `FrayHitState2D` |
+| 攻击窗口 | `FoundationAttackState` 按 `CombatAttackAttribute.startup_frames/active_frames/duration_frames` 控制 `FrayHitState2D` |
 | 空间接触 | `FrayHitState2D`、`FrayHitbox2D`、hitbox attribute 过滤 |
 | 外部受击 | `CombatCoreMatch` 批量提交后集中调用 fighter `request_external_state()` 网关 |
 | 动画观察 | `FrayAnimationObserver` + `FrayAnimatorTrackerAnimationPlayer` |
@@ -43,7 +43,7 @@ Main
 
 ## 4. 唯一数据来源
 
-`FrayAttackAttribute` 当前覆盖：
+`CombatAttackAttribute` 当前覆盖：
 
 - 帧：duration/startup/active；
 - 取消：cancel_start_frame、cancel_end_frame、cancel_requirement、cancel_target_states；
@@ -59,7 +59,7 @@ Main
 
 ## 5. 防御段位与接触语义
 
-`FrayAttackAttribute.GuardType` 的项目解析规则如下：
+`CombatAttackAttribute.GuardType` 的项目解析规则如下：
 
 | 类型 | 站防 | 蹲防 | 额外语义 |
 |---|---|---|---|
@@ -74,7 +74,7 @@ Main
 
 ## 6. 数据化取消规则
 
-取消关系由攻击 strike 上的同一 `FrayAttackAttribute` 声明：
+取消关系由攻击 strike 上的同一 `CombatAttackAttribute` 声明：
 
 - `cancel_start_frame` / `cancel_end_frame`：取消窗口；
 - `cancel_requirement`：`ALWAYS`、`ON_HIT`、`ON_BLOCK` 或 `ON_HIT_OR_BLOCK`；
@@ -135,7 +135,7 @@ stateDiagram-v2
 - 普通波：相对方向 `后、前、J`，速度 `360`，伤害 `8`；
 - 强化波：先完成普通波 `后、前、J`，再于施法第 `0..11F` 按 `;`，支付 `1000` 气（1 格）后转入，速度 `520`，伤害 `12`。
 
-普通波 sequence 仍由 Fray 输入树识别；进入 `projectile` 后，`FrayBufferedInputAdvancer` 在 attribute 声明的窗口内消费 `p1_guard` press transition，并转入共享施法运行时的 `enhanced_projectile`。Amplify 不重播施法动画、不把计时归零，也不延后投射物生成：普通与强化资源都在第 `14F` 生成。支付、窗口和目标分别来自普通波 `FrayAttackAttribute` 的 `amplify_meter_cost`、`amplify_start_frame` / `amplify_end_frame` 与 `amplify_target_state`。两种投射物都把最终施放 resource 传给实例 strike；强化波除 `id`、`projectile_speed`、`damage` 外与普通波保持相同战斗字段，不增加额外硬直、击倒、多段或表现效果。初次进入和重置回合时气条值为 1 格（内部值 `1000`）。
+普通波 sequence 仍由 Fray 输入树识别；进入 `projectile` 后，`FrayBufferedInputAdvancer` 在 attribute 声明的窗口内消费 `p1_guard` press transition，并转入共享施法运行时的 `enhanced_projectile`。Amplify 不重播施法动画、不把计时归零，也不延后投射物生成：普通与强化资源都在第 `14F` 生成。支付、窗口和目标分别来自普通波 `CombatAttackAttribute` 的 `amplify_meter_cost`、`amplify_start_frame` / `amplify_end_frame` 与 `amplify_target_state`。两种投射物都把最终施放 resource 传给实例 strike；强化波除 `id`、`projectile_speed`、`damage` 外与普通波保持相同战斗字段，不增加额外硬直、击倒、多段或表现效果。初次进入和重置回合时气条值为 1 格（内部值 `1000`）。
 
 ## 8. 固定 Tick 时序
 

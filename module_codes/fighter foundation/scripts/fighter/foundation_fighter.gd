@@ -189,6 +189,7 @@ func initialize_fighter() -> bool:
 	if not _input_setup.bind_advancer(controller, input_advancer, sequence_tree):
 		state_machine.active = false
 		return false
+	state_machine.advance()
 	_connect_debug_input_listener(fray_input)
 	_initialized = true
 	_sync_state_visual(state_machine.get_current_state_name())
@@ -207,7 +208,7 @@ func set_control_locked(locked: bool, reason: StringName = &"external") -> void:
 		_movement.stop()
 		state_machine.goto(&"locked", {"reason": reason})
 	else:
-		state_machine.goto_start({"reason": reason})
+		state_machine.goto(&"idle", {"reason": reason})
 
 
 ## 返回当前集中控制锁定值，供 Fray condition 只读查询。
@@ -296,7 +297,7 @@ func reset_for_round(spawn: Transform2D, facing: int = 1) -> void:
 	_movement.refresh_snapshot()
 	_deactivate_all_attack_hit_states()
 	_sync_facing_visual()
-	state_machine.goto_start({"reason": &"round_reset"})
+	state_machine.goto(&"idle", {"reason": &"round_reset"})
 	_clear_debug_history()
 
 
@@ -365,12 +366,10 @@ func get_debug_snapshot() -> Dictionary:
 		"facing": facing_direction,
 		"control_locked": _control_locked,
 		"simulation_paused": _simulation_paused,
-		"buffer_clock_paused": input_advancer.buffer_clock_paused,
 		"lock_reason": _last_lock_reason,
 		"device": controller.device,
 		"device_connected": controller.is_device_connected(),
 		"last_transition": "%s → %s" % [_last_transition_from, _last_transition_to],
-		"buffer_clock_msec": input_advancer.get_buffer_clock_msec(),
 		"buffer": input_advancer.get_buffer(),
 		"input_history": _input_history.duplicate(true),
 		"state_history": _state_history.duplicate(true),

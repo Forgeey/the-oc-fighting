@@ -15,6 +15,8 @@ var _fighter
 var _controller: FrayController
 var _advancer: FrayBufferedInputAdvancer
 var _sequence_tree: FraySequenceTree
+var _sequence_matcher := FraySequenceMatcher.new()
+var _fray_input: _FrayInput
 var _configured: bool = false
 
 
@@ -70,7 +72,7 @@ func create_combat_sequences(prefix: StringName) -> FraySequenceTree:
 	return tree
 
 
-## 校验节点关系并让 FrayBufferedInputAdvancer 监听当前 controller。
+## 校验节点关系，并在项目层把 FrayInput 事件和序列匹配结果送入原版 advancer。
 func bind_advancer(
 	controller: FrayController,
 	advancer: FrayBufferedInputAdvancer,
@@ -85,42 +87,91 @@ func bind_advancer(
 	if not (advancer.get_parent() is FrayStateMachine):
 		push_error("FrayBufferedInputAdvancer 必须是 FrayStateMachine 的直接子节点。")
 		return false
+
+	_disconnect_input_listener()
 	_controller = controller
 	_advancer = advancer
 	_sequence_tree = tree
-	_advancer.listen_to_fray_input(_controller, _prefix, _sequence_tree)
-	return true
+	_sequence_matcher.initialize(_sequence_tree)
+	var sequence_callback := Callable(self, "_on_sequence_match_found")
+	if not _sequence_matcher.match_found.is_connected(sequence_callback):
+		_sequence_matcher.match_found.connect(sequence_callback)
+	return _connect_input_listener()
 
 
-## 同步输入消费暂停与缓冲时钟暂停语义；仅在 bind_advancer() 成功后调用。
-# paused控制advancer对输入的消费。
-# freeze_clock控制缓冲区的游戏时间是否继续前进。
-func set_input_pause(paused: bool, freeze_clock: bool) -> void:
-	_advancer.paused = paused
-	_advancer.buffer_clock_paused = freeze_clock
+## 原版 Fray 的 paused 只暂停缓冲消费；缓冲年龄仍按 Time.get_ticks_msec() 计算。
+## 保留第二参数仅用于兼容调用方，插件本身不提供可冻结的独立缓冲时钟。
+func set_input_pause(paused: bool, _freeze_clock: bool) -> void:
+	if _advancer != null:
+		_advancer.paused = paused
 
 
-## 清理缓冲；仅在 bind_advancer() 成功后调用，relisten 为 true 时重建 Fray singleton 监听。
-# 上一回合结束前玩家按了攻击，如果不清理缓冲，新回合开始时这个攻击可能被状态机消费。
+## 清理缓冲；relisten 为 true 时重新连接 FrayInput singleton。
 func reset_input_runtime(relisten: bool = false) -> void:
-	_advancer.clear_buffer()
+	if _advancer != null:
+		_advancer.clear_buffer()
+	if _sequence_tree != null:
+		_sequence_matcher.initialize(_sequence_tree)
 	if relisten:
-		_advancer.stop_listening_to_fray_input()
-		_advancer.listen_to_fray_input(_controller, _prefix, _sequence_tree)
+		_disconnect_input_listener()
+		_connect_input_listener()
 
 
 ## 停止 singleton 监听并清空缓冲；重复调用安全。
-# 彻底结束当前fighter的输入运行时。
 func shutdown_input() -> void:
-	if _advancer == null:
-		return
-	_advancer.stop_listening_to_fray_input()
-	_advancer.clear_buffer()
+	_disconnect_input_listener()
+	if _advancer != null:
+		_advancer.clear_buffer()
 	_advancer = null
 	_controller = null
 	_sequence_tree = null
+	_fray_input = null
 	_fighter = null
 
+
+## 幂等连接 FrayInput.input_detected。
+func _connect_input_listener() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		push_error("无法访问 SceneTree，不能连接 FrayInput singleton。")
+		return false
+	_fray_input = tree.root.get_node_or_null("FrayInput") as _FrayInput
+	if _fray_input == null:
+		push_error("无法访问 FrayInput singleton；请确认 Fray 插件已启用。")
+		return false
+	var input_callback := Callable(self, "_on_fray_input_detected")
+	if not _fray_input.input_detected.is_connected(input_callback):
+		_fray_input.input_detected.connect(input_callback)
+	return true
+
+
+## 幂等断开 FrayInput.input_detected。
+func _disconnect_input_listener() -> void:
+	if _fray_input == null:
+		return
+	var input_callback := Callable(self, "_on_fray_input_detected")
+	if _fray_input.input_detected.is_connected(input_callback):
+		_fray_input.input_detected.disconnect(input_callback)
+
+
+## 过滤设备和命名空间后，先匹配 sequence，再缓冲原始 distinct press。
+func _on_fray_input_detected(input_event: FrayInputEvent) -> void:
+	if _controller == null or _advancer == null:
+		return
+	if _controller.disabled or input_event.device != _controller.device:
+		return
+	if not String(input_event.input).begins_with(_prefix):
+		return
+
+	_sequence_matcher.read(input_event)
+	if input_event.is_just_pressed() and input_event.is_distinct():
+		_advancer.buffer_press(input_event.input, input_event.is_pressed())
+
+
+## FraySequenceMatcher 同步发出匹配结果，并由原版 advancer 缓冲 sequence。
+func _on_sequence_match_found(sequence_name: StringName) -> void:
+	if _advancer != null:
+		_advancer.buffer_sequence(sequence_name)
 
 ## 返回当前配置的输入前缀。
 func get_prefix() -> String:

@@ -198,7 +198,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## 接收投射物施放 FrayState 的生成请求，并把实际攻击资源交给统一生成入口校验。
-func _on_projectile_requested(fighter, attribute: FrayAttackAttribute) -> void:
+func _on_projectile_requested(fighter, attribute: CombatAttackAttribute) -> void:
 	spawn_projectile(fighter as CombatCoreFighter, attribute)
 
 
@@ -207,9 +207,9 @@ func _on_contact_requested(defender, _detector_hitbox: FrayHitbox2D, strike_hitb
 	var typed_defender := defender as CombatCoreFighter
 	if typed_defender == null or strike_hitbox == null:
 		return
-	var attribute := strike_hitbox.attribute as FrayAttackAttribute
+	var attribute := strike_hitbox.attribute as CombatAttackAttribute
 	if attribute == null:
-		push_error("命中接触缺少 FrayAttackAttribute，已阻止结算。")
+		push_error("命中接触缺少 CombatAttackAttribute，已阻止结算。")
 		return
 	var source := strike_hitbox.source
 	var attacker: CombatCoreFighter
@@ -272,7 +272,7 @@ func _submit_interaction_batch() -> void:
 	for result in results:
 		var attacker: CombatCoreFighter = result.attacker
 		var defender: CombatCoreFighter = result.defender
-		var attribute: FrayAttackAttribute = result.attribute
+		var attribute: CombatAttackAttribute = result.attribute
 		var blocked := bool(result.blocked)
 		var current: Dictionary = reactions.get(defender, {})
 		var priority := _reaction_priority(result)
@@ -280,7 +280,7 @@ func _submit_interaction_batch() -> void:
 		var current_priority := -1
 		var current_duration := -1
 		if not current.is_empty():
-			var current_attribute: FrayAttackAttribute = current.attribute
+			var current_attribute: CombatAttackAttribute = current.attribute
 			current_priority = _reaction_priority(current)
 			current_duration = current_attribute.blockstun_frames if current.blocked else current_attribute.hitstun_frames
 		if current.is_empty() or priority > current_priority or (priority == current_priority and duration > current_duration):
@@ -316,7 +316,7 @@ func _submit_interaction_batch() -> void:
 func _reaction_priority(result: Dictionary) -> int:
 	if bool(result.blocked):
 		return 0
-	var attribute: FrayAttackAttribute = result.attribute
+	var attribute: CombatAttackAttribute = result.attribute
 	if attribute.causes_knockdown():
 		return 3
 	if not is_zero_approx(attribute.get_launch_y_velocity(bool(result.defender_was_airborne))):
@@ -328,7 +328,7 @@ func _reaction_priority(result: Dictionary) -> int:
 func _resolve_contact(contact: Dictionary) -> Dictionary:
 	var attacker: CombatCoreFighter = contact.attacker
 	var defender: CombatCoreFighter = contact.defender
-	var attribute: FrayAttackAttribute = contact.attribute
+	var attribute: CombatAttackAttribute = contact.attribute
 	if attacker.health <= 0 or defender.health <= 0:
 		return {}
 	var defender_was_airborne := defender.is_airborne_for_combat()
@@ -368,7 +368,7 @@ func _resolve_contact(contact: Dictionary) -> Dictionary:
 
 
 ## 创建或续接 ComboContext，并应用逐击、起手、重复招式与 juggle 规则。
-func _advance_combo(attacker: CombatCoreFighter, defender: CombatCoreFighter, attribute: FrayAttackAttribute) -> Dictionary:
+func _advance_combo(attacker: CombatCoreFighter, defender: CombatCoreFighter, attribute: CombatAttackAttribute) -> Dictionary:
 	var frame: int = Engine.get_physics_frames()
 	var key: StringName = defender.fighter_id
 	var context: Dictionary = _combo_by_defender.get(key, {})
@@ -429,11 +429,11 @@ func _advance_combo(attacker: CombatCoreFighter, defender: CombatCoreFighter, at
 	return context
 
 
-## 根据唯一 FrayAttackAttribute 上的气条收益字段提交双方资源变化。
+## 根据唯一 CombatAttackAttribute 上的气条收益字段提交双方资源变化。
 func _apply_meter_result(result: Dictionary) -> void:
 	var attacker: CombatCoreFighter = result.attacker
 	var defender: CombatCoreFighter = result.defender
-	var attribute: FrayAttackAttribute = result.attribute
+	var attribute: CombatAttackAttribute = result.attribute
 	if result.blocked:
 		attacker.add_meter(attribute.attacker_meter_gain_block, &"attack_blocked", attribute)
 		defender.add_meter(attribute.defender_meter_gain_block, &"guard_success", attribute)
@@ -476,7 +476,7 @@ func _consume_contact_source(source) -> void:
 
 
 ## 生成一枚使用 FrayHitState2D/FrayHitbox2D 的投射物，并校验其 strike 使用施放状态传入的同一资源。
-func spawn_projectile(attacker: CombatCoreFighter, expected_attribute: FrayAttackAttribute) -> void:
+func spawn_projectile(attacker: CombatCoreFighter, expected_attribute: CombatAttackAttribute) -> void:
 	if projectile_scene == null or attacker == null or attacker.health <= 0 or attacker.training_dummy:
 		return
 	var projectile = projectile_scene.instantiate()
@@ -494,9 +494,9 @@ func spawn_projectile(attacker: CombatCoreFighter, expected_attribute: FrayAttac
 	projectile.position = _projectiles_root.to_local(spawn_global_position)
 	_projectiles_root.add_child(projectile)
 	if expected_attribute != null and projectile.has_method("get_attack_attribute"):
-		var actual_attribute := projectile.get_attack_attribute() as FrayAttackAttribute
+		var actual_attribute := projectile.get_attack_attribute() as CombatAttackAttribute
 		if actual_attribute != expected_attribute:
-			push_error("projectile_scene 的 strike 未使用 fighter 施放状态传入的同一 FrayAttackAttribute。")
+			push_error("projectile_scene 的 strike 未使用 fighter 施放状态传入的同一 CombatAttackAttribute。")
 			projectile.queue_free()
 			return
 
@@ -536,7 +536,7 @@ func _contact_less(a: Dictionary, b: Dictionary) -> bool:
 
 
 ## 保存有界战斗事件日志，字段均可追踪到 attribute.id。
-func _record_event(event_name: StringName, attacker: CombatCoreFighter, defender: CombatCoreFighter, attribute: FrayAttackAttribute, extra: Dictionary = {}) -> void:
+func _record_event(event_name: StringName, attacker: CombatCoreFighter, defender: CombatCoreFighter, attribute: CombatAttackAttribute, extra: Dictionary = {}) -> void:
 	var event := {
 		"frame": Engine.get_physics_frames(),
 		"event": event_name,
@@ -551,7 +551,7 @@ func _record_event(event_name: StringName, attacker: CombatCoreFighter, defender
 
 
 ## KO 信号仅用于补充日志；真正 KO 状态在批次反应提交阶段进入。
-func _on_fighter_knocked_out(fighter, attribute: FrayAttackAttribute) -> void:
+func _on_fighter_knocked_out(fighter, attribute: CombatAttackAttribute) -> void:
 	var typed_fighter := fighter as CombatCoreFighter
 	if typed_fighter == null:
 		return

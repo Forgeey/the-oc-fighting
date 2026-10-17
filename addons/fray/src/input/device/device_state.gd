@@ -1,89 +1,94 @@
-extends Reference
-## Used by FrayInput to track device state
+class_name FrayDeviceState
+extends RefCounted
+## Used by [_FrayInput] to track device state
 
-const InputState = preload("input_data/state/input_state.gd")
-
-## Type: Dictionary<string, InputState>
-var input_state_by_name: Dictionary
-
-## Type: Dictionary<String, bool>
-var bool_by_condition: Dictionary
-
-func flag_inputs_use_in_composite(composite: String, inputs: PoolStringArray) -> void:
-    for input in inputs:
-        if input_state_by_name.has(input):
-            input_state_by_name[input].composites_used_in[composite] = true
+# Type: Dictionary<StringName, InputState>
+var _input_state_by_name: Dictionary
+var _is_valid := true
 
 
-func unflag_inputs_use_in_composite(composite: String, inputs: PoolStringArray) -> void:
-    for input in inputs:
-        if input_state_by_name.has(input):
-            input_state_by_name[input].composites_used_in.erase(composite)
+## Returns [code]true[/code] if the input state is still valid.
+func is_valid() -> bool:
+	return _is_valid
 
 
-func flag_inputs_as_distinct(inputs: PoolStringArray, ignore_in_comp_check: bool = false) -> void:
-    for input in inputs:
-        if input_state_by_name.has(input) and (ignore_in_comp_check or input_state_by_name[input].composites_used_in.empty()):
-            input_state_by_name[input].is_distinct = true
-
-func unflag_inputs_as_distinct(inputs: PoolStringArray) -> void:
-    for input in inputs:
-        if input_state_by_name.has(input):
-            input_state_by_name[input].is_distinct = false
-
-func set_inputs_distinctiveness(inputs: PoolStringArray, is_distinct: bool) -> void:
-    for input in inputs:
-        if input_state_by_name.has(input):
-            input_state_by_name[input].is_distinct = is_distinct
+## Invalidates this input state resulting in it being removed from the [_FrayInput] singleton.
+func invalidate() -> void:
+	_is_valid = false
 
 
-func is_all_indistinct(inputs: PoolStringArray) -> bool:
-    for input in inputs:
-        if input_state_by_name.has(input) and input_state_by_name[input].is_distinct:
-            return false
-    return true
-
-func get_pressed_inputs() -> PoolStringArray:
-    var pressed_inputs: PoolStringArray
-    for input in input_state_by_name:
-        if input_state_by_name[input].pressed:
-            pressed_inputs.append(input)
-    return pressed_inputs
+## Returns an array containing the names of every pressed input in this device state.
+func get_pressed_inputs() -> PackedStringArray:
+	var pressed_inputs: PackedStringArray
+	for input in _input_state_by_name:
+		if _input_state_by_name[input].pressed:
+			pressed_inputs.append(input)
+	return pressed_inputs
 
 
-func get_unpressed_inputs() -> PoolStringArray:
-    var unpressed_inputs: PoolStringArray
-    for input in input_state_by_name:
-        if not input_state_by_name[input].pressed:
-            unpressed_inputs.append(input)
-    return unpressed_inputs
+## Returns an array containing the names of every unpressed input in this device state.
+func get_unpressed_inputs() -> PackedStringArray:
+	var unpressed_inputs: PackedStringArray
+	for input in _input_state_by_name:
+		if not _input_state_by_name[input].pressed:
+			unpressed_inputs.append(input)
+	return unpressed_inputs
 
 
-func get_all_inputs() -> PoolStringArray:
-    return PoolStringArray(input_state_by_name.keys())
+## Returns the names of all inputs tracked by this device.
+func get_all_inputs() -> PackedStringArray:
+	return PackedStringArray(_input_state_by_name.keys())
 
 
-func get_input_state(input_name: String) -> InputState:
-    if input_state_by_name.has(input_name):
-        return input_state_by_name[input_name]
-    return register_input_state(input_name)
+## Returns the input state of an input associated with a given [kbd]input_name[\kbd],
+## if it exists.
+func get_input_state(input_name: StringName) -> FrayInputState:
+	if _input_state_by_name.has(input_name):
+		return _input_state_by_name[input_name]
+	return register_input_state(input_name)
 
 
-func register_input_state(input_name: String) -> InputState:
-    var input_state := InputState.new(input_name)
-    input_state_by_name[input_name] = input_state
-    return input_state
+## Creates a new input state for the given [kbd]input_name[\kbd].
+func register_input_state(input_name: StringName) -> FrayInputState:
+	var input_state := FrayInputState.new(input_name)
+	_input_state_by_name[input_name] = input_state
+	return input_state
 
 
-func is_condition_true(condition: String) -> bool:
-    if bool_by_condition.has(condition):
-        return bool_by_condition[condition]
-    return false
+## Flags all [kbd]inputs[/kbd] given as being used by given [kbd]composite[/kbd].
+func flag_inputs_use_in_composite(composite: StringName, inputs: PackedStringArray) -> void:
+	for input in inputs:
+		if _input_state_by_name.has(input):
+			_input_state_by_name[input].composites_used_in[composite] = true
 
 
-func set_condition(condition: String, value: bool) -> void:
-    bool_by_condition[condition] = value
+## Unflags all [kbd]inputs[/kbd] given as being used by given [kbd]composite[/kbd].
+func unflag_inputs_use_in_composite(composite: StringName, inputs: PackedStringArray) -> void:
+	for input in inputs:
+		if _input_state_by_name.has(input):
+			_input_state_by_name[input].composites_used_in.erase(composite)
 
 
-func clear_conditions() -> void:
-    bool_by_condition.clear()
+## Sets all [kbd]inputs[/kbd] as distinct.
+func set_inputs_as_distinct(inputs: PackedStringArray, ignore_in_comp_check: bool = false) -> void:
+	for input in inputs:
+		if (
+			_input_state_by_name.has(input)
+			and (ignore_in_comp_check or _input_state_by_name[input].composites_used_in.is_empty())
+		):
+			_input_state_by_name[input].is_distinct = true
+
+
+## Unsets all [kbd]inputs[/kbd] as distinct.
+func unset_inputs_as_distinct(inputs: PackedStringArray) -> void:
+	for input in inputs:
+		if _input_state_by_name.has(input):
+			_input_state_by_name[input].is_distinct = false
+
+
+## Returns [code]true[/code] if all [kbd]inputs[/kbd] are distinct.
+func is_all_distinct(inputs: PackedStringArray) -> bool:
+	for input in inputs:
+		if _input_state_by_name.has(input) and _input_state_by_name[input].is_distinct:
+			return true
+	return false

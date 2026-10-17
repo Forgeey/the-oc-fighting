@@ -8,6 +8,7 @@
 - Fighter 战斗薄层：`scripts/fighter/combat_core_fighter.gd`
 - 共享规则：`resources/combat/combat_rules.tres`
 - 攻击唯一来源：`resources/attacks/*.tres`，直接挂在 strike `FrayHitbox2D.attribute`
+- 战斗属性类：`scripts/resources/combat/combat_attack_attribute.gd` 与 `combat_hurtbox_attribute.gd`（项目自定义的 `FrayHitboxAttribute` 子类，不属于 Fray 插件）
 - 双时钟约束：动画图片序列统一按 34 FPS 播放；游戏逻辑与判定固定按 60 Hz 物理帧运行
 - 投射物：`scenes/projectiles/combat_core_projectile.tscn`
 - 软件设计与架构图：`docs/SDD.md`
@@ -28,7 +29,7 @@
 
 ## 可验证规则
 
-1. **攻击唯一来源**：damage、chip、hitstun、blockstun、hitstop、击退、浮空、juggle、倒地、气条收益、取消规则和投射物速度均来自实际 strike 上的 `FrayAttackAttribute`。
+1. **攻击唯一来源**：damage、chip、hitstun、blockstun、hitstop、击退、浮空、juggle、倒地、气条收益、取消规则和投射物速度均来自实际 strike 上的 `CombatAttackAttribute`。
 2. **批量结算**：strike 主动检测 hurtbox 后只把接触放入队列；`CombatCoreMatch` 按稳定键排序整个批次后分阶段提交，支持同帧互击与双 KO。
 3. **重复命中过滤**：去重键为 attacker、defender、攻击实例 token 与 hit id；近战一次攻击实例和一枚投射物对同一目标最多结算一次。
 4. **防御段位**：站防/蹲防由 Fray guard 状态表示。`HIGH` 可站防且会被主动蹲姿闪避；`MID` 可站防或蹲防；`LOW` 只能蹲防；`OVERHEAD`（越头）只能站防；`THROW` 与 `UNBLOCKABLE` 不可防御。当前下蹲攻击为 `LOW`，空中攻击为 `OVERHEAD`，站立重击与两种波为 `MID`。
@@ -43,10 +44,11 @@
 
 - `scripts/combat/`、`scripts/projectile/`、`scripts/debug/`：第 2 组项目薄层。
 - `scripts/fighter/`：复用并扩展第 1 组 Fray fighter 状态机。
-- `addons/fray/`：同一 Fray addon；通用 `FrayAttackAttribute` 承载防御段位、取消规则、投射物速度及既有战斗字段，没有把项目私有结算器塞入 addon。
+- `addons/fray/`：保持为通用 Fray addon，不放置项目私有攻击/受击类型。
+- `scripts/resources/combat/`：项目自有 `CombatAttackAttribute` 与 `CombatHurtboxAttribute`；二者扩展 `FrayHitboxAttribute`，承载格斗数据与碰撞过滤。
 - `FOUNDATION_BASELINE.md`：第 1 组项目的历史快照；其中记录的独立 Foundation 演示场景不属于当前项目运行结构，当前只保留其基础脚本供 `CombatCoreFighter` 继承。
 
 ## 已知限制
 
 - 本组不实现投技/拆投、精准防御、护甲、clash、舞台换场、回合计时、AI 或联网回滚。
-- 当前工作区已注明 `godot`/`godot4` 不在 PATH，因此实现阶段只能做文本、引用和资源静态检查；需用户提供 Godot 可执行文件路径后再执行引擎启动验证。
+- `godot`/`godot4` 未加入 PATH；可直接使用本机 Godot 4.7.1 可执行文件，或将其加入 PATH 后执行无窗口导入与运行验证。

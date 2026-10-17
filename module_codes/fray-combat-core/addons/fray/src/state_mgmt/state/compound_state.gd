@@ -90,7 +90,6 @@ var _global_transitions: Array[_Transition]
 var _current_state: StringName
 var _start_state: StringName
 var _end_state: StringName
-var _skip_child_enter_on_enter := false
 
 
 func _enter_impl(args: Dictionary) -> void:
@@ -100,7 +99,7 @@ func _enter_impl(args: Dictionary) -> void:
 		_current_state = start_state
 
 	var cur_state := get_current_state()
-	if cur_state != null and not _skip_child_enter_on_enter:
+	if cur_state is FrayCompoundState:
 		cur_state._enter_impl(args)
 
 
@@ -695,7 +694,6 @@ func clear() -> void:
 	_current_state = ""
 	_start_state = ""
 	_end_state = ""
-	_skip_child_enter_on_enter = false
 
 
 ## Prints this state machine in adjacency list form.
@@ -811,13 +809,7 @@ func _goto(path: StringName, args: Dictionary = {}) -> void:
 		var next_state_name := state_paths[i]
 		new_active_state._current_state = next_state_name
 		new_active_state = new_active_state.get_state(next_state_name)
-		var compound_state := new_active_state as FrayCompoundState
-		if compound_state != null and i < state_paths.size() - 1:
-			compound_state._skip_child_enter_on_enter = true
-			compound_state._enter_impl(args)
-			compound_state._skip_child_enter_on_enter = false
-		else:
-			new_active_state._enter_impl(args)
+		new_active_state._enter_impl(args)
 
 	transitioned.emit(active_path_info.path, path)
 

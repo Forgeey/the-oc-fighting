@@ -3,7 +3,7 @@ extends Resource
 ## Fighter foundation 的环境与角色运动物理参数。
 ##
 ## 本资源统一提供移动、二段跳、受身和恢复流程的物理参数。
-## 攻击/受击数值不在这里重复定义，仍只来自 FrayAttackAttribute。
+## 攻击/受击数值不在这里重复定义，仍只来自 CombatAttackAttribute。
 
 @export_group("Ground")
 ## walk forwards，地面前进行走最大速度，单位为像素/秒。

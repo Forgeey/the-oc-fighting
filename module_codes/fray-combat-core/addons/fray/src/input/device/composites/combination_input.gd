@@ -15,9 +15,6 @@ enum Mode {
 ## Determines press condition necessary to trigger combination
 var mode: Mode = Mode.SYNC
 
-## When true, synchronous components must record the exact same physics press frame.
-var require_same_physics_frame: bool = false
-
 ## Returns a builder instance
 static func builder() -> Builder:
 	return Builder.new()
@@ -61,21 +58,8 @@ func _is_all_components_pressed(device: int) -> bool:
 
 func _is_combination_quick_enough(device: int, tolerance: float = 10) -> bool:
 	var decomposed_states := _get_decomposed_states(device)
-	if decomposed_states.is_empty():
-		return false
-	if require_same_physics_frame:
-		var expected_physics_frame: int = -1
-		for input_state_value in decomposed_states:
-			var input_state := input_state_value as FrayInputState
-			if input_state == null or not input_state.is_pressed:
-				return false
-			if expected_physics_frame < 0:
-				expected_physics_frame = input_state.physics_frame
-			elif input_state.physics_frame != expected_physics_frame:
-				return false
-		return true
-
 	var avg_difference := 0
+
 	for i in len(decomposed_states):
 		if i > 0:
 			var input1: FrayInputState = decomposed_states[i]
@@ -131,13 +115,6 @@ class Builder:
 	## Returns a reference to the newly built combination input.
 	func mode_sync() -> Builder:
 		_composite_input.mode = FrayCombinationInput.Mode.SYNC
-		return self
-
-	## Requires synchronous components to be pressed on the exact same physics frame.
-	## [br]
-	## Returns a reference to the newly built combination input.
-	func same_physics_frame(value: bool = true) -> Builder:
-		_composite_input.require_same_physics_frame = value
 		return self
 
 	## Sets the combination to ordered mode.

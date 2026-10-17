@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="MoveEnvironment" format=3 uid="uid://dxxtbi0a1b40s"]
+
+[ext_resource type="Script" uid="uid://6jrfhyq3qqc" path="res://scripts/move_environment.gd" id="1_lvppg"]
+
+[resource]
+script = ExtResource("1_lvppg")
+metadata/_custom_type_script = "uid://6jrfhyq3qqc"

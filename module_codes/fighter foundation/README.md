@@ -1,4 +1,4 @@
-# 01 Fray Fighter Foundation
+﻿# 01 Fray Fighter Foundation
 
 这是一个独立的 Godot 4.7 / Fray 2.0.0-alpha 格斗角色基础项目。当前版本重点展示一套由 **Fray 状态机、Fray 输入、Fray 输入缓冲与 Fray hitbox** 共同驱动的格斗游戏角色状态框架，并包含每次离地一次的二段跳。
 
@@ -8,6 +8,7 @@
 - 角色入口：`scripts/fighter/foundation_fighter.gd`
 - 移动适配：`scripts/fighter/foundation_movement.gd`
 - 攻击数据：`resources/attacks/*.tres`
+- 攻击属性类：scripts/resources/combat/fray_attack_attribute.gd（项目自定义的 FrayHitboxAttribute 子类，不属于 Fray 插件）
 
 ## 状态集合
 
@@ -70,8 +71,8 @@
 | `5` | 调试 KO |
 | `R` | 重置位置、朝向、状态、速度和输入缓冲 |
 | `L` | 切换集中控制锁定 |
-| `P` | 普通暂停：状态机停止消费，缓冲时钟继续 |
-| `H` | hitstop 式暂停：状态机停止消费，缓冲时钟冻结 |
+| `P` | 普通暂停：状态机与 Fray 缓冲消费停止；缓冲年龄继续按真实时间增长 |
+| `H` | hitstop 式暂停：游戏逻辑停止；原版 Fray 缓冲年龄仍按真实时间增长 |
 
 朝向由 `FoundationFighter.facing_direction` 直接保存，黄色箭头显示当前值。角色与 `OpponentMarker2D` 换边时，fighter 在允许自动改向的地面状态中直接更新朝向；同一物理方向键随后会映射为新的 `forward` / `back` 语义。
 

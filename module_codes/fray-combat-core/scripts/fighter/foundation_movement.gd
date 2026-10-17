@@ -5,7 +5,7 @@ extends RefCounted
 ## 每个FrayState负责决定在当前状态的哪个时机调用哪一种运动方法
 ##
 ## 地面移动、冲刺、分段重力、固定跳跃轨迹、二段跳、受击击退和场地边界
-## 均由状态调用；攻击帧数据仍只来自 FrayAttackAttribute。
+## 均由状态调用；攻击帧数据仍只来自 CombatAttackAttribute。
 
 # 常量，在角色脚底即将接触或刚好轻微陷入地面时，强行认定角色为“接地”状态
 # 防止角色因物理引擎的数值误差或高速下落导致的落地判定失效
@@ -145,8 +145,8 @@ func step_airborne(delta: float) -> void:
 	_move_body()
 
 
-## 使用 FrayAttackAttribute 的 lunge 数据推进地面攻击移动。
-func step_ground_attack(attribute: FrayAttackAttribute, elapsed_frames: int, delta: float) -> void:
+## 使用 CombatAttackAttribute 的 lunge 数据推进地面攻击移动。
+func step_ground_attack(attribute: CombatAttackAttribute, elapsed_frames: int, delta: float) -> void:
 	_apply_gravity(delta)
 	if elapsed_frames <= attribute.lunge_frames:
 		_fighter.velocity.x = float(_fighter.facing_direction) * attribute.lunge_speed
@@ -193,7 +193,7 @@ func step_dash_world(
 ## 使用攻击资源启动受击击退；命中前已浮空时读取 airborne_launch_y_velocity。
 ## airborne_hit_count 来自当前 ComboContext，只用于共享重力缩放，不复制攻击数值。
 func start_hit_reaction(
-	attribute: FrayAttackAttribute,
+	attribute: CombatAttackAttribute,
 	defender_was_airborne: bool,
 	airborne_hit_count: int = 0
 ) -> void:
@@ -209,7 +209,7 @@ func start_hit_reaction(
 
 
 ## 使用攻击资源启动格挡推退。
-func start_block_reaction(attribute: FrayAttackAttribute) -> void:
+func start_block_reaction(attribute: CombatAttackAttribute) -> void:
 	_jump_air_locked = false
 	_fighter.velocity.x = -float(_fighter.facing_direction) * attribute.knockback * _environment.block_pushback_ratio
 	if _fighter.velocity.y > 0.0:
@@ -218,7 +218,7 @@ func start_block_reaction(attribute: FrayAttackAttribute) -> void:
 
 ## 使用攻击资源启动倒地运动，并保留命中前姿态与空中命中计数。
 func start_knockdown(
-	attribute: FrayAttackAttribute,
+	attribute: CombatAttackAttribute,
 	defender_was_airborne: bool = false,
 	airborne_hit_count: int = 0
 ) -> void:
@@ -282,7 +282,7 @@ func _get_juggle_gravity_scale() -> float:
 	if not _juggle_gravity_active:
 		return 1.0
 	var followup_hits := maxi(_juggle_air_hit_count - 1, 0)
-	var airborne_seconds := float(_juggle_airborne_frames) / FrayAttackAttribute.get_gameplay_frames_per_second()
+	var airborne_seconds := float(_juggle_airborne_frames) / CombatAttackAttribute.get_gameplay_frames_per_second()
 	var growth := (
 		float(followup_hits) * _environment.juggle_gravity_growth_per_hit
 		+ airborne_seconds * _environment.juggle_gravity_growth_per_second

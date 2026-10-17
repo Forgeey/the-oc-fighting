@@ -2,7 +2,7 @@ class_name CombatRuleSet
 extends Resource
 ## 第 2 组战斗核心的非招式规则资源。
 ##
-## 单招 damage、硬直、击退、浮空和气条收益仍由 FrayAttackAttribute 独占；
+## 单招 damage、硬直、击退、浮空和气条收益仍由 CombatAttackAttribute 独占；
 ## 本资源只保存跨招式共享的连段、生命与资源上限规则。
 
 ## 每名 fighter 的回合生命上限。

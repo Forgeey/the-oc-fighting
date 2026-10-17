@@ -10,8 +10,8 @@
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_crouch_heavy_hit_state.tscn" id="8_crouch_heavy"]
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_air_light_hit_state.tscn" id="9_air_light"]
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_air_heavy_hit_state.tscn" id="10_air_heavy"]
-[ext_resource type="Resource" path="res://resources/attacks/foundation_debug_knockdown.tres" id="11_debug_knockdown"]
-[ext_resource type="Resource" path="res://resources/attacks/foundation_debug_reaction.tres" id="12_debug_reaction"]
+[ext_resource type="Resource" uid="uid://rnmw5hly5h1b" path="res://resources/attacks/foundation_debug_knockdown.tres" id="11_debug_knockdown"]
+[ext_resource type="Resource" uid="uid://5r4jw0w38edo" path="res://resources/attacks/foundation_debug_reaction.tres" id="12_debug_reaction"]
 [ext_resource type="Script" uid="uid://c4csuxwyt10ds" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="13_hit_state"]
 [ext_resource type="Script" uid="uid://b0vx4yrnvlfgv" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="14_hitbox"]
 [ext_resource type="Resource" path="res://resources/combat/foundation_hurtbox.tres" id="15_hurtbox"]
@@ -34,7 +34,7 @@
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_crouch_medium_hit_state.tscn" id="32_crouch_medium"]
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_air_medium_hit_state.tscn" id="33_air_medium"]
 [ext_resource type="PackedScene" path="res://scenes/hitboxes/foundation_stand_combo_medium_hit_state.tscn" id="34_combo_medium"]
-[ext_resource type="Resource" path="res://resources/attacks/combat_arc_bolt.tres" id="36_arc_bolt"]
+[ext_resource type="Resource" uid="uid://d8k1xodsigij" path="res://resources/attacks/combat_arc_bolt.tres" id="36_arc_bolt"]
 [ext_resource type="Resource" path="res://resources/attacks/combat_arc_bolt_enhanced.tres" id="37_arc_bolt_enhanced"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
@@ -984,7 +984,7 @@ advance_mode = 1
 [node name="FrayBufferedInputAdvancer" type="Node" parent="FrayStateMachine" unique_id=616553038]
 process_physics_priority = 10
 script = ExtResource("4_advancer")
-max_buffer_time = 0.083333
+max_buffer_time = 0.5
 advance_mode = 1
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1459805115]

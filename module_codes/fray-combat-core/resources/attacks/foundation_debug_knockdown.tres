@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="FrayAttackAttribute" format=3 uid="uid://rnmw5hly5h1b"]
+[gd_resource type="Resource" script_class="CombatAttackAttribute" format=3 uid="uid://rnmw5hly5h1b"]
 
-[ext_resource type="Script" uid="uid://d3l8m2a6xrart" path="res://addons/fray/src/hit/attack_attribute.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/resources/combat/combat_attack_attribute.gd" id="1_attack"]
 
 [resource]
 script = ExtResource("1_attack")
@@ -17,3 +17,4 @@ knockdown_frames = 52
 untechable_frames = 16
 knockback = 320.0
 airborne_launch_y_velocity = -90.0
+

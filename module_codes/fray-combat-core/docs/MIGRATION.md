@@ -4,7 +4,7 @@
 
 - `scripts/combat/combat_core_match.gd`：批量接触、稳定排序、去重、ComboContext、meter、KO。
 - `scripts/fighter/combat_core_fighter.gd`：hurtbox 上报、集中反应、hitstop、只读快照，以及 Amplify 气条原子支付入口。
-- `FrayAttackAttribute` 的 `amplify_target_state`、`amplify_start_frame`、`amplify_end_frame`、`amplify_meter_cost`：把状态内强化目标、窗口与消耗留在攻击唯一数据源。
+- `CombatAttackAttribute` 的 `amplify_target_state`、`amplify_start_frame`、`amplify_end_frame`、`amplify_meter_cost`：把状态内强化目标、窗口与消耗留在攻击唯一数据源。
 - `scripts/projectile/combat_core_projectile.gd`：Fray projectile strike 与实例 token。
 - `scripts/combat/combat_rule_set.gd` 与 `resources/combat/combat_rules.tres`。
 - `scripts/debug/combat_hitbox_debug_draw.gd`：训练判定框显示。

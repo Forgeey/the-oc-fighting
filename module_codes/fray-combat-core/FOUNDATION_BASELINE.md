@@ -72,8 +72,8 @@
 | `5` | 调试 KO |
 | `R` | 重置位置、朝向、状态、速度和输入缓冲 |
 | `L` | 切换集中控制锁定 |
-| `P` | 普通暂停：状态机停止消费，缓冲时钟继续 |
-| `H` | hitstop 式暂停：状态机停止消费，缓冲时钟冻结 |
+| `P` | 普通暂停：状态机与 Fray 缓冲消费停止；缓冲年龄继续按真实时间增长 |
+| `H` | hitstop 式暂停：游戏逻辑停止；原版 Fray 缓冲年龄仍按真实时间增长 |
 
 朝向由 `FoundationFighter.facing_direction` 直接保存。角色与 `OpponentMarker2D` 换边时，fighter 在允许自动改向的地面状态中直接更新朝向；角色图片与 Fray 攻击判定管理器随之镜像，同一物理方向键随后会映射为新的 `forward` / `back` 语义。
 
@@ -95,7 +95,7 @@
 
 ## 攻击数据与 hitbox
 
-六种基础攻击均使用 `FrayAttackAttribute` 资源作为唯一数据来源，包含：
+六种基础攻击均使用 `CombatAttackAttribute` 资源作为唯一数据来源，包含：
 
 - 总时长、startup、active；
 - damage、block damage；
@@ -103,9 +103,9 @@
 - knockback、launch、knockdown、受身窗口；
 - 攻击前移 lunge。
 
-六个攻击 `FrayHitState2D` 由角色场景中的 `FrayHitStateManager2D` 统一管理；每个 hit state 直接包含至少一个 `FrayHitbox2D`，且其 `attribute` 直接绑定对应 `.tres`。角色初始化时从 hitbox 校验并缓存唯一的 `FrayAttackAttribute`，`FighterStateMachineBuilder` 不再直接引用攻击资源；`FoundationAttackState` 只读取该 attribute 来推进攻击帧、位移和 strike 激活窗口。
+六个攻击 `FrayHitState2D` 由角色场景中的 `FrayHitStateManager2D` 统一管理；每个 hit state 直接包含至少一个 `FrayHitbox2D`，且其 `attribute` 直接绑定对应 `.tres`。角色初始化时从 hitbox 校验并缓存唯一的 `CombatAttackAttribute`，`FighterStateMachineBuilder` 不再直接引用攻击资源；`FoundationAttackState` 只读取该 attribute 来推进攻击帧、位移和 strike 激活窗口。
 
-角色场景还包含常驻 `FrayHurtboxAttribute` hurtbox。当前 foundation 主要演示状态框架、攻击判定资源和外部反应 API；完整的双角色伤害、格挡判定、血量、连段与回合裁判仍应由后续战斗解析层接入。
+角色场景还包含常驻 `CombatHurtboxAttribute` hurtbox。当前 foundation 主要演示状态框架、攻击判定资源和外部反应 API；完整的双角色伤害、格挡判定、血量、连段与回合裁判仍应由后续战斗解析层接入。
 
 ## Fray-first 设计
 
@@ -115,7 +115,7 @@
 - 外部 hitstun、blockstun、knockdown、wakeup、KO 统一通过 `FoundationFighter.request_external_state()` 进入。
 - `FoundationMovement` 只负责 `CharacterBody2D` 运动，不维护状态枚举或转移图。
 - `FoundationFighterEnvironment` 只保存环境、移动、跳跃和恢复物理参数；攻击与受击数值不在其中重复定义。
-- 攻击 strike 直接挂载 `FrayAttackAttribute`，符合 Fray hitbox attribute 数据流。
+- 攻击 strike 直接挂载 `CombatAttackAttribute`，符合 Fray hitbox attribute 数据流。
 
 ## 输入与缓冲
 
@@ -136,8 +136,8 @@ Fray 原版 advancer 会在尝试队首输入后移除该项目；若当前状�
 fighter foundation/
 ├─ addons/fray/                         # Fray 核心，未为本功能另建并行系统
 ├─ resources/
-│  ├─ attacks/                          # FrayAttackAttribute 攻击/调试反应资源
-│  ├─ combat/                           # FrayHurtboxAttribute
+│  ├─ attacks/                          # CombatAttackAttribute 攻击/调试反应资源
+│  ├─ combat/                           # CombatHurtboxAttribute
 │  └─ environment/                      # 移动与舞台环境参数
 ├─ scenes/
 │  ├─ hitboxes/                         # 六种攻击的 FrayHitState2D 场景

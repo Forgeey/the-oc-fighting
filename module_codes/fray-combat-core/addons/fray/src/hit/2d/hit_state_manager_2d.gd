@@ -45,14 +45,14 @@ func _ready() -> void:
 		if child is FrayHitState2D:
 			child.set_hitbox_source(source)
 			child.hitbox_intersected.connect(_on_Hitstate_hitbox_intersected)
-			child.hitbox_separated.connect(_on_Hitstate_hitbox_separated)
+			child.hitbox_intersected.connect(_on_Hitstate_hitbox_separated)
 			child.active_hitboxes_changed.connect(_on_HitState_active_hitboxes_changed.bind(child))
 
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings: PackedStringArray = []
 	
-	if not get_children().any(func(node): return node is FrayHitState2D):
+	if get_children().any(func(node): node is FrayHitState2D):
 		warnings.append("This node has no hit states so there is nothing to manage. Consider adding a FrayHitState2D as a child.")
 	
 	return warnings
@@ -99,6 +99,7 @@ func _set_current_state(new_current_state: StringName) -> void:
 		for child in get_children():
 			if child is FrayHitState2D and child.name != _current_state:
 				child.deactivate()
+				print(child.name)
 
 
 func _on_ChildChangeDetector_child_changed(node: Node, change: _ChildChangeDetector.Change) -> void:
@@ -120,4 +121,4 @@ func _on_Hitstate_hitbox_separated(detector_hitbox: FrayHitbox2D, detected_hitbo
 func _on_HitState_active_hitboxes_changed(hitstate: FrayHitState2D) -> void:
 	if hitstate.active_hitboxes != 0:
 		_set_current_state(hitstate.name)
-		hitstate.activate()
+	hitstate.activate()

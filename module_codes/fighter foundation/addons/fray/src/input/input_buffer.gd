@@ -30,6 +30,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	for input in _buffer_by_input:
 		var buffer: _InputBuffer = _buffer_by_input[input]
+		
 		if buffer.is_pressed and (buffer.is_expired() or buffer.can_reset()):
 			buffer.reset()
 	
@@ -37,9 +38,6 @@ func _physics_process(delta: float) -> void:
 		var window: _InputWindow = _window_by_input[input]
 		
 		if window.is_pressed and window.can_end():
-			window.end()
-		
-		if window.time_started > 0 and Time.get_ticks_msec() - window.time_started > window.duration:
 			window.end()
 		
 		if window.can_start():
@@ -58,7 +56,6 @@ func set_buffer(input: StringName, duration: int, can_reset := Callable()) -> vo
 	_WARN_INPUT_DOES_NOT_EXIST(input)
 	
 	var buffer: _InputBuffer = _buffer_by_input.get(input, _InputBuffer.new())
-	buffer.device = device
 	buffer.input = input
 	buffer.duration = duration
 	buffer.func_can_reset = can_reset
@@ -84,7 +81,6 @@ func set_window(input: StringName, duration: int, can_start := Callable(), can_e
 	_WARN_INPUT_DOES_NOT_EXIST(input)
 	
 	var window: _InputWindow = _window_by_input.get(input, _InputWindow.new())
-	window.device = device
 	window.input = input
 	window.duration = duration
 	window.func_can_end = can_end
@@ -131,7 +127,6 @@ func start_window(input: StringName) -> void:
 	match _window_by_input.get(input):
 		var window:
 			window.time_started = Time.get_ticks_msec()
-			window.is_pressed = false
 		null:
 			push_warning("Failed to start window. A window was never set for input %s" % input)
 
@@ -173,7 +168,7 @@ class _InputBuffer:
 		return func_can_reset.is_valid() and func_can_reset.call()
 	
 	func is_expired() -> bool:
-		return time_started + duration - Time.get_ticks_msec() < 0
+		return time_started + duration * 1000 - Time.get_ticks_msec() < 0
 
 	
 	func reset() -> void:
@@ -191,7 +186,6 @@ class _InputBuffer:
 	
 	func _on_FrayInput_input_detected(input_event: FrayInputEvent) -> void:
 		if _is_pressed(input_event):
-			time_started = Time.get_ticks_msec()
 			is_pressed = true
 				
 
@@ -203,7 +197,7 @@ class _InputWindow:
 	var input: StringName
 	var func_can_end: Callable
 	var func_can_start: Callable
-	var duration: int
+	var duration: float
 	var is_pressed: bool
 	
 	
@@ -225,7 +219,7 @@ class _InputWindow:
 			and input_event.input == input 
 			and input_event.is_just_pressed()
 			and time_started > 0
-			and input_event.time_pressed - time_started <= duration
+			and input_event.time_pressed - time_started <= duration * 1000
 			)
 
 
@@ -233,5 +227,5 @@ class _InputWindow:
 		if input_event.device == device:
 			if _is_input_in_window(input_event):
 				is_pressed = true
-			#else:
-				#is_pressed = false
+			else:
+				is_pressed = false

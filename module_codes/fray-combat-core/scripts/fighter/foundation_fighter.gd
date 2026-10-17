@@ -3,7 +3,7 @@ extends CharacterBody2D
 ## Fray fighter foundation 角色入口。
 ##
 ## 本脚本只负责依赖装配、集中外部战斗事件、回合生命周期与调试投影；
-## 状态拓扑由 FighterStateMachineBuilder 独占，攻击帧数据由 FrayAttackAttribute 独占。
+## 状态拓扑由 FighterStateMachineBuilder 独占，攻击帧数据由 CombatAttackAttribute 独占。
 
 signal foundation_ready(success: bool)
 signal debug_snapshot_changed(snapshot: Dictionary)
@@ -88,11 +88,11 @@ const STATE_COLORS := {
 ## 角色当前世界朝向；1 表示向右，-1 表示向左。
 @export_enum("Left:-1", "Right:1") var facing_direction: int = 1
 
-## 调试受击按键使用的 FrayAttackAttribute；正式战斗应传入实际 strike attribute。
-@export var debug_reaction_attribute: FrayAttackAttribute
+## 调试受击按键使用的 CombatAttackAttribute；正式战斗应传入实际 strike attribute。
+@export var debug_reaction_attribute: CombatAttackAttribute
 
-## 调试倒地按键使用的软倒地 FrayAttackAttribute。
-@export var debug_knockdown_attribute: FrayAttackAttribute
+## 调试倒地按键使用的软倒地 CombatAttackAttribute。
+@export var debug_knockdown_attribute: CombatAttackAttribute
 
 ## 演示用对手标记路径；正式对手解析属于后续项目。
 @export_node_path("Node2D") var opponent_marker_path: NodePath
@@ -112,7 +112,7 @@ var _initialized: bool = false
 var _control_locked: bool = false
 var _simulation_paused: bool = false
 var _tech_roll_available: bool = false
-var _pending_reaction_attribute: FrayAttackAttribute
+var _pending_reaction_attribute: CombatAttackAttribute
 var _attack_hit_states: Dictionary = {}
 var _attack_attributes: Dictionary = {}
 var _last_transition_from: StringName = &""
@@ -203,6 +203,7 @@ func initialize_fighter() -> bool:
 	if not _input_setup.bind_advancer(controller, input_advancer, sequence_tree):
 		state_machine.active = false
 		return false
+	state_machine.advance()
 	_connect_debug_input_listener(fray_input)
 	_initialized = true
 	_sync_state_visual(state_machine.get_current_state_name())
@@ -221,7 +222,7 @@ func set_control_locked(locked: bool, reason: StringName = &"external") -> void:
 		_movement.stop()
 		state_machine.goto(&"locked", {"reason": reason})
 	else:
-		state_machine.goto_start({"reason": reason})
+		state_machine.goto(&"idle", {"reason": reason})
 
 
 ## 返回当前集中控制锁定值，供 Fray condition 只读查询。
@@ -276,8 +277,8 @@ func get_attack_hit_state(state_id: StringName) -> FrayHitState2D:
 
 
 ## 返回从指定 FrayHitState2D 子 FrayHitbox2D.attribute 中缓存的唯一攻击属性。
-func get_attack_attribute(state_id: StringName) -> FrayAttackAttribute:
-	return _attack_attributes.get(state_id) as FrayAttackAttribute
+func get_attack_attribute(state_id: StringName) -> CombatAttackAttribute:
+	return _attack_attributes.get(state_id) as CombatAttackAttribute
 
 
 ## 返回已由 FrayHitStateManager2D 校验的攻击状态 ID，供状态机按资源生成取消转移。
@@ -289,9 +290,9 @@ func get_attack_state_ids() -> Array[StringName]:
 	return result
 
 
-## 集中解析受击来源并缓存 FrayAttackAttribute；空值回退到调试资源。
-func resolve_reaction_attribute(value = null) -> FrayAttackAttribute:
-	var attribute: FrayAttackAttribute = value as FrayAttackAttribute
+## 集中解析受击来源并缓存 CombatAttackAttribute；空值回退到调试资源。
+func resolve_reaction_attribute(value = null) -> CombatAttackAttribute:
+	var attribute: CombatAttackAttribute = value as CombatAttackAttribute
 	if attribute == null:
 		attribute = _pending_reaction_attribute
 	if attribute == null:
@@ -319,7 +320,7 @@ func reset_for_round(spawn: Transform2D, facing: int = 1) -> void:
 	_movement.refresh_snapshot()
 	_deactivate_all_attack_hit_states()
 	_sync_facing_visual()
-	state_machine.goto_start({"reason": &"round_reset"})
+	state_machine.goto(&"idle", {"reason": &"round_reset"})
 	_clear_debug_history()
 
 
@@ -341,7 +342,7 @@ func is_simulation_paused() -> bool:
 func request_external_state(kind: StringName, args: Dictionary = {}) -> bool:
 	if not _initialized:
 		return false
-	var reaction_attribute: FrayAttackAttribute
+	var reaction_attribute: CombatAttackAttribute
 	match kind:
 		&"hitstun":
 			reaction_attribute = resolve_reaction_attribute(args.get("attribute", debug_reaction_attribute))
@@ -401,12 +402,10 @@ func get_debug_snapshot() -> Dictionary:
 		"facing": facing_direction,
 		"control_locked": _control_locked,
 		"simulation_paused": _simulation_paused,
-		"buffer_clock_paused": input_advancer.buffer_clock_paused,
 		"lock_reason": _last_lock_reason,
 		"device": controller.device,
 		"device_connected": controller.is_device_connected(),
 		"last_transition": "%s → %s" % [_last_transition_from, _last_transition_to],
-		"buffer_clock_msec": input_advancer.get_buffer_clock_msec(),
 		"buffer": input_advancer.get_buffer(),
 		"input_history": _input_history.duplicate(true),
 		"state_history": _state_history.duplicate(true),
@@ -446,28 +445,28 @@ func _collect_attack_hit_states() -> bool:
 func _validate_attack_hit_state(
 	state_id: StringName,
 	hit_state: FrayHitState2D
-) -> FrayAttackAttribute:
+) -> CombatAttackAttribute:
 	var hitboxes := hit_state.get_hitboxes()
 	if hitboxes.is_empty():
 		push_error("攻击状态 %s 下没有 FrayHitbox2D。" % state_id)
 		return null
 
-	var result: FrayAttackAttribute
+	var result: CombatAttackAttribute
 	for hitbox in hitboxes:
-		var attack := hitbox.attribute as FrayAttackAttribute
+		var attack := hitbox.attribute as CombatAttackAttribute
 		if attack == null:
-			push_error("攻击状态 %s 的 FrayHitbox2D.attribute 必须是 FrayAttackAttribute。" % state_id)
+			push_error("攻击状态 %s 的 FrayHitbox2D.attribute 必须是 CombatAttackAttribute。" % state_id)
 			return null
 		if attack.id != state_id:
 			push_error("攻击状态 %s 的 attribute.id 必须与状态名一致，当前为 %s。" % [state_id, attack.id])
 			return null
 		if result != null and result != attack:
-			push_error("攻击状态 %s 的所有 FrayHitbox2D 必须引用同一个 FrayAttackAttribute。" % state_id)
+			push_error("攻击状态 %s 的所有 FrayHitbox2D 必须引用同一个 CombatAttackAttribute。" % state_id)
 			return null
 		result = attack
 	if (
-		result.cancel_requirement < FrayAttackAttribute.CancelRequirement.ALWAYS
-		or result.cancel_requirement > FrayAttackAttribute.CancelRequirement.ON_HIT_OR_BLOCK
+		result.cancel_requirement < CombatAttackAttribute.CancelRequirement.ALWAYS
+		or result.cancel_requirement > CombatAttackAttribute.CancelRequirement.ON_HIT_OR_BLOCK
 	):
 		push_error("攻击状态 %s 的 cancel_requirement 无效。" % state_id)
 		return null

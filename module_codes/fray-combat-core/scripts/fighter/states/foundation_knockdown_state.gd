@@ -1,6 +1,6 @@
 class_name FoundationKnockdownState
 extends FoundationState
-## 倒地状态；倒地与不可受身帧数来自 FrayAttackAttribute。
+## 倒地状态；倒地与不可受身帧数来自 CombatAttackAttribute。
 
 var _elapsed_frames: int = 0
 var _duration_frames: int = 1
@@ -11,7 +11,7 @@ var _hard_knockdown: bool = false
 ## 进入倒地时读取集中缓存的攻击资源，并重置受身窗口。
 func _enter_impl(args: Dictionary) -> void:
 	_elapsed_frames = 0
-	var attribute: FrayAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
+	var attribute: CombatAttackAttribute = fighter.resolve_reaction_attribute(args.get("attribute"))
 	_duration_frames = attribute.knockdown_frames
 	if _duration_frames <= 0:
 		_duration_frames = environment.default_knockdown_duration_frames

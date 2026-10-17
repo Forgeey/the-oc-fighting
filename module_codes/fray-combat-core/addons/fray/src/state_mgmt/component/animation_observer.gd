@@ -11,28 +11,26 @@ extends Node
 @export var tracker: FrayAnimatorTracker:
 	set(value):
 		tracker = value
-		if tracker == null:
-			return
 		tracker.fn_get_path_from = _get_path_from
 		tracker.fn_get_node_or_null = get_node_or_null
 
 
 func _ready() -> void:
-	if Engine.is_editor_hint() or tracker == null:
+	if Engine.is_editor_hint():
 		return
 
 	tracker.ready()
 
 
 func _process(delta: float) -> void:
-	if Engine.is_editor_hint() or tracker == null:
+	if Engine.is_editor_hint():
 		return
 
 	tracker.process(delta)
 
 
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint() or tracker == null:
+	if Engine.is_editor_hint():
 		return
 
 	tracker.physics_process(delta)
@@ -70,4 +68,3 @@ func usignal_updated(animation: String) -> Signal:
 
 func _get_path_from(from_node: Node) -> NodePath:
 	return NodePath(from_node.get_path_to(self))
-

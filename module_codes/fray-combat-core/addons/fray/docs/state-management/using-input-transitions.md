@@ -60,13 +60,8 @@ if Input.is_action_just_pressed("ui_select"):
     advancer.buffer_press("jump_button")
 ```
 
-Input feeding and buffer aging can be paused independently. `paused` prevents buffered inputs from being consumed, while `buffer_clock_paused` freezes the gameplay clock used for input timestamps, buffer expiration, and accepted-input intervals. Inputs can still be collected while either pause is active.
-
-Use only `paused` when a state temporarily disallows transition consumption but buffered inputs should continue aging. Use both properties for hitstop or another gameplay pause:
+Additionally, the advancer can be paused to control the timing of input feeding. Note that pausing doesn't stop the advancer; inputs can still be buffered during pauses, and they will expire if they exceed the maximum buffer time. This behavior allows the timeframe during which device inputs have the opportunity to trigger state transitions to be defined. Even if input buffering is not required, the advancer offers a friendly interface for feeding device inputs to a state machine.
 
 ```gdscript
-advancer.paused = hitstop_active
-advancer.buffer_clock_paused = hitstop_active
+advancer.paused = false
 ```
-
-`get_buffer_clock_msec()` exposes the same clock for gameplay systems that need to compare their windows with buffered input timestamps.
