@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="FighterTransitionLibrary" format=3 uid="uid://dv42k3m0gvn1k"]
+
+[ext_resource type="Script" uid="uid://duonerohe7see" path="res://scripts/transitions/transition_library.gd" id="1_f82ra"]
+[ext_resource type="Script" uid="uid://3oiendllxdb1" path="res://scripts/transitions/transition_definition.gd" id="2_47f6f"]
+
+[sub_resource type="Resource" id="Rule_idle_to_crouch"]
+script = ExtResource("2_47f6f")
+from_state = &"idle"
+to_state = &"crouch"
+advance_conditions = ["inputed_crouch"]
+
+[sub_resource type="Resource" id="Rule_idle_to_fwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"idle"
+to_state = &"fwalk"
+advance_conditions = ["inputed_fwalk"]
+
+[sub_resource type="Resource" id="Rule_idle_to_bwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"idle"
+to_state = &"bwalk"
+advance_conditions = ["inputed_bwalk"]
+
+[sub_resource type="Resource" id="Rule_fwalk_to_crouch"]
+script = ExtResource("2_47f6f")
+from_state = &"fwalk"
+to_state = &"crouch"
+advance_conditions = ["inputed_crouch"]
+
+[sub_resource type="Resource" id="Rule_fwalk_to_bwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"fwalk"
+to_state = &"bwalk"
+advance_conditions = ["inputed_bwalk"]
+
+[sub_resource type="Resource" id="Rule_fwalk_to_idle"]
+script = ExtResource("2_47f6f")
+from_state = &"fwalk"
+to_state = &"idle"
+advance_conditions = ["!inputed_fwalk"]
+
+[sub_resource type="Resource" id="Rule_bwalk_to_crouch"]
+script = ExtResource("2_47f6f")
+from_state = &"bwalk"
+to_state = &"crouch"
+advance_conditions = ["inputed_crouch"]
+
+[sub_resource type="Resource" id="Rule_bwalk_to_fwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"bwalk"
+to_state = &"fwalk"
+advance_conditions = ["inputed_fwalk"]
+
+[sub_resource type="Resource" id="Rule_bwalk_to_idle"]
+script = ExtResource("2_47f6f")
+from_state = &"bwalk"
+to_state = &"idle"
+advance_conditions = ["!inputed_bwalk"]
+
+[sub_resource type="Resource" id="Rule_crouch_to_fwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"crouch"
+to_state = &"fwalk"
+advance_conditions = ["inputed_fwalk"]
+
+[sub_resource type="Resource" id="Rule_crouch_to_bwalk"]
+script = ExtResource("2_47f6f")
+from_state = &"crouch"
+to_state = &"bwalk"
+advance_conditions = ["inputed_bwalk"]
+
+[sub_resource type="Resource" id="Rule_crouch_to_idle"]
+script = ExtResource("2_47f6f")
+from_state = &"crouch"
+to_state = &"idle"
+advance_conditions = ["!inputed_crouch"]
+
+[resource]
+script = ExtResource("1_f82ra")
+condition_methods = Dictionary[StringName, StringName]({
+&"inputed_bwalk": &"inputed_bwalk",
+&"inputed_crouch": &"inputed_crouch",
+&"inputed_fwalk": &"inputed_fwalk"
+})
+transitions = Array[ExtResource("2_47f6f")]([SubResource("Rule_idle_to_crouch"), SubResource("Rule_idle_to_fwalk"), SubResource("Rule_idle_to_bwalk"), SubResource("Rule_fwalk_to_crouch"), SubResource("Rule_fwalk_to_bwalk"), SubResource("Rule_fwalk_to_idle"), SubResource("Rule_bwalk_to_crouch"), SubResource("Rule_bwalk_to_fwalk"), SubResource("Rule_bwalk_to_idle"), SubResource("Rule_crouch_to_fwalk"), SubResource("Rule_crouch_to_bwalk"), SubResource("Rule_crouch_to_idle")])

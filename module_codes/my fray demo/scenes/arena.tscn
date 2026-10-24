@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://b32rn72mth8ll"]
+
+[ext_resource type="PackedScene" uid="uid://duhn654wd0r8u" path="res://scenes/Fighter.tscn" id="1_5ftpa"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_r1fbv"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_0351o"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_so2gl"]
+
+[node name="Arena" type="Node2D" unique_id=1621125537]
+
+[node name="Background" type="Polygon2D" parent="." unique_id=678804956]
+color = Color(0.055, 0.075, 0.11, 1)
+polygon = PackedVector2Array(0, 0, 1280, 0, 1280, 720, 0, 720)
+
+[node name="FloorVisual" type="Polygon2D" parent="." unique_id=551886465]
+color = Color(0.12, 0.16, 0.22, 1)
+polygon = PackedVector2Array(0, 640, 1280, 640, 1280, 720, 0, 720)
+
+[node name="FloorLine" type="Line2D" parent="." unique_id=302011525]
+points = PackedVector2Array(0, 640, 1280, 640)
+width = 2.0
+default_color = Color(0.35, 0.7, 0.75, 1)
+
+[node name="Title" type="Label" parent="." unique_id=1244223486]
+offset_left = 32.0
+offset_top = 24.0
+theme_override_font_sizes/font_size = 26
+text = "FRAY / IDLE + FWALK + BWALK + CROUCH"
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1199083018]
+rotation = 1.5707964
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1079909484]
+shape = SubResource("WorldBoundaryShape2D_r1fbv")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="." unique_id=160797711]
+position = Vector2(0, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D2" unique_id=1978652767]
+shape = SubResource("WorldBoundaryShape2D_0351o")
+
+[node name="StaticBody2D3" type="StaticBody2D" parent="." unique_id=1805922368]
+position = Vector2(1280, 0)
+rotation = -1.5707964
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D3" unique_id=2147154133]
+shape = SubResource("WorldBoundaryShape2D_so2gl")
+
+[node name="Fighter" parent="." unique_id=1909154529 instance=ExtResource("1_5ftpa")]
+position = Vector2(320, 640)

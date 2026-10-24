@@ -54,7 +54,8 @@ var end_state: StringName = "":
 			return
 		_end_state = state
 
-## If [code]true[/code] this state does not reset to its start state on enter.
+## If [code]true[/code], entering this group without an explicit descendant restores
+## its last selected child. This is a Fray extension, not SCXML history nodes.
 var is_persistent := false
 
 # Type: Dictionary<StringName, FrayState>
@@ -91,16 +92,12 @@ var _current_state: StringName
 var _start_state: StringName
 var _end_state: StringName
 
+# Lifecycle callbacks must not recursively execute another transition.
+var _is_transitioning := false
+
 
 func _enter_impl(args: Dictionary) -> void:
 	super(args)
-
-	if not is_persistent or _current_state.is_empty():
-		_current_state = start_state
-
-	var cur_state := get_current_state()
-	if cur_state is FrayCompoundState:
-		cur_state._enter_impl(args)
 
 
 func _exit_impl() -> void:
@@ -151,34 +148,48 @@ func is_root() -> bool:
 ##
 ## Returns true if the input was accepted and state advanced.
 func advance(input: Dictionary = {}, args: Dictionary = {}) -> bool:
-	var cur_state: FrayState = get_current_state()
-	var has_substate_advanced := false
+	if get_root()._is_transitioning:
+		return false
 
-	if cur_state != null:
-		if _astar.has_next_travel_point():
-			#TODO: Traveling may need to be reapproach due to the _goto changes
-			# further testing is required.
-			var travel_state = cur_state
-			while travel_state.is_done_processing() and _astar.has_next_travel_point():
-				_goto(_astar.get_next_travel_point(), _travel_args)
-				travel_state = get_state(_current_state)
-		else:
-			var next_state := get_next_state(input)
+	var cur_state := get_current_state()
+	if cur_state == null:
+		return false
 
-			if not next_state.is_empty():
-				goto(next_state, args)
-				return true
+	# Explicit travel remains a Fray extension and takes priority at this level.
+	if _astar.has_next_travel_point():
+		var advanced := false
+		while _astar.has_next_travel_point() and cur_state.is_done_processing():
+			var next_point := _astar.get_next_travel_point()
+			# AStar includes the origin; it is not an external self-transition.
+			if next_point == _current_state:
+				continue
+			if not _transition_to(next_point, _travel_args, cur_state):
+				_astar.clear_travel_path()
+				return advanced
+			advanced = true
+			cur_state = get_current_state()
+		if advanced:
+			return true
+		return cur_state.advance(input, args) if cur_state is FrayCompoundState else false
 
-		if cur_state is FrayCompoundState:
-			return cur_state.advance(input, args)
+	# A descendant's matching rule wins over an ancestor's matching rule.
+	if cur_state is FrayCompoundState and cur_state.advance(input, args):
+		return true
 
-	return false
+	var next_transition := _get_next_transition(input)
+	if next_transition == null:
+		return false
+
+	return _transition_to(next_transition.to, args, cur_state)
 
 
 ## Transitions from the current state to another state, following the shortest path.
 ## This transition ignores prerequisites and advance conditions, but waits until the current state finishes processing.
 ## If no valid travel path can be established, the [kbd]to[/kbd] state will be visited directly.
 func travel(to: StringName, args: Dictionary = {}) -> void:
+	if get_root()._is_transitioning:
+		push_error("Failed to travel during a lifecycle callback.")
+		return
 	if _ERR_INVALID_STATE(to):
 		return
 
@@ -194,13 +205,12 @@ func travel(to: StringName, args: Dictionary = {}) -> void:
 ## This method exits states leading up to the most common ancestor of the current state and the target state,
 ## and then enters states leading towards the target state.
 ## In a non-hierarchical system, it exits the current state and directly enters the specified state.
+## Compound targets expand to a valid default/history leaf; explicit paths win.
+## Navigating to the current leaf does not re-enter it. Ordinary rules are external.
 ## If a travel is being performed it will be interupted.
 func goto(path: StringName, args: Dictionary = {}) -> void:
 	if not has_state(path):
 		return
-
-	if _astar.has_next_travel_point():
-		_astar.clear_travel_path()
 
 	_goto(path, args)
 
@@ -417,7 +427,9 @@ func add_transition(
 	tr.to = to
 	tr.transition = transition
 
-	_astar.connect_points(from, to, has_transition(from, to))
+	# AStar rejects self-edges; self-transitions are lifecycle rules, not travel edges.
+	if from != to:
+		_astar.connect_points(from, to, has_transition(from, to))
 	_transitions.append(tr)
 
 
@@ -428,7 +440,8 @@ func remove_transition(from: StringName, to: StringName) -> void:
 	if _ERR_INVALID_STATE(to):
 		return
 
-	_astar.disconnect_points(from, to, not has_transition(from, to))
+	if from != to:
+		_astar.disconnect_points(from, to, not has_transition(from, to))
 
 	for transition in _transitions:
 		if transition.from == from and transition.to == to:
@@ -452,15 +465,8 @@ func get_transition(from: StringName, to: StringName) -> FrayStateMachineTransit
 
 ## Returns the name of the next reachable state.
 func get_next_state(input: Dictionary = {}) -> StringName:
-	if _current_state.is_empty():
-		push_warning("No current state is set.")
-		return ""
-
-	for tr in get_next_transitions(_current_state):
-		var transition: FrayStateMachineTransition = tr.transition
-		if _can_transition(transition) and _can_advance(transition, input):
-			return tr.to
-	return ""
+	var next_transition := _get_next_transition(input)
+	return next_transition.to if next_transition != null else &""
 
 
 ## Returns an array of transitions traversable from the given state.
@@ -620,6 +626,8 @@ func ready(context: Dictionary) -> void:
 
 	for state_name in _states:
 		var state: FrayState = _states[state_name]
+		# A subtree may have been built before it was attached to this root.
+		state._root_ref = weakref(get_root())
 
 		if state is FrayCompoundState:
 			state.ready(context)
@@ -774,44 +782,111 @@ func _get_state(path: StringName, can_push_errors: bool = true) -> FrayState:
 
 func _get_transition_priority(from: StringName, to: StringName) -> float:
 	var tr := get_transition(from, to)
-	return float(tr.transition.priority) if tr else 0.0
+	return float(tr.priority) if tr else 0.0
 
 
 func _goto(path: StringName, args: Dictionary = {}) -> void:
-	var target_state := get_state(path)
+	_transition_to(path, args)
 
-	if target_state == null:
-		push_error("Failed to go to target state. State not found.")
-		return
 
-	# Find most common active ancestor of target and current active state.
-	var active_path_info := get_active_states_info()
-	var active_states: Array[FrayState] = active_path_info.states
-	var common_active_ancestor: FrayState = target_state
+## Resolves a complete root-to-leaf path before any lifecycle callback runs.
+## Explicit descendants take precedence over default and persistent entries.
+func _resolve_entry_states(path: StringName = &"") -> Array[FrayState]:
+	var states: Array[FrayState] = []
+	var target: FrayState = self if path.is_empty() else get_state_or_null(path)
+	if target == null:
+		push_error("Failed to enter state. Target path '%s' does not exist." % path)
+		return states
 
-	while common_active_ancestor != null and not common_active_ancestor in active_states:
-		common_active_ancestor = common_active_ancestor.get_parent()
+	var ancestor: FrayState = target
+	while ancestor != null:
+		states.push_front(ancestor)
+		ancestor = ancestor.get_parent()
 
-	# Exit all active states leading up to common ancestor excluding common ancestor
-	for i in range(active_states.size() - 1, -1, -1):
-		var state: FrayState = active_states[i]
-		if state == common_active_ancestor:
+	while target is FrayCompoundState:
+		var group := target as FrayCompoundState
+		var child_name := group._current_state if (
+			group.is_persistent and not group._current_state.is_empty()
+		) else group.start_state
+		var child: FrayState = group._states.get(child_name)
+		if child == null or child in states:
+			push_error("Failed to enter compound state. Invalid default/history child '%s'." % child_name)
+			return []
+		states.append(child)
+		target = child
+
+	return states
+
+
+## Enters only the new suffix of an already resolved activation path.
+func _enter_states(states: Array[FrayState], first_index: int, args: Dictionary) -> void:
+	for i in range(first_index, states.size()):
+		var state := states[i]
+		if state is FrayCompoundState:
+			# No descendant is active until its own entry is performed.
+			state._current_state = &""
+		if i > 0:
+			var parent := states[i - 1] as FrayCompoundState
+			parent._current_state = StringName(parent._states.find_key(state))
+		state._enter_impl(args)
+
+
+## Returns the actual selected rule, not just its destination name.
+func _get_next_transition(input: Dictionary = {}) -> _Transition:
+	if _current_state.is_empty():
+		return null
+	for transition in get_next_transitions(_current_state):
+		if _can_transition(transition.transition) and _can_advance(transition.transition, input):
+			return transition
+	return null
+
+
+## A null source means navigation; a source means an external rule transition.
+## Ordinary self-transitions therefore exit/re-enter, unlike goto(current_leaf).
+func _transition_to(path: StringName, args: Dictionary, source: FrayState = null) -> bool:
+	var root := get_root()
+	if root._is_transitioning:
+		push_error("Failed to transition. Lifecycle callbacks cannot execute nested transitions.")
+		return false
+
+	var target := get_state_or_null(path)
+	if target == null:
+		push_error("Failed to transition. Target path '%s' does not exist." % path)
+		return false
+	var next_states := _resolve_entry_states(path)
+	if next_states.is_empty():
+		return false
+
+	var active_info := root.get_active_states_info()
+	var active_states: Array[FrayState] = active_info.states
+	var common_count := 0
+	while common_count < mini(active_states.size(), next_states.size()):
+		if active_states[common_count] != next_states[common_count]:
 			break
+		common_count += 1
 
-		state.exit()
+	if source != null:
+		var source_index := active_states.find(source)
+		if source_index < 0:
+			push_error("Failed to transition. Source state is not active.")
+			return false
+		# External transitions retain only a proper common ancestor of source
+		# and explicit target, even when default expansion selects the old leaf.
+		common_count = mini(common_count, mini(source_index, next_states.find(target)))
 
-	# Enter all states leading to target state excluding common ancestor
-	var ancestor_path_index := active_states.find(common_active_ancestor)
-	var new_active_state: FrayState = common_active_ancestor
-	var state_paths := path.split("/")
+	if _astar.has_next_travel_point() and source == null:
+		_astar.clear_travel_path()
+	root._is_transitioning = true
+	for i in range(active_states.size() - 1, common_count - 1, -1):
+		active_states[i].exit()
+	root._enter_states(next_states, common_count, args)
+	root._is_transitioning = false
 
-	for i in range(ancestor_path_index, state_paths.size()):
-		var next_state_name := state_paths[i]
-		new_active_state._current_state = next_state_name
-		new_active_state = new_active_state.get_state(next_state_name)
-		new_active_state._enter_impl(args)
-
-	transitioned.emit(active_path_info.path, path)
+	var next_path: StringName = root.get_active_states_info().path
+	root.transitioned.emit(active_info.path, next_path)
+	if self != root:
+		transitioned.emit(active_info.path, next_path)
+	return true
 
 
 func _can_transition(transition: FrayStateMachineTransition) -> bool:

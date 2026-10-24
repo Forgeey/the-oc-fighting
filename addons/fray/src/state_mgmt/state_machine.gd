@@ -58,18 +58,33 @@ func _physics_process(delta: float) -> void:
 ## [kbd]context[/kbd] is an optional dictionary which can pass read-only data to all states within the hierarchy.
 ## This data is accessible within a state's [method FrayState._ready_impl] method when it is invoked.
 ## [br]
+## [kbd]initial_path[/kbd] optionally selects a leaf or compound target directly.
+## An empty path uses the root default; no bootstrap state or second goto is needed.
+## [br]
 ## [b]WARN:[/b] The dictionary provided to the context argument will be made read-only.
-func initialize(context: Dictionary, root: FrayCompoundState) -> void:
+func initialize(context: Dictionary, root: FrayCompoundState, initial_path: StringName = &"") -> void:
 	if root.has_parent():
 		push_error("Failed to initialize statemachine. Provided root has parent state.")
 		return
+	if root._is_transitioning or (_root != null and _root._is_transitioning):
+		push_error("Failed to initialize statemachine during a lifecycle callback.")
+		return
 
+	# Validate the complete entry before ready/enter or replacing the old root.
+	var entry_states := root._resolve_entry_states(initial_path)
+	if entry_states.is_empty():
+		return
+
+	if _root != null and _root.transitioned.is_connected(_on_RootState_transitioned):
+		_root.transitioned.disconnect(_on_RootState_transitioned)
 	_root = root
 	_root._fn_get_node = get_node
 	_root._fn_get_node_of_type = get_node_of_type
 	_root._fn_get_nodes_of_type = get_nodes_of_type
+	_root._is_transitioning = true
 	_root.ready(context)
-	_root._enter_impl({})
+	_root._enter_states(entry_states, 0, {})
+	_root._is_transitioning = false
 	_root.transitioned.connect(_on_RootState_transitioned)
 
 

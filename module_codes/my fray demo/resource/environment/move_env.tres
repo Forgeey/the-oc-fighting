@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="FighterMoveEnv" format=3 uid="uid://dxxtbi0a1b40s"]
+
+[ext_resource type="Script" uid="uid://6jrfhyq3qqc" path="res://scripts/fighter/fighter_move_env.gd" id="1_lvppg"]
+
+[resource]
+script = ExtResource("1_lvppg")
+arena_left = 64.0
+arena_right = 1216.0
+metadata/_custom_type_script = "uid://6jrfhyq3qqc"
