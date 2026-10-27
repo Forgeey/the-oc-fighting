@@ -28,7 +28,7 @@ def run(godot: str, project: Path, args: list[str], label: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot", default="godot", help="Godot console executable")
-    parser.add_argument("--suite", choices=("neutral", "moves", "resources"), default="neutral")
+    parser.add_argument("--suite", choices=("neutral", "moves", "resources", "hits"), default="neutral")
     options = parser.parse_args()
     source = Path(__file__).resolve().parents[2]
     godot = shutil.which(options.godot) or str(Path(options.godot).resolve())
@@ -47,6 +47,7 @@ def main() -> None:
             "neutral": "tests/neutral/test_neutral.gd",
             "moves": "tests/moves/test_move_transitions.gd",
             "resources": "tests/neutral/test_transition_resources.gd",
+            "hits": "tests/hit/test_hit_assembly.gd",
         }[options.suite]
         shutil.copyfile(test_source, project / "test_neutral.gd")
         (project / "test_neutral.tscn").write_text(
@@ -54,12 +55,27 @@ def main() -> None:
             '[ext_resource type="Script" path="res://test_neutral.gd" id="1"]\n'
             '[node name="NeutralTests" type="Node"]\nscript = ExtResource("1")\n',
             encoding="utf-8")
+        if options.suite == "resources":
+            shutil.copyfile(source / "tests/transitions/test_transition_serialization.gd",
+                            project / "test_transition_serialization.gd")
+            (project / "test_transition_serialization.tscn").write_text(
+                '[gd_scene load_steps=2 format=3]\n'
+                '[ext_resource type="Script" path="res://test_transition_serialization.gd" id="1"]\n'
+                '[node name="SerializationTests" type="Node"]\nscript = ExtResource("1")\n',
+                encoding="utf-8")
         run(godot, project, ["--editor", "--import"], "Import")
+        if options.suite == "resources":
+            # Save only the temporary copy, then start a fresh Godot process below.
+            serialized = run(godot, project, ["--quit-after", "30", "res://test_transition_serialization.tscn"],
+                             "Transition save/reload regression")
+            if not re.search(r"TRANSITION SERIALIZATION TESTS: \d+ checks, 0 failures", serialized):
+                raise SystemExit("Missing successful serialization summary")
         output = run(godot, project, ["--fixed-fps", "60", "--quit-after", "180", "res://test_neutral.tscn"], f"{options.suite} tests")
         summary = {
             "neutral": "NEUTRAL TESTS",
             "moves": "MOVE TRANSITION TESTS",
             "resources": "TRANSITION RESOURCE TESTS",
+            "hits": "HIT ASSEMBLY TESTS",
         }[options.suite]
         if not re.search(rf"{summary}: \d+ checks, 0 failures", output):
             raise SystemExit("Missing successful test summary")

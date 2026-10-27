@@ -12,5 +12,5 @@ extends Resource
 ## 指定本状态播放的动画语义；留空表示不请求播放动画。
 @export var animation_key: StringName
 
-## 预留本状态的判定定义引用，当前不读取。
-@export var hit_state_definition: Resource
+## 本状态使用的完整判定姿态，留空时进入后不启用任何姿态。
+@export var hit_state_definition: FighterHitStateDefinition

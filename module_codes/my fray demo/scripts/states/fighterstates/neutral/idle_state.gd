@@ -4,6 +4,7 @@ extends FighterState
 
 ## 进入待机时播放待机动画。
 func _enter_impl(_args: Dictionary) -> void:
+	super(_args)
 	play_state_animation()
 
 

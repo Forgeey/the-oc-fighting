@@ -1,0 +1,73 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/fray/src/hit/2d/hit_state_2d.gd" id="1_pose"]
+[ext_resource type="Script" path="res://addons/fray/src/hit/2d/hitbox_2d.gd" id="2_box"]
+[ext_resource type="Script" path="res://scripts/hit/fighter_hitbox_attribute.gd" id="3_attribute"]
+
+[sub_resource type="Resource" id="Attribute_Hurtbox"]
+script = ExtResource("3_attribute")
+kind = 0
+
+[sub_resource type="RectangleShape2D" id="Shape_Hurtbox"]
+size = Vector2(100, 108)
+
+[sub_resource type="Resource" id="Attribute_Pushbox"]
+script = ExtResource("3_attribute")
+kind = 2
+
+[sub_resource type="RectangleShape2D" id="Shape_Pushbox"]
+size = Vector2(76, 94)
+
+[sub_resource type="Resource" id="Attribute_Attackbox"]
+script = ExtResource("3_attribute")
+kind = 1
+
+[sub_resource type="RectangleShape2D" id="Shape_Attackbox"]
+size = Vector2(80, 44)
+
+[node name="LightAttack" type="Node2D"]
+visible = false
+script = ExtResource("1_pose")
+active_hitboxes = 0
+
+[node name="Hurtbox" type="Area2D" parent="."]
+position = Vector2(0, -54)
+visible = false
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("2_box")
+attribute = SubResource("Attribute_Hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("Shape_Hurtbox")
+debug_color = Color(0.15, 0.85, 0.3, 0.4)
+
+[node name="Pushbox" type="Area2D" parent="."]
+position = Vector2(0, -47)
+visible = false
+collision_layer = 8
+collision_mask = 8
+monitoring = false
+monitorable = false
+script = ExtResource("2_box")
+attribute = SubResource("Attribute_Pushbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pushbox"]
+shape = SubResource("Shape_Pushbox")
+debug_color = Color(0.2, 0.45, 1, 0.4)
+
+[node name="Attackbox" type="Area2D" parent="."]
+position = Vector2(78, -65)
+visible = false
+collision_layer = 4
+collision_mask = 2
+monitoring = false
+monitorable = false
+script = ExtResource("2_box")
+attribute = SubResource("Attribute_Attackbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Attackbox"]
+shape = SubResource("Shape_Attackbox")
+debug_color = Color(1, 0.2, 0.15, 0.45)

@@ -8,78 +8,91 @@ script = ExtResource("2_47f6f")
 transition_id = &"idle_to_crouch"
 from_state = &"neutral/idle"
 to_state = &"neutral/crouch"
+advance_conditions = PackedStringArray("inputed_crouch")
 
 [sub_resource type="Resource" id="Rule_idle_to_fwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"idle_to_fwalk"
 from_state = &"neutral/idle"
 to_state = &"neutral/fwalk"
+advance_conditions = PackedStringArray("inputed_fwalk")
 
 [sub_resource type="Resource" id="Rule_idle_to_bwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"idle_to_bwalk"
 from_state = &"neutral/idle"
 to_state = &"neutral/bwalk"
+advance_conditions = PackedStringArray("inputed_bwalk")
 
 [sub_resource type="Resource" id="Rule_fwalk_to_crouch"]
 script = ExtResource("2_47f6f")
 transition_id = &"fwalk_to_crouch"
 from_state = &"neutral/fwalk"
 to_state = &"neutral/crouch"
+advance_conditions = PackedStringArray("inputed_crouch")
 
 [sub_resource type="Resource" id="Rule_fwalk_to_bwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"fwalk_to_bwalk"
 from_state = &"neutral/fwalk"
 to_state = &"neutral/bwalk"
+advance_conditions = PackedStringArray("inputed_bwalk")
 
 [sub_resource type="Resource" id="Rule_fwalk_to_idle"]
 script = ExtResource("2_47f6f")
 transition_id = &"fwalk_to_idle"
 from_state = &"neutral/fwalk"
 to_state = &"neutral/idle"
+advance_conditions = PackedStringArray("!inputed_fwalk")
 
 [sub_resource type="Resource" id="Rule_bwalk_to_crouch"]
 script = ExtResource("2_47f6f")
 transition_id = &"bwalk_to_crouch"
 from_state = &"neutral/bwalk"
 to_state = &"neutral/crouch"
+advance_conditions = PackedStringArray("inputed_crouch")
 
 [sub_resource type="Resource" id="Rule_bwalk_to_fwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"bwalk_to_fwalk"
 from_state = &"neutral/bwalk"
 to_state = &"neutral/fwalk"
+advance_conditions = PackedStringArray("inputed_fwalk")
 
 [sub_resource type="Resource" id="Rule_bwalk_to_idle"]
 script = ExtResource("2_47f6f")
 transition_id = &"bwalk_to_idle"
 from_state = &"neutral/bwalk"
 to_state = &"neutral/idle"
+advance_conditions = PackedStringArray("!inputed_bwalk")
 
 [sub_resource type="Resource" id="Rule_crouch_to_fwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"crouch_to_fwalk"
 from_state = &"neutral/crouch"
 to_state = &"neutral/fwalk"
+advance_conditions = PackedStringArray("inputed_fwalk")
 
 [sub_resource type="Resource" id="Rule_crouch_to_bwalk"]
 script = ExtResource("2_47f6f")
 transition_id = &"crouch_to_bwalk"
 from_state = &"neutral/crouch"
 to_state = &"neutral/bwalk"
+advance_conditions = PackedStringArray("inputed_bwalk")
 
 [sub_resource type="Resource" id="Rule_crouch_to_idle"]
 script = ExtResource("2_47f6f")
 transition_id = &"crouch_to_idle"
 from_state = &"neutral/crouch"
 to_state = &"neutral/idle"
+advance_conditions = PackedStringArray("!inputed_crouch")
 
 [sub_resource type="Resource" id="Rule_action_to_neutral"]
 script = ExtResource("2_47f6f")
 transition_id = &"action_to_neutral"
 from_state = &"action"
 to_state = &"neutral"
+prereqs = PackedStringArray("active_leaf_done")
 
 [sub_resource type="Resource" id="Rule_idle_to_light_attack"]
 script = ExtResource("2_47f6f")
@@ -87,6 +100,7 @@ transition_id = &"idle_to_light_attack"
 move_id = &"01010001"
 from_state = &"neutral/idle"
 to_state = &"action/basic_attack/light_attack"
+prereqs = PackedStringArray("grounded")
 auto_advance = false
 
 [sub_resource type="Resource" id="Rule_fwalk_to_light_attack"]
@@ -95,6 +109,7 @@ transition_id = &"fwalk_to_light_attack"
 move_id = &"01010001"
 from_state = &"neutral/fwalk"
 to_state = &"action/basic_attack/light_attack"
+prereqs = PackedStringArray("grounded")
 auto_advance = false
 
 [sub_resource type="Resource" id="Rule_bwalk_to_light_attack"]
@@ -103,6 +118,7 @@ transition_id = &"bwalk_to_light_attack"
 move_id = &"01010001"
 from_state = &"neutral/bwalk"
 to_state = &"action/basic_attack/light_attack"
+prereqs = PackedStringArray("grounded")
 auto_advance = false
 
 [resource]

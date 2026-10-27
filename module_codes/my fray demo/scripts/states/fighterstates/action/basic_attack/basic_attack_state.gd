@@ -9,6 +9,7 @@ var move: FighterMoveDefinition
 
 ## 读取本次招式并重置计时和播放动画。
 func _enter_impl(args: Dictionary) -> void:
+	super(args)
 	move = args["move"]
 	elapsed_frames = 0
 	movement.stop_horizontal()

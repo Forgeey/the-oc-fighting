@@ -8,29 +8,37 @@
 [ext_resource type="Script" uid="uid://y4vreslewqa3" path="res://scripts/states/fighterstates/neutral/crouch_state.gd" id="6_crouch"]
 [ext_resource type="Script" uid="uid://dkpqa6u0nspr8" path="res://scripts/states/fighterstates/action/basic_attack/basic_attack_state.gd" id="7_attack"]
 
+[ext_resource type="Resource" path="res://resource/combat/hit_states/neutral/standing_hit_state.tres" id="8_standing_hit"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/neutral/crouch_hit_state.tres" id="9_crouch_hit"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/action/basic_attack/01010001_hit_state.tres" id="10_attack_hit"]
+
 [sub_resource type="Resource" id="State_idle"]
 script = ExtResource("2_state")
 state_name = &"idle"
 state_script = ExtResource("3_idle")
 animation_key = &"idle"
+hit_state_definition = ExtResource("8_standing_hit")
 
 [sub_resource type="Resource" id="State_fwalk"]
 script = ExtResource("2_state")
 state_name = &"fwalk"
 state_script = ExtResource("4_fwalk")
 animation_key = &"fwalk"
+hit_state_definition = ExtResource("8_standing_hit")
 
 [sub_resource type="Resource" id="State_bwalk"]
 script = ExtResource("2_state")
 state_name = &"bwalk"
 state_script = ExtResource("5_bwalk")
 animation_key = &"bwalk"
+hit_state_definition = ExtResource("8_standing_hit")
 
 [sub_resource type="Resource" id="State_crouch"]
 script = ExtResource("2_state")
 state_name = &"crouch"
 state_script = ExtResource("6_crouch")
 animation_key = &"crouch"
+hit_state_definition = ExtResource("9_crouch_hit")
 
 [sub_resource type="Resource" id="State_light_attack"]
 script = ExtResource("2_state")
@@ -38,6 +46,7 @@ group_path = &"action/basic_attack"
 state_name = &"light_attack"
 state_script = ExtResource("7_attack")
 animation_key = &"light_attack"
+hit_state_definition = ExtResource("10_attack_hit")
 
 [resource]
 script = ExtResource("1_definition")

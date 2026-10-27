@@ -4,6 +4,7 @@ extends FighterState
 
 ## 停止水平移动并切换下蹲碰撞体和动画。
 func _enter_impl(_args: Dictionary) -> void:
+	super(_args)
 	movement.stop_horizontal()
 	fighter.set_crouching(true)
 	play_state_animation()
@@ -11,6 +12,7 @@ func _enter_impl(_args: Dictionary) -> void:
 
 ## 离开下蹲时恢复站立碰撞体。
 func _exit_impl() -> void:
+	super()
 	fighter.set_crouching(false)
 
 

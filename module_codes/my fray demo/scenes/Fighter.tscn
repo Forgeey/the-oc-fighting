@@ -5,7 +5,6 @@
 [ext_resource type="Resource" uid="uid://dxxtbi0a1b40s" path="res://resource/environment/move_env.tres" id="2_7p24r"]
 [ext_resource type="Script" uid="uid://cddu0odpxiiw7" path="res://addons/fray/src/state_mgmt/state_machine.gd" id="2_65vn2"]
 [ext_resource type="Script" uid="uid://cex6ybho30xqy" path="res://addons/fray/src/state_mgmt/component/buffered_input_advancer.gd" id="3_7p24r"]
-[ext_resource type="Script" uid="uid://dhalfcyvq1sfd" path="res://addons/fray/src/hit/2d/hit_state_manager_2d.gd" id="4_p8ut5"]
 [ext_resource type="SpriteFrames" uid="uid://dl0ar2lydioww" path="res://resource/animation/fighter_frames.tres" id="7_frames"]
 [ext_resource type="Resource" uid="uid://bcovg644nray1" path="res://resource/characters/demo_loadout.tres" id="9_loadout"]
 [ext_resource type="Script" uid="uid://chgve6pm2pgn2" path="res://scripts/input/fighter_input.gd" id="10_input"]
@@ -42,6 +41,3 @@ script = ExtResource("2_65vn2")
 script = ExtResource("3_7p24r")
 paused = true
 advance_mode = 1
-
-[node name="FrayHitStateManager2D" type="Node2D" parent="." unique_id=59463164]
-script = ExtResource("4_p8ut5")

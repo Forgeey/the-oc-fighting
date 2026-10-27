@@ -24,3 +24,13 @@ func _ready_impl(context: Dictionary) -> void:
 func play_state_animation() -> void:
 	if not state_definition.animation_key.is_empty():
 		fighter.play_animation(state_definition.animation_key)
+
+
+## 进入状态时通过 Fighter 选择本状态声明的完整判定姿态。
+func _enter_impl(_args: Dictionary) -> void:
+	fighter.select_hit_state(state_definition.hit_state_definition)
+
+
+## 退出状态时完全关闭旧姿态，防止中断或重入残留判定。
+func _exit_impl() -> void:
+	fighter.clear_hit_state()

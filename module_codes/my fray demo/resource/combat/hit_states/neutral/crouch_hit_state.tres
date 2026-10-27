@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="FighterHitStateDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/hit/fighter_hit_state_definition.gd" id="1_definition"]
+[ext_resource type="PackedScene" path="res://scenes/combat/hit_states/neutral/crouch_hit_state.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_definition")
+hit_state_scene = ExtResource("2_scene")
+default_active_hitboxes = 3

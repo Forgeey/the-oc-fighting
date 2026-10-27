@@ -10,12 +10,16 @@ var _standing_body_pos: Vector2
 ## 保存本角色全部已选转换，同组普通规则交给 Fray 推进。
 var _selected_transitions: Array[FighterTransitionDefinition] = []
 
+## 由判定 Builder 离树组装后整体挂载，不预置在 Fighter 场景中。
+var hit_state_manager: FrayHitStateManager2D
+var _hit_state_by_definition: Dictionary[FighterHitStateDefinition, FrayHitState2D] = {}
+var _current_hit_state: FrayHitState2D
+
 @onready var body_shape: CollisionShape2D = $CollisionShape2D
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var controller: FrayController = $FrayController
 @onready var fighter_input: FighterInput = $FighterInput
-@onready var hit_state_manager: FrayHitStateManager2D = $FrayHitStateManager2D
 @onready var state_machine: FrayStateMachine = $FrayStateMachine
 @onready var advancer: FrayBufferedInputAdvancer = $FrayStateMachine/FrayBufferedInputAdvancer
 
@@ -36,9 +40,13 @@ func _init_fighter() -> void:
 	_standing_body_size = body_shape.shape.size
 	_standing_body_pos = body_shape.position
 	_movement.init_movement(move_env, self)
+	var hit_builder := FighterHitStateBuilder.new()
+	hit_state_manager = hit_builder.build(loadout)
+	_hit_state_by_definition = hit_builder.hit_state_by_definition
+	add_child(hit_state_manager)
+	hit_state_manager.source = self
 	set_facing(1)
 	advancer.paused = true
-	hit_state_manager.source = self
 	_initialize_state_machine(loadout.entry_path)
 
 
@@ -126,6 +134,8 @@ func set_facing(direction: int) -> void:
 	_movement.set_facing(direction)
 	# 原图朝左，面向右时仅翻转表现节点。
 	sprite.flip_h = direction == 1
+	# 判定场景面向右，只在 Manager 上镜像一次，不翻转世界碰撞体。
+	hit_state_manager.scale.x = float(direction)
 
 
 ## 返回前进时使用的水平输入轴。
@@ -173,6 +183,36 @@ func play_animation(animation_key: StringName) -> void:
 ## 预留角色自定义动画映射入口，当前仅原样返回动画语义。
 func _resolve_animation_key(animation_key: StringName) -> StringName:
 	return animation_key
+
+
+## 清理旧姿态后，选择本角色已装配的定义并应用默认掩码。
+func select_hit_state(definition: FighterHitStateDefinition) -> void:
+	clear_hit_state()
+	if definition == null or definition.default_active_hitboxes == 0:
+		return
+	_current_hit_state = _hit_state_by_definition[definition]
+	set_hit_state_mask(definition.default_active_hitboxes)
+
+
+## 完全关闭当前姿态，避免 Manager 对零掩码通知再次 activate。
+func clear_hit_state() -> void:
+	if _current_hit_state == null:
+		return
+	var pose := _current_hit_state
+	_current_hit_state = null
+	var blocked := pose.is_blocking_signals()
+	pose.set_block_signals(true)
+	pose.active_hitboxes = 0
+	pose.deactivate()
+	pose.set_block_signals(blocked)
+
+
+## 统一设置当前姿态的启用位，零掩码表示完全清理且需重新选择。
+func set_hit_state_mask(mask: int) -> void:
+	if mask == 0:
+		clear_hit_state()
+	elif _current_hit_state != null:
+		_current_hit_state.active_hitboxes = mask
 
 
 ## 判断当前最深活动状态是否完成。
