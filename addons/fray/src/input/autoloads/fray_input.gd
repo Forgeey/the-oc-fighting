@@ -152,7 +152,7 @@ func is_just_released(input: StringName, device: int = DEVICE_KBM_JOY1) -> bool:
 				)
 			else:
 				return (
-					not input_state.ispressed
+					not input_state.is_pressed
 					and input_state.process_frame == Engine.get_process_frames()
 				)
 		null:

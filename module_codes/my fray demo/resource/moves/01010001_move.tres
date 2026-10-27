@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FighterMoveDefinition" format=3 uid="uid://gndqaj38moc7"]
+
+[ext_resource type="Script" uid="uid://bebwpygwc3lkw" path="res://scripts/moves/fighter_move_definition.gd" id="1_move"]
+[ext_resource type="Script" uid="uid://b6jll876r8b0t" path="res://scripts/input/fighter_command_definition.gd" id="2_command"]
+
+[sub_resource type="Resource" id="Command_light"]
+script = ExtResource("2_command")
+resolve_delay_frames = 0
+
+[resource]
+script = ExtResource("1_move")
+move_id = &"01010001"
+move_name = "轻攻击"
+command = SubResource("Command_light")
+entry_path = &"action/basic_attack/light_attack"
+required_state_paths = Array[StringName]([&"action/basic_attack/light_attack"])

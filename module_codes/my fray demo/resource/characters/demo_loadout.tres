@@ -1,15 +1,17 @@
 [gd_resource type="Resource" script_class="FighterLoadout" format=3 uid="uid://bcovg644nray1"]
 
 [ext_resource type="Script" uid="uid://crs47a1x0o2a7" path="res://scripts/fighter/fighter_loadout.gd" id="1_loadout"]
-[ext_resource type="Script" uid="uid://bebwpygwc3lkw" path="res://scripts/moves/fighter_move_definition.gd" id="2_nwqat"]
 [ext_resource type="Resource" uid="uid://lrfxhmcesaio" path="res://resource/state_machine/state_library.tres" id="2_states"]
 [ext_resource type="Resource" uid="uid://dv42k3m0gvn1k" path="res://resource/state_machine/transition_library.tres" id="3_transitions"]
+[ext_resource type="Resource" path="res://resource/state_machine/move_library.tres" id="4_moves"]
 
 [resource]
 script = ExtResource("1_loadout")
 state_library = ExtResource("2_states")
+move_library = ExtResource("4_moves")
 transition_library = ExtResource("3_transitions")
 selected_state_paths = Array[StringName]([&"neutral/idle", &"neutral/fwalk", &"neutral/bwalk", &"neutral/crouch"])
+selected_move_ids = Array[StringName]([&"01010001"])
 group_start_states = Dictionary[StringName, StringName]({
 &"neutral": &"idle"
 })

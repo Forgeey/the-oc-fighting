@@ -1,6 +1,6 @@
 class_name FighterStateLibrary
 extends Resource
-## 公共可选状态库。状态用 group_path/state_name 完整路径标识。
-## 只保存静态定义；每个 Fighter 只实例化自己选中的状态。
+## 保存全游戏只读状态目录。
 
+## 保存按完整路径查找的全游戏状态定义。
 @export var states: Array[FighterStateDefinition] = []

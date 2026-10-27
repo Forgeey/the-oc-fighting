@@ -29,8 +29,6 @@ sprite_frames = ExtResource("7_frames")
 animation = &"idle"
 flip_h = true
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=826580046]
-
 [node name="FrayController" type="Node" parent="." unique_id=1738780246]
 script = ExtResource("1_w2163")
 

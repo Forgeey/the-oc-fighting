@@ -31,13 +31,13 @@ Nodes, like any other objects, can be provided to a state machine within the con
 ```gdscript
 class_name CustomState
 
-var anim_player: AnimationPlayer
+var sprite: AnimatedSprite2D
 
 func _ready(context: Dictionary) -> void:
-    anim_player = get_node_of_type(AnimationPlayer)
+    sprite = get_node_of_type(AnimatedSprite2D)
 ```
 
-This allows states to interact with and observe nodes within the scene providing the ability to encapsulate control of the game's behavior within different states.
+This allows states to interact with and observe nodes within the scene providing the ability to encapsulate control of the game's behavior within different states. The type lookup above only finds direct children of the state machine; when a sprite is a sibling (as in the current project), pass it through context or use an explicit relative path instead. No AnimationPlayer node is required by Fray.
 
 ## Object Constructor
 

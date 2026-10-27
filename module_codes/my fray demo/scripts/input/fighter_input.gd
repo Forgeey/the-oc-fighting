@@ -1,7 +1,6 @@
 class_name FighterInput
 extends Node
-## 每角色输入适配：复用 Fray 的采样与序列匹配。
-## priority -50：位于 FrayInput(-100) 之后、状态物理更新(0)之前。
+## 采样本角色输入并生成已装备招式的候选。
 
 var controller: FrayController
 var facing_dir: int = 1
@@ -27,11 +26,13 @@ var _device := 0
 var _suspended := false
 
 
+## 设置输入采样顺序并连接 Fray 输入信号。
 func _ready() -> void:
 	process_physics_priority = -50
 	FrayInput.input_detected.connect(_on_fray_input_input_detected)
 
 
+## 按已装备招式配置输入识别并清空历史。
 func configure(input_controller: FrayController, moves: Array[FighterMoveDefinition]) -> void:
 	controller = input_controller
 	_device = controller.device
@@ -52,11 +53,12 @@ func configure(input_controller: FrayController, moves: Array[FighterMoveDefinit
 	clear_history()
 
 
+## 每个物理帧采样一次角色输入。
 func _physics_process(_delta: float) -> void:
 	sample()
 
 
-## 仅由本节点 _physics_process 调用一次；controller 由 Fighter 初始化时配置。
+## 采样方向和按钮并更新招式候选。
 func sample() -> void:
 	var frame := Engine.get_physics_frames()
 	if _device != controller.device:
@@ -118,27 +120,32 @@ func sample() -> void:
 	_special_ids = retained_special
 
 
+## 返回本帧采样的水平输入轴。
 func get_horizontal_axis() -> float:
 	return _horizontal_axis
 
 
+## 判断是否有未被下蹲覆盖的前进输入。
 func inputed_fwalk() -> bool:
 	return not inputed_crouch() and _horizontal_axis * facing_dir > 0.1
 
 
+## 判断是否有未被下蹲覆盖的后退输入。
 func inputed_bwalk() -> bool:
 	return not inputed_crouch() and _horizontal_axis * facing_dir < -0.1
 
 
+## 返回本帧采样的下蹲意图。
 func inputed_crouch() -> bool:
 	return _crouch_pressed
 
 
+## 返回相对角色朝向的九宫格方向。
 func get_direction() -> int:
 	return _direction
 
 
-## 只过滤尚在组合键等待窗口内的普通单键；候选保持生成顺序，不做评分排序。
+## 返回已结束等待期且尚未过期的输入候选。
 func get_candidates() -> Array[Dictionary]:
 	var frame := Engine.get_physics_frames()
 	var result: Array[Dictionary] = []
@@ -149,6 +156,7 @@ func get_candidates() -> Array[Dictionary]:
 	return result
 
 
+## 消费成功候选及与其共用按键来源的候选。
 func consume(candidate: Dictionary) -> void:
 	var ids: Array = candidate.source_ids
 	for id in ids:
@@ -158,7 +166,7 @@ func consume(candidate: Dictionary) -> void:
 	_reset_matchers()
 
 
-## 窗口允许的最低输入帧由阶段状态查询 candidate.created_frame，不自动重用旧按键。
+## 清空输入历史、候选和移动意图。
 func clear_history() -> void:
 	_events.clear()
 	_candidates.clear()
@@ -175,6 +183,7 @@ func clear_history() -> void:
 	_reset_matchers()
 
 
+## 重建已装备序列招式的匹配器。
 func _reset_matchers() -> void:
 	_matchers.clear()
 	for move in _moves:
@@ -187,6 +196,7 @@ func _reset_matchers() -> void:
 			_matchers[move.move_id] = matcher
 
 
+## 收集本角色设备的有效按钮事件。
 func _on_fray_input_input_detected(event: FrayInputEvent) -> void:
 	if _suspended or controller.disabled:
 		return
@@ -197,6 +207,7 @@ func _on_fray_input_input_detected(event: FrayInputEvent) -> void:
 		_events.append(event)
 
 
+## 将方向变化转换为序列输入事件。
 func _feed_direction(direction: int, pressed: bool) -> void:
 	var event := FrayInputEvent.new()
 	event.input = StringName("dir_%d" % direction)
@@ -209,6 +220,7 @@ func _feed_direction(direction: int, pressed: bool) -> void:
 	_feed_sequences(event, [])
 
 
+## 把按钮或方向事件送入序列匹配器。
 func _feed_sequences(event: FrayInputEvent, ids: Array[int]) -> void:
 	_active_source_ids = ids
 	for move in _moves:
@@ -221,10 +233,12 @@ func _feed_sequences(event: FrayInputEvent, ids: Array[int]) -> void:
 	_active_source_ids = []
 
 
+## 为匹配成功的序列创建招式候选。
 func _on_sequence_match_found(move_id: StringName) -> void:
 	_add_candidate(move_id, _active_source_ids)
 
 
+## 按按钮时间差识别组合键候选。
 func _sample_combinations() -> void:
 	var frame := Engine.get_physics_frames()
 	for move in _moves:
@@ -247,6 +261,7 @@ func _sample_combinations() -> void:
 		_combination_active[move.move_id] = held
 
 
+## 登记候选并处理按键来源的归属。
 func _add_candidate(move_id: StringName, ids: Array[int]) -> void:
 	if ids.is_empty():
 		return
@@ -276,6 +291,7 @@ func _add_candidate(move_id: StringName, ids: Array[int]) -> void:
 		ready_frame = ready_frame, expires_frame = frame + move.command.buffer_frames})
 
 
+## 判断两个按键来源列表是否有交集。
 func _overlaps(first: Array, second: Array) -> bool:
 	for id in first:
 		if id in second:
@@ -283,6 +299,7 @@ func _overlaps(first: Array, second: Array) -> bool:
 	return false
 
 
+## 在失去或恢复焦点时重置输入历史。
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_suspended = true

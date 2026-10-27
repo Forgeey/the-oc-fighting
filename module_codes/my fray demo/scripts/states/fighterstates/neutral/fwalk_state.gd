@@ -1,11 +1,12 @@
 class_name FWalkState
 extends FighterState
-## 按相对面向前进；输入条件由普通转换资源解释。
+## 处理角色相对朝向前进时的动画和移动。
 
-
+## 进入前进时播放前进动画。
 func _enter_impl(_args: Dictionary) -> void:
-	fighter.play_animation(&"fwalk")
+	play_state_animation()
 
 
+## 按前进输入更新地面移动。
 func _physics_process_impl(delta: float) -> void:
 	movement.step_grounded(fighter.get_forward_axis(), delta)

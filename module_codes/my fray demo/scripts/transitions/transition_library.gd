@@ -1,8 +1,9 @@
 class_name FighterTransitionLibrary
 extends Resource
-## 公共候选转换库。构建器根据角色选中的状态及可进入的分组筛选规则。
+## 保存全游戏转换规则和条件方法映射。
 
-## 条件名称 -> Fighter 的无参数 bool 方法名。只绑定实际选入规则的条件。
-@export var condition_methods: Dictionary[StringName, StringName] = {}
-## 入选规则保持数组顺序，允许相同端点具有不同条件的多条规则。
+## 保存所有的状态之间的普通转换或招式转换。
 @export var transitions: Array[FighterTransitionDefinition] = []
+
+## 将条件名映射到 Fighter 的无参布尔方法。
+@export var condition_methods: Dictionary[StringName, StringName] = {}

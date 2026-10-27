@@ -2,31 +2,43 @@
 
 [ext_resource type="Script" uid="uid://ct88vrxc63fix" path="res://scripts/states/state_library.gd" id="1_definition"]
 [ext_resource type="Script" uid="uid://cobbicjisasmg" path="res://scripts/states/state_definition.gd" id="2_state"]
-[ext_resource type="Script" uid="uid://dt7d0hm6difda" path="res://scripts/states/idle_state.gd" id="3_idle"]
-[ext_resource type="Script" uid="uid://dows4djijsls6" path="res://scripts/states/fwalk_state.gd" id="4_fwalk"]
-[ext_resource type="Script" uid="uid://caf6hb6uisopv" path="res://scripts/states/bwalk_state.gd" id="5_bwalk"]
-[ext_resource type="Script" uid="uid://y4vreslewqa3" path="res://scripts/states/crouch_state.gd" id="6_crouch"]
+[ext_resource type="Script" uid="uid://dt7d0hm6difda" path="res://scripts/states/fighterstates/neutral/idle_state.gd" id="3_idle"]
+[ext_resource type="Script" uid="uid://dows4djijsls6" path="res://scripts/states/fighterstates/neutral/fwalk_state.gd" id="4_fwalk"]
+[ext_resource type="Script" uid="uid://caf6hb6uisopv" path="res://scripts/states/fighterstates/neutral/bwalk_state.gd" id="5_bwalk"]
+[ext_resource type="Script" uid="uid://y4vreslewqa3" path="res://scripts/states/fighterstates/neutral/crouch_state.gd" id="6_crouch"]
+[ext_resource type="Script" uid="uid://dkpqa6u0nspr8" path="res://scripts/states/fighterstates/action/basic_attack/basic_attack_state.gd" id="7_attack"]
 
 [sub_resource type="Resource" id="State_idle"]
 script = ExtResource("2_state")
 state_name = &"idle"
 state_script = ExtResource("3_idle")
+animation_key = &"idle"
 
 [sub_resource type="Resource" id="State_fwalk"]
 script = ExtResource("2_state")
 state_name = &"fwalk"
 state_script = ExtResource("4_fwalk")
+animation_key = &"fwalk"
 
 [sub_resource type="Resource" id="State_bwalk"]
 script = ExtResource("2_state")
 state_name = &"bwalk"
 state_script = ExtResource("5_bwalk")
+animation_key = &"bwalk"
 
 [sub_resource type="Resource" id="State_crouch"]
 script = ExtResource("2_state")
 state_name = &"crouch"
 state_script = ExtResource("6_crouch")
+animation_key = &"crouch"
+
+[sub_resource type="Resource" id="State_light_attack"]
+script = ExtResource("2_state")
+group_path = &"action/basic_attack"
+state_name = &"light_attack"
+state_script = ExtResource("7_attack")
+animation_key = &"light_attack"
 
 [resource]
 script = ExtResource("1_definition")
-states = Array[ExtResource("2_state")]([SubResource("State_idle"), SubResource("State_fwalk"), SubResource("State_bwalk"), SubResource("State_crouch")])
+states = Array[ExtResource("2_state")]([SubResource("State_idle"), SubResource("State_fwalk"), SubResource("State_bwalk"), SubResource("State_crouch"), SubResource("State_light_attack")])

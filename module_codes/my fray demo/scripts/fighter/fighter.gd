@@ -1,12 +1,14 @@
 class_name Fighter
 extends CharacterBody2D
-## 输入采样(-50) → 状态物理更新(0) → 本节点普通推进(50)。
+## 管理角色组件、输入请求和状态机初始化。
 
 @export var move_env: FighterMoveEnv
 @export var loadout: FighterLoadout
 var _movement := FighterMovement.new()
 var _standing_body_size: Vector2
 var _standing_body_pos: Vector2
+## 保存本角色全部已选转换，同组普通规则交给 Fray 推进。
+var _selected_transitions: Array[FighterTransitionDefinition] = []
 
 @onready var body_shape: CollisionShape2D = $CollisionShape2D
 
@@ -18,10 +20,12 @@ var _standing_body_pos: Vector2
 @onready var advancer: FrayBufferedInputAdvancer = $FrayStateMachine/FrayBufferedInputAdvancer
 
 
+## 节点就绪后初始化角色。
 func _ready() -> void:
 	_init_fighter()
 
 
+## 初始化角色组件和物理更新顺序。
 func _init_fighter() -> void:
 	FighterInputBindings.register_actions(FrayInputMap)
 	# Fray 原始采样先于每角色方向清洗；不修改插件源码。
@@ -38,9 +42,12 @@ func _init_fighter() -> void:
 	_initialize_state_machine(loadout.entry_path)
 
 
+## 按装备的招式构建状态机并配置输入。
 func _initialize_state_machine(target_path: StringName) -> void:
-	var root := FighterSMBuilder.new().build(self, loadout)
-	fighter_input.configure(controller, loadout.selected_moves)
+	var builder := FighterSMBuilder.new()
+	var root := builder.build(self, loadout)
+	_selected_transitions = builder.selected_transitions
+	fighter_input.configure(controller, builder.selected_moves)
 	state_machine.initialize({
 		"fighter": self,
 		"controller": controller,
@@ -52,47 +59,68 @@ func _initialize_state_machine(target_path: StringName) -> void:
 	state_machine.active = true
 
 
-# 根据指令推进状态机
+## 每个物理帧处理输入候选和普通转换。
 func _physics_process(_delta: float) -> void:
 	advance_commands()
 
 
-## 根据候选指令进行推进，无法推进则进行状态机自动推进。
+## 依次尝试招式候选、跨组普通转换和同组普通转换。
 func advance_commands() -> bool:
 	for candidate in fighter_input.get_candidates():
 		if _try_move(candidate):
 			fighter_input.consume(candidate)
 			return true
+	for rule in _selected_transitions:
+		if not rule.move_id.is_empty():
+			continue
+		if String(rule.from_state).get_base_dir() == String(rule.to_state).get_base_dir():
+			continue
+		if _try_transition(rule):
+			return true
 	return state_machine.advance()
 
 
-## 固定招式规则通过源状态、前置条件和完成条件后，才执行 external 转换。
-## Fray 公开 add_transition 仅支持直接子节点；跨层入口桥接集中在此处。
+## 按已装配的转换规则检查并发动候选招式。
 func _try_move(candidate: Dictionary) -> bool:
 	var move: FighterMoveDefinition = candidate.move
 	var root := state_machine.get_root()
-	var active_info := root.get_active_states_info()
-	var active_states: Array[FrayState] = active_info.states
-	var source: FrayState
-	for state in active_states:
-		for path in move.allowed_from_paths:
-			if root.get_state_or_null(path) == state:
-				source = state
-	if source == null:
-		return false
 	for expression in move.prereqs:
 		if not root.is_condition_true(expression):
 			return false
-	if move.switch_mode == FrayStateMachineTransition.SwitchMode.AT_END:
+	for rule in _selected_transitions:
+		if rule.move_id != move.move_id or rule.to_state != move.entry_path:
+			continue
+		if _try_transition(rule, {
+			"move": move,
+			"move_id": move.move_id,
+			"input_frame": candidate.created_frame,
+		}):
+			return true
+	return false
+
+
+## 检查活动源和规则条件后按完整路径执行转换。
+func _try_transition(rule: FighterTransitionDefinition, args: Dictionary = {}) -> bool:
+	var root := state_machine.get_root()
+	var active_states: Array[FrayState] = root.get_active_states_info().states
+	var source := root.get_state_or_null(rule.from_state)
+	if not source in active_states:
+		return false
+	for expression in rule.prereqs:
+		if not root.is_condition_true(expression):
+			return false
+	# 普通转换沿用 Fray 的条件语义，招式转换始终检查推进条件。
+	if rule.auto_advance or not rule.move_id.is_empty():
+		for expression in rule.advance_conditions:
+			if not root.is_condition_true(expression):
+				return false
+	if rule.switch_mode == FrayStateMachineTransition.SwitchMode.AT_END:
 		if not source.is_done_processing() or not active_states.back().is_done_processing():
 			return false
-	# 不是无条件 goto；使用修复后的 external 执行器，保留自转移和进退顺序。
-	return root._transition_to(move.entry_path, {
-		"move_id": move.move_id,
-		"input_frame": candidate.created_frame,
-	}, source)
+	return root._transition_to(rule.to_state, args, source)
 
 
+## 同步角色移动朝向和精灵翻转。
 func set_facing(direction: int) -> void:
 	fighter_input.facing_dir = direction
 	_movement.set_facing(direction)
@@ -100,32 +128,54 @@ func set_facing(direction: int) -> void:
 	sprite.flip_h = direction == 1
 
 
+## 返回前进时使用的水平输入轴。
 func get_forward_axis() -> float:
 	return fighter_input.get_horizontal_axis() if inputed_fwalk() else 0.0
 
 
+## 判断当前输入是否要求前进。
 func inputed_fwalk() -> bool:
 	return fighter_input.inputed_fwalk()
 
 
+## 返回后退时使用的水平输入轴。
 func get_backward_axis() -> float:
 	return fighter_input.get_horizontal_axis() if inputed_bwalk() else 0.0
 
 
+## 判断当前输入是否要求后退。
 func inputed_bwalk() -> bool:
 	return fighter_input.inputed_bwalk()
 
 
+## 判断当前输入是否要求下蹲。
 func inputed_crouch() -> bool:
 	return fighter_input.inputed_crouch()
 
 
-## 只调整实体碰撞体，保持脚底高度；不代替战斗 hurtbox / 防御判定。
+## 判断角色是否接触地面。
+func grounded() -> bool:
+	return is_on_floor()
+
+
+## 切换实体碰撞体高度并保持脚底位置。
 func set_crouching(crouching: bool) -> void:
 	var height := _standing_body_size.y * (0.5 if crouching else 1.0)
 	body_shape.shape.size = Vector2(_standing_body_size.x, height)
 	body_shape.position = _standing_body_pos + Vector2(0.0, (_standing_body_size.y - height) * 0.5)
 
 
+## 解析状态动画语义并播放角色当前表现中的动画。
 func play_animation(animation_key: StringName) -> void:
-	sprite.play(animation_key)
+	sprite.play(_resolve_animation_key(animation_key))
+
+
+## 预留角色自定义动画映射入口，当前仅原样返回动画语义。
+func _resolve_animation_key(animation_key: StringName) -> StringName:
+	return animation_key
+
+
+## 判断当前最深活动状态是否完成。
+func active_leaf_done() -> bool:
+	var states: Array[FrayState] = state_machine.get_root().get_active_states_info().states
+	return not states.is_empty() and states.back().is_done_processing()

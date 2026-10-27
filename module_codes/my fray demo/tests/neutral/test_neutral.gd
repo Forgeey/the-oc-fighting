@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 ## Loaded as a scene so Fray autoloads are available before Fighter compilation.
 
 const ACTIONS: Array[StringName] = FighterInputBindings.ACTIONS
@@ -57,6 +57,7 @@ func _spawn(paths: Array[StringName]) -> Fighter:
 	var actor: Fighter = load("res://scenes/Fighter.tscn").instantiate()
 	actor.loadout = fighter.loadout.duplicate()
 	actor.loadout.selected_state_paths = paths
+	actor.loadout.selected_move_ids = []
 	actor.position = Vector2(700.0, 640.0)
 	add_child(actor)
 	_pause_actor(actor, true)
@@ -64,15 +65,17 @@ func _spawn(paths: Array[StringName]) -> Fighter:
 
 
 func _run() -> void:
-	var arena := load("res://scenes/arena.tscn").instantiate()
+	var arena: Node2D = load("res://scenes/arena.tscn").instantiate()
 	add_child(arena)
 	fighter = arena.get_node("Fighter")
+	_check(not fighter.has_node("AnimationPlayer"), "fighter has no unused AnimationPlayer node")
 	_pause_actor(fighter, true)
 	_expect(&"idle", "default entry remains neutral/idle")
 	var root := fighter.state_machine.get_root()
 	_check(root.get_state(&"neutral/bwalk") is BWalkState, "bwalk is assembled from state library")
 	_check(root.get_state(&"neutral/crouch") is CrouchState, "crouch is assembled from state library")
-	_check(fighter.loadout.selected_moves.is_empty(), "default character still equips no attacks")
+	_check(fighter.loadout.selected_move_ids == [&"01010001"], "default character equips light attack by ID")
+	_check(root.get_state(&"action/basic_attack/light_attack") is BasicAttackState, "move dependency is assembled from state library")
 	_check(fighter.state_machine.advance_mode == FrayStateMachine.AdvanceMode.MANUAL, "single manual transition scheduler is preserved")
 	var standing_size: Vector2 = fighter.body_shape.shape.size
 	var standing_pos := fighter.body_shape.position
@@ -171,6 +174,8 @@ func _run() -> void:
 	_pause_actor(fighter, false)
 	await _frames(6)
 	_check(fighter.is_on_floor(), "fighter settles on arena floor")
+	await _test_live_idle_stability("initial idle")
+	await _test_light_attack()
 	var initial_x := fighter.position.x
 	_inputs([&"move_left"])
 	await _frames(20)
@@ -193,6 +198,7 @@ func _run() -> void:
 	await _frames(10)
 	_expect(&"idle", "releasing walk enters idle")
 	_check(is_zero_approx(fighter.velocity.x), "idle friction stops walking velocity")
+	await _test_live_idle_stability("idle after releasing movement")
 	fighter.set_facing(-1)
 	_inputs([&"move_right"])
 	await _frames(20)
@@ -206,3 +212,68 @@ func _run() -> void:
 	await get_tree().process_frame
 	print("NEUTRAL TESTS: %d checks, %d failures" % [checks, failures])
 	get_tree().quit(0 if failures == 0 else 1)
+
+
+func _test_light_attack() -> void:
+	var attack: BasicAttackState = fighter.state_machine.get_root().get_state(&"action/basic_attack/light_attack")
+	var duration := fighter.loadout.move_library.moves[0].total_frames()
+	_check(duration == 24, "light attack uses configured 24 logical frames")
+	var has_j := false
+	for event in InputMap.action_get_events(&"light_attack"):
+		if event is InputEventKey and event.physical_keycode == KEY_J:
+			has_j = true
+	_check(has_j, "physical J is bound to light_attack")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_J
+	key.pressed = true
+	Input.parse_input_event(key)
+	await _frames(2)
+	_check(_path() == &"action/basic_attack/light_attack", "physical J enters equipped light attack")
+	_check(fighter.sprite.animation == &"light_attack" and fighter.sprite.is_playing(), "attack animation plays independently of logical completion")
+	_check(not fighter.active_leaf_done(), "parent completion cannot end attack before recovery")
+	_check(fighter.fighter_input.get_candidates().is_empty(), "successful move consumes its candidate")
+	_pause_actor(fighter, true)
+	var initial := attack.elapsed_frames
+	var initial_x := fighter.position.x
+	for i in range(initial, duration):
+		_check(not attack.is_done_processing(), "attack incomplete before logical frame %d" % i)
+		attack._physics_process_impl(1.0 / 60.0)
+		if i + 1 < duration:
+			_check(not fighter.advance_commands(), "no early normal exit at logical frame %d" % i)
+	_check(attack.is_done_processing() and attack.get_phase() == BasicAttackState.Phase.DONE, "recovery completion marks attack done")
+	_check(fighter.advance_commands(), "completed attack takes selected return transition")
+	_expect(&"idle", "attack returns to neutral/idle")
+	_check(is_equal_approx(initial_x, fighter.position.x), "attack does not introduce horizontal movement")
+	_pause_actor(fighter, false)
+	await _frames(duration + 2)
+	_expect(&"idle", "holding J does not automatically repeat attack")
+	key = InputEventKey.new()
+	key.physical_keycode = KEY_J
+	key.pressed = false
+	Input.parse_input_event(key)
+	await _frames(2)
+	# Re-press starts a fresh execution; interruption must not leak old progress.
+	_inputs([&"light_attack"])
+	await _frames(2)
+	_check(_path() == &"action/basic_attack/light_attack" and attack.elapsed_frames < duration, "fresh press restarts attack from new progress")
+	fighter.state_machine.goto(&"neutral/idle")
+	_inputs([])
+	await _frames(2)
+	var actor := _spawn([&"neutral/idle"])
+	_check(not actor.state_machine.get_root().has_state(&"action/basic_attack/light_attack"), "unequipped move does not instantiate attack state")
+	actor.fighter_input.sample()
+	_check(actor.fighter_input.get_candidates().is_empty(), "unequipped move registers no input candidate")
+	actor.free()
+
+
+## 通过真实采样与物理推进检查每次转换信号，避免偶数次循环被最终状态掩盖。
+func _test_live_idle_stability(label: String) -> void:
+	var root := fighter.state_machine.get_root()
+	var transitions: Array[StringName] = []
+	var record := func(_from: StringName, to: StringName) -> void:
+		transitions.append(to)
+	root.transitioned.connect(record)
+	await _frames(12)
+	root.transitioned.disconnect(record)
+	_check(transitions.is_empty(), "%s has no unsolicited transitions over 12 live physics frames" % label)
+	_check(_path() == &"neutral/idle" and fighter.sprite.animation == &"idle", "%s keeps state and configured animation stable" % label)

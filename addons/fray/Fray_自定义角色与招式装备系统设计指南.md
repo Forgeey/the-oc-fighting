@@ -6,7 +6,7 @@
 
 本方案明确采用以下约束：
 
-1. **角色状态机负责行为流程，不为每个可装备招式强制创建一个独立状态。**
+1. **每个装备招式默认有自己的行为叶子和完整路径；执行协议相同时可以复用脚本类，但状态实例与招式配置独立。普通三阶段在该叶子内部推进。**
 2. 攻击行为考虑四类：**基础攻击、特殊攻击、组合式攻击、投技**。
 3. 特殊攻击包括 projectile（投射物）、蓄力，以及其他需要特殊执行流程的招式。
 4. 新增业务模块 **`MoveManager`**，统一管理招式装备、查询、校验和动作请求的准备。
@@ -15,7 +15,12 @@
 7. **仅角色配置界面允许换装；战斗中不允许装备、卸下或替换招式。**
 8. 叶子状态调用 `Movement`，由 `Movement` 负责角色实际移动；不能在父状态或 Fighter 中重复提交移动。
 
-> 推荐架构：少量稳定的行为状态 + 数据驱动的招式定义 + MoveManager 装备管理 + 角色动画标识映射。
+9. **每个特殊技固定一套方向序列＋一个指定逻辑攻击按钮，不自动提供轻／中／重三个数值版本。**
+10. **招式逻辑帧统一驱动判定、取消窗口与结束；AnimatedSprite2D 负责显示，当前 Demo 不使用 AnimationPlayer 节点。**
+
+> 2026-10-25 修订：稳定基础状态 + 每招独立叶子（执行脚本按协议复用）+ 只读招式配置 + 按 Loadout 装配完整判定姿态。当前 Demo 的 MoveLibrary/Loadout 招式选择接线、招式计时和判定依赖仍是后续设计，不在本次实现。
+>
+> 固定输入／数值与执行脚本复用是正交问题。每招独立状态路径不要求每招独立脚本文件；同协议招式可以共享脚本类，由独立状态实例读取各自配置。公共基类、Movement、计时和清理工具仍可复用。详细问答见 [招式装配与判定时序疑难解答](../../module_codes/my%20fray%20demo/docs/招式装配与判定时序疑难解答.md)。
 
 本文所有 `MoveManager`、`MoveDefinition`、`AttackRuntime` 等名称都是建议新增的项目类型，不是 Fray 内置 API。示例字段与方法为设计约定，需后续实现。
 
@@ -53,111 +58,53 @@ MoveManager 可以检查能量、接地等公共限制，但当前动作能否�
 
 ## 3. 角色状态机如何划分
 
-### 3.1 第一版使用平面状态机即可
+### 3.1 基础状态与招式叶子分离
+
+基础移动、受击、倒地等状态不是必须装备的玩家招式。保留独立状态定义，装配器统一收集所选基础状态和招式依赖，不把所有行为都包装成 Move。
+
+### 3.2 当前分层方案：类别分组下放具体招式
 
 ```text
-FighterRoot（FrayCompoundState）
-├─ Idle
-├─ Walk
-├─ Crouch
-├─ Jump
-├─ Dash
-├─ BasicAttack
-├─ SpecialAttack
-├─ CompositeAttack
-├─ Throw
-├─ Hitstun
-├─ Blockstun
-├─ Knockdown
-├─ Getup
-├─ Captured             被投技控制，按需求加入
-└─ KO
+root
+├─ neutral
+│  ├─ idle
+│  ├─ fwalk
+│  ├─ bwalk
+│  └─ crouch
+├─ action
+│  ├─ basic_attack
+│  │  ├─ punch                  → PunchState 专用脚本
+│  │  └─ kick                   → KickState 专用脚本
+│  ├─ special_attack
+│  │  ├─ fireball               → FireballState 专用脚本
+│  │  └─ rising_strike          → RisingStrikeState 专用脚本
+│  ├─ composite_attack
+│  │  └─ rush_combo             → RushComboState 专用脚本
+│  └─ throw
+│     └─ forward_throw          → ForwardThrowState 专用脚本
+└─ reaction
+   └─ hitstun / knockdown 等（按需实现）
 ```
 
-四类攻击状态负责四种行为协议，而不是四个固定招式。不同基础攻击共享 `BasicAttack`；不同特殊攻击可以共享 `SpecialAttack` 的阶段驱动，并按机制采用不同执行逻辑。
+四类攻击是组织分组，不是“每类一个通用 Attack 执行叶子”。招式入口指向具体路径，例如 `action/special_attack/fireball`。除当前四个 neutral 叶子外，上图攻击与反应内容是示意，不是默认已装备状态。
 
-不要求第一阶段实现所有状态。先完成移动、一个基础攻击和受击，再逐步扩展。
+每招默认一份自己的叶子定义与脚本；只有选择该招才装配其专属行为与判定依赖。一个招式的起手、有效、恢复默认是同一叶子的内部阶段，不能据此创建三倍状态。
 
-### 3.2 分层方案：Action 直接包含 Dash 与四类攻击
-
-采用分层时，`Action` 下直接放置 `Dash`、`BasicAttack`、`SpecialAttack`、`CompositeAttack`、`Throw`，不再增加中间的统一 `Attack` 分组。
-
-四类攻击作为复合状态，各自下面的具体 Attack 叶子承担实际执行：
-
-```text
-FighterRoot
-├─ Neutral
-│  ├─ Idle / Walk / Crouch
-│  └─ Jump
-├─ Action                         主动行为复合状态
-│  ├─ Dash                        冲刺执行状态，复杂后可自行分层
-│  ├─ BasicAttack                 基础攻击复合状态
-│  │  └─ Attack                   实际基础攻击执行叶子
-│  ├─ SpecialAttack               特殊攻击复合状态
-│  │  └─ Attack                   实际特殊攻击执行叶子
-│  ├─ CompositeAttack             组合式攻击复合状态
-│  │  └─ Attack                   实际组合式攻击执行叶子
-│  └─ Throw                       投技复合状态
-│     └─ Attack                   实际投技执行叶子
-├─ Reaction
-│  └─ Hitstun / Blockstun / Knockdown / Getup / Captured
-└─ KO
-```
-
-这里四个 `Attack` 是不同父状态下的局部名称，完整路径分别为：
-
-```text
-Action/BasicAttack/Attack
-Action/SpecialAttack/Attack
-Action/CompositeAttack/Attack
-Action/Throw/Attack
-```
-
-它们是不同的状态实例，可以分别使用基础攻击、特殊攻击、组合攻击、投技执行脚本；**名称相同不代表共用一个实例或同一种实现，也不要求四个脚本声明相同的全局类名。**
-
-#### 各层职责
+### 3.3 各层职责与规模控制
 
 | 层级 | 职责 |
 | --- | --- |
-| `Action` | 主动行为之间的转换与组级中断规则；其中也包含 Dash，不等同于纯攻击组 |
-| 四类攻击复合状态 | 本类攻击共有的进入/退出规则、组内转换、完成语义与公共清理 |
-| 具体 `Attack` 叶子 | 持有本次动作运行时、读取招式资源、推进阶段、调用动画/判定和 Movement |
+| root／action／攻击类别组 | 分组、入口、跨组出口及明确的完成／中断规则 |
+| 具体招式叶子 | 读取只读配置，推进逻辑帧，调用 Movement、显示和判定；退出清理 |
+| neutral／reaction 叶子 | 持续移动意图或战斗反应，不伪造玩家招式候选 |
 
-只有当前执行叶子提交角色移动，父层不再执行一次 Movement。类别复合状态也不会自动因为叶子结束就判定完成，需要按当前 Fray 的完成判定实现明确的组完成条件。
+只有当前叶子提交一次实际移动。父层收到物理回调不表示应重复调用 Movement。父组完成不会天然递归等待叶子，需要明确条件。
 
-删除统一 Attack 父层后，四类攻击共有但不适用于 Dash 的规则，可通过共享辅助逻辑、同层标签和条件配置复用，不能把它们无条件套在整个 Action 上。
+不为每个来源姿态复制招式：idle／fwalk 都能发火球时，由 `allowed_from_paths` 与前置条件表达，不创建 `IdleFireball`、`WalkFireball`。
 
-#### 具体 Attack 可以按需要继续细分
+不以减少状态数量为目标强制共享执行器，也不以“每招独立”为由复制全部公共工具。相同协议允许多个独立状态路径复用一个脚本类；脚本复用不会自动派生数值版本，也不意味着采用通用多招派发叶子。
 
-上图以每类一个数据驱动执行叶子起步。如果确有不同执行协议，可以在相应类别下增加不同叶子，例如地面/空中基础攻击执行器，或普通施放/蓄力施放执行器。
-
-这些具体 Attack 不必与每个装备招式一一对应：
-
-- 直拳、重拳可以由 `BasicAttack/Attack` 读取不同 `MoveDefinition` 执行。
-- 火球与蓄力火球可由特殊攻击执行器选择不同阶段流程；若拆出蓄力执行器，它仍可在释放时生成 projectile，机制不是互斥的。
-- 组合攻击的内部片段默认仍由片段图驱动，不必为每个片段创建 Fray 状态。
-- 确有独立行为的招式可以拥有专用叶子，但仅伤害、帧数、动画不同的招式优先使用配置资源。
-
-分层后，组装/派发层负责把执行类型及必要的执行变体映射到**具体叶子路径**，不能只定位到类别父状态就假定招式已启动。应测试具体叶子的进入回调、参数传递和父层清理次数。
-
-层级变化不应改变招式资源的稳定 ID，也不应要求装备存档保存 `Action/BasicAttack/Attack` 这类内部状态路径。MoveManager 仍负责装备与查询，不直接承担类别内部的状态推进。
-
-3.1 的平面方案仍可作为第一版；选择本分层方案时，四类名称表示复合状态，实际执行职责下移到其 Attack 叶子。
-
-### 3.3 不按招式数量扩张状态数量
-
-例如：
-
-```text
-直拳、重拳、踢腿       → BasicAttack
-火球、蓄力火球、冲击波 → SpecialAttack
-三段突进、分支派生技   → CompositeAttack
-普通投、指令投         → Throw
-```
-
-上面的名称表示执行类别：在平面方案中对应执行状态，在 3.2 的分层方案中对应类别下面的具体 Attack 叶子。
-
-地面/空中使用限制、速度和伤害差异优先由配置表达。若某种行为的完整生命周期与现有执行器差异太大，再新增执行器或状态，而不是不断向通用状态塞无关条件。
+有独立抓取／约束／等待协议的招式可以拥有额外控制流程。当前 StateDefinition 只支持无参构造的 FrayState 叶子，不能直接填 FrayCompoundState 脚本；新增分组或多叶子依赖仍须遵守构建器接口。
 
 ## 4. 四类攻击的执行模型
 
@@ -171,7 +118,7 @@ startup（起手）→ active（有效）→ recovery（恢复）→ 结束
 
 招式数据提供：阶段时长、判定时间窗、位移规则、伤害和取消规则。状态维护当前进度，调用动画、判定和 Movement。
 
-不同攻击速度、不同身体动画，不足以成为新建状态脚本的理由。
+本项目为每招使用专用脚本，时间与伤害等仍作为只读配置，不在共享资源中保存执行进度。逻辑帧控制阶段和判定；不依赖动画结束。FrayState 默认视为已完成，招式必须覆盖 `_is_done_processing_impl()`，恢复结束后才返回 true。
 
 ### 4.2 特殊攻击 SpecialAttack
 
@@ -190,7 +137,7 @@ charge_profile = 可选蓄力配置
 projectile_profile = 可选投射物配置
 ```
 
-简单特殊攻击可以沿用阶段计时。蓄力流程较复杂时，再在 SpecialAttack 内使用明确的内部阶段或子状态：
+每个特殊技默认固定方向序列与指定按钮，并使用自己的专用叶子／脚本；不按攻击按钮自动选择轻中重强度。简单特殊技在本叶子内计时。若将来明确需要蓄力，可在该招式内设计额外流程（不是本次新增数值版本）：
 
 ```text
 charge_start → charging → release → recovery
@@ -276,7 +223,8 @@ Projectile 的责任边界：
 | 分组 | 示例字段 |
 | --- | --- |
 | 身份 | `move_id`、显示名、版本、标签 |
-| 执行 | `execution_kind`：basic / special / composite / throw |
+| 执行 | `entry_path`、`states`、`transitions`；类别 basic / special / composite / throw |
+| 输入 | 作者固定 `command`；特殊技方向序列＋指定按钮，不接受强度按钮覆盖 |
 | 装备 | 允许槽位、角色兼容标签、可选装备成本 |
 | 发动 | 地面/空中限制、能量消耗、冷却或其他前置条件 |
 | 时间 | 起手、有效、恢复、判定时间窗 |
@@ -424,7 +372,7 @@ punch_light
     └─ 角色 B → B 的轻拳动画
 ```
 
-招式不直接持有“A 的身体精灵图”。实际帧图、图集、动画播放器入口及适配信息由 `CharacterAnimationMap` 或对应表现资源持有。
+招式不直接持有“A 的身体精灵图”。实际帧图、图集与 SpriteFrames 显示适配由角色表现资源持有；不要求 AnimationPlayer 或固定判定轨道路径。
 
 ### 8.2 一招可以引用多个动画标识
 
@@ -437,13 +385,13 @@ punch_light
 
 不要把“只引用动画标识”误解成“一招只允许一个字符串”。
 
-### 8.3 动画不是唯一的战斗计时来源
+### 8.3 逻辑帧是唯一的战斗时间来源
 
-建议由招式逻辑时间控制伤害判定、阶段完成和取消窗口，动画跟随该时间语义。换皮肤或更换精灵帧数量，不应意外改变伤害有效帧。
+招式专用叶子的动作进度决定伤害判定、阶段完成、取消窗口与生成事件，AnimatedSprite2D 只负责显示。基础动画继续使用现有 `sprite.play()`；需要精确逐帧同步的攻击，后续可由同一进度映射 SpriteFrames 显示帧，不引入第二套战斗时钟。
 
-如果采用动画事件驱动某些逻辑，则必须约定事件标识与时间标准，并校验每个角色动画都提供相同的必要事件，不能随意替换动画后继续假定逻辑等价。
+当前 Demo 不使用 AnimationPlayer 节点，不用属性轨／方法轨控制判定，也不用 `frame_changed` 或 `animation_finished` 决定战斗结束。Hitstop、暂停和变速需统一动作与显示策略，不能默认 Sprite 自主播放会自动冻结。
 
-投技同步锚点、攻击判定挂点等也需要兼容性契约；仅存在同名动画不足以证明角色可以正确执行该招式。
+换皮肤或图片帧数改变不应意外改变有效帧。投技同步锚点与判定挂点仍须显式兼容，仅存在同名动画不足以证明能够执行。
 
 ### 8.4 缺少动画时的策略
 
@@ -455,21 +403,23 @@ punch_light
 
 ## 9. 状态机与 MoveManager 如何接入 Fray
 
-### 9.1 组装时不按装备数量生成状态
+### 9.1 按所选招式装配专属叶子与判定依赖
 
-推荐由 `InitStateMachine` 创建支持的行为状态，并维护执行类型到实际执行叶子的映射。平面方案与 3.2 分层方案分别为：
+当前 Demo 使用 `FighterSMBuilder`，收集基础 `selected_state_paths` 和 `selected_moves` 的 states／transitions；每个完整状态路径在一个角色内装配一次，脚本以 `.new()` 创建独立实例。
+
+每招的 `entry_path` 指向其具体叶子，不按类别统一派发到一个 `Attack`。不同招式使用不同路径，不依赖同路径后写覆盖。当前 Builder 信任作者配置，不进行防御性资源预检。
+
+判定采用以下拟新增关系（不是已实现字段）：
 
 ```text
-执行类型     平面方案             分层方案
-basic       BasicAttack          Action/BasicAttack/Attack
-special     SpecialAttack        Action/SpecialAttack/Attack
-composite   CompositeAttack      Action/CompositeAttack/Attack
-throw       Throw                Action/Throw/Attack
+Move.states → StateDefinition.hit_state_definition
+    → FighterHitStateDefinition.hit_state_scene: PackedScene
+    → 本角色独立 FrayHitState2D 实例
 ```
 
-角色生成时通过 context 注入 Fighter、Movement、MoveManager、控制器和动画接口。Fray 的 `initialize(context, root)` 会让 context 字典只读，但不会把其中引用的 MoveManager 对象自动变成不可变对象；装备锁定仍需业务层实现。
+在状态定义声明一次依赖，不在 Move 重复存同一场景；资源不能持有已实例化 Node。角色按 Loadout 生成时装配，战斗中只选择与启停。Manager 的 ready 接线限制与装配顺序见 [动态装配方案](../../module_codes/my%20fray%20demo/docs/判定系统动态装配方案.md)。
 
-装备条目影响“候选招式与合法取消目标”，不一定影响状态节点数量。只有特殊执行机制确实需要额外状态时，再由组装层添加对应状态。
+MoveManager 的装备 UI、校验与锁定是未来业务层能力，不替换当前输入消费规则。context 的只读字典也不会自动使其中的对象不可变。
 
 ### 9.2 请求执行与提交
 
@@ -486,24 +436,13 @@ throw       Throw                Action/Throw/Attack
 
 普通请求不要直接无条件调用 `goto()`；当前 Fray 的 `goto()` 绕过普通转换前置条件。若业务层选择使用它完成派发，必须先完成全部验证，并限制在统一提交入口。
 
-### 9.3 同一执行状态之间的连续招式
+### 9.3 连续招式与同招重启
 
-这是数据驱动方案必须单独解决的问题：
+默认不同招式进入不同叶子，如 `punch → kick`，旧叶子退出清理，新叶子建立独立执行进度。当前 `_try_move()` 传入 move_id 与 input_frame，并通过经来源检查的 `_transition_to(..., source)` 执行 external 转移。
 
-```text
-BasicAttack（直拳）→ BasicAttack（重拳）
-```
+同招再次合法发动时仍须测试重入：旧判定、取消窗口、命中记录、计时与生成标记先清理，再分配新动作代次。不能只覆盖招式引用，也不能假定重复 `goto()` 一定重入；当前插件 external 路径的修复不应与旧指南对 goto 的警告混为一谈。
 
-上例使用平面方案名称；分层方案对应 `Action/BasicAttack/Attack` 这个同一叶子执行不同招式。不能假定再次 `goto("BasicAttack")`（平面）或 `goto("Action/BasicAttack/Attack")`（分层）会重新调用进入回调。当前源码的切换逻辑会寻找共同活动祖先，目标已经活动时不保证重入启动。
-
-建议定义明确的动作执行接口，例如 `begin_execution(request)` / `replace_execution(request)`：
-
-- 首次进入由状态入口启动执行。
-- 合法的同状态取消由统一提交入口调用执行替换。
-- 替换时先清理旧判定和阶段效果，再建立新运行时数据。
-- 不能只在字典里覆盖当前招式引用而保留旧的计时和命中列表。
-
-也可以采用经过测试的状态重入机制，但不要靠重复调用 `goto()` 猜测行为。
+当前不新增一个多招共用的 `begin_execution/replace_execution` 调度器。如以后引入通用执行器，再明确动作上下文和替换协议。
 
 ### 9.4 其他当前源码注意点
 
@@ -549,8 +488,8 @@ BasicAttack（直拳）→ BasicAttack（重拳）
 
 1. 实现 `MoveDefinition`、基础 `MoveSetDefinition` 和 MoveManager 的配置/锁定流程。
 2. 完成动画标识到角色实际动画的解析与装备前校验。
-3. 用一个 `BasicAttack` 执行两种不同招式，验证切换配置不增加状态。
-4. 验证同状态连续攻击的执行替换与退出清理。
+3. 用两个固定指令、固定数值的招式验证各自专用叶子／脚本及 Loadout 依赖装配，不自动生成强度版本。
+4. 验证普通三阶段逻辑帧、跨招转换、同招重入、判定动态装配与退出清理。
 5. 实现 projectile 特殊攻击，再实现蓄力，并验证蓄力 projectile 的机制组合。
 6. 实现组合式攻击片段图与分支验证。
 7. 实现投技及目标受控流程。
@@ -573,10 +512,10 @@ scripts/
 │  ├─ character_definition.gd
 │  └─ character_animation_map.gd
 └─ states/
-   ├─ basic_attack.gd
-   ├─ special_attack.gd
-   ├─ composite_attack.gd
-   └─ throw.gd
+   ├─ punch_state.gd
+   ├─ fireball_state.gd
+   ├─ rush_combo_state.gd
+   └─ forward_throw_state.gd
 
 resource/
 ├─ moves/

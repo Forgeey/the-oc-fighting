@@ -3,7 +3,9 @@
 > **依据：仓库根目录 `addons/fray/` 当前源码，`plugin.cfg` 版本 `2.0.0-alpha`。**
 > **核对日期：2026-10-16；输入映射、FrayInputBuffer、多框组合、自定义按键、Advancer 表驱动与统一输入仲裁补充核对：2026-10-17。** 插件随附安装说明标注 Godot 4.2+；本文示例使用 Godot 4 GDScript。
 >
-> 本文是面向本项目的推荐接入方案，不表示项目已经实现全部功能。插件接口以根目录 `addons/fray/` 为依据；动画组织参考 `addons/fray_demo/` 的角色场景。已静态核对相关接口和引用路径，示例尚未通过 Godot 引擎运行测试。
+> 本文是面向本项目的推荐接入方案，不表示项目已经实现全部功能。插件接口以根目录 `addons/fray/` 为依据；Godot 3 Demo 仅作为历史参考，不作为当前战斗时序方案。示例尚未通过 Godot 引擎运行测试。
+>
+> **2026-10-25 修订：** 每个特殊技固定一套方向序列＋指定攻击按钮，每招一套明确基础数值，不自动派生轻中重版本；默认每招专用叶子与脚本，普通三阶段在叶子内部由逻辑帧推进。AnimatedSprite2D 显示，不使用 AnimationPlayer 节点或判定轨。固定输入与脚本复用是正交问题，公共基类／工具仍可复用。详见 [疑难解答](../../module_codes/my%20fray%20demo/docs/招式装配与判定时序疑难解答.md)。
 >
 > **核心约定：每个角色仅有一个 `FrayHitStateManager2D`。每个 `FrayHitState2D` 只包含该姿态实际需要的框，同类框可以有多个；idle、jump 等非攻击动作无需创建 Attackbox，也不按框的类别拆成多个管理器。**
 
@@ -14,7 +16,7 @@
 3. [单管理器与位掩码](#3-单管理器与位掩码)
 4. [三类框的属性和碰撞层](#4-三类框的属性和碰撞层)
 5. [初始化与动作播放入口](#5-初始化与动作播放入口)
-6. [动画方案：AnimationPlayer 主控，AnimatedSprite2D 显示](#6-动画方案animationplayer-主控animatedsprite2d-显示)
+6. [动画与判定：逻辑帧主控，AnimatedSprite2D 显示](#6-动画与判定逻辑帧主控animatedsprite2d-显示)
 7. [输入与行为状态机](#7-输入与行为状态机)
 8. [指令识别与取消](#8-指令识别与取消)
 9. [命中防御与去重](#9-命中防御与去重)
@@ -63,51 +65,38 @@ res://
 
 ## 2. 推荐角色节点树
 
-下列结构是推荐新建的角色场景，括号内为类型。为便于入门，主树先展示每类一个框；**不代表每个状态只能有一个攻击框或一个受击框**。每个 `→ CollisionShape2D` 表示该框下有一个直接子形状节点，多框与多形状扩展见本节后半部分。
+角色模板只保留唯一管理器，按 Loadout 装配所需完整判定场景，不预建所有可装备招式。以下是职责示意，不表示当前 Demo 已有完整战斗功能：
 
-```text
-Fighter (CharacterBody2D，角色脚本)
-├── WorldCollision (CollisionShape2D，场景地面／墙体碰撞)
-├── Controller (FrayController)
-├── AnimationPlayer (AnimationPlayer，动作时间轴，Physics 更新)
-├── StateMachine (FrayStateMachine)
-│   ├── InputAdvancer (FrayBufferedInputAdvancer)
-│   └── AnimationObserver (FrayAnimationObserver，可选)
-├── VisualRoot (Node2D，图像与判定统一换向)
-│   ├── Sprite (AnimatedSprite2D，仅显示帧，不自行播放)
-│   ├── EffectsRoot (Node2D)
-│   └── HitStateManager (FrayHitStateManager2D，角色唯一管理器)
-│       ├── Stand (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       ├── Crouch (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       ├── Jump (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       ├── LightPunch (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   ├── Attackbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       ├── Guard (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       ├── Hurt (FrayHitState2D)
-│       │   ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│       │   └── Pushbox (FrayHitbox2D) → CollisionShape2D
-│       └── Knockdown (FrayHitState2D)
-│           ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
-│           └── Pushbox (FrayHitbox2D) → CollisionShape2D
-└── Audio (AudioStreamPlayer2D)
-```
+    Fighter (CharacterBody2D)
+      ├── WorldCollision (CollisionShape2D)
+      ├── Controller (FrayController)
+      ├── FighterInput（当前 Demo 的输入与候选）
+      ├── StateMachine (FrayStateMachine，当前 Demo 使用 MANUAL)
+      │   └── InputAdvancer（当前 Demo 保持 paused）
+      ├── VisualRoot（示意：图像与判定统一换向）
+      │   ├── Sprite (AnimatedSprite2D，负责显示)
+      │   ├── EffectsRoot (Node2D)
+      │   └── HitStateManager (FrayHitStateManager2D，唯一)
+      │       └── 按最终状态定义装配的完整 FrayHitState2D
+      └── Audio (AudioStreamPlayer2D)
+
+实际 Demo 节点名和层级以 scenes/Fighter.tscn 为准，目前 Sprite 与管理器在根下，并非已经存在 VisualRoot。换向必须同时处理判定，不以翻转 Sprite 代替全部镜像。AnimationPlayer 空节点已移除。
+
+单个装配姿态的布局示例：
+
+    PunchHitState (FrayHitState2D，直接放到唯一管理器下)
+      ├── Hurtbox (FrayHitbox2D) → CollisionShape2D
+      ├── Attackbox (FrayHitbox2D) → CollisionShape2D
+      └── Pushbox (FrayHitbox2D) → CollisionShape2D
+
+非攻击姿态省略 Attackbox；同类框允许多个矩形，不预留无用空框。判定依赖只在 StateDefinition 声明一次，经 HitStateDefinition 引用 PackedScene；不在招式资源重复保存 Node 实例。详细装配时机见 [判定系统动态装配方案](../../module_codes/my%20fray%20demo/docs/判定系统动态装配方案.md)。
 
 ### 必须遵守的结构规则
 
 - **一个角色一个管理器**，两名角色各一个，不是整场对战共用一个。
 - 每个 HitState 只创建实际需要的框。Stand（供 idle／walk 使用）、Jump 等非攻击姿态不创建 Attackbox；Hurtbox、Pushbox 也按玩法需要保留，可以只有其中一种。上图的非攻击姿态以同时保留 Hurtbox、Pushbox 为例。
 - HitState 是管理器的**直接子节点**；实际存在的判定框是 HitState 的**直接子节点**。不要增加中间分组节点，插件不会递归查找其中的框。
-- 推荐已有框按 **所有 Hurtbox → 所有 Attackbox → 所有 Pushbox** 的相对顺序排列，缺少的框直接省略，**不保留空位**。每个状态的位索引按实际框顺序单独计算；增删／重排框后必须同步修改该状态的掩码和动画轨。不要在这些直接子节点之间混入装饰或工具节点，避免 Inspector 标号与位索引混淆。
+- 推荐已有框按 **所有 Hurtbox → 所有 Attackbox → 所有 Pushbox** 的相对顺序排列，缺少的框直接省略，**不保留空位**。每个状态的位索引按实际框顺序单独计算；增删／重排框后必须同步修改该状态的掩码和逻辑时序配置。不要在这些直接子节点之间混入装饰或工具节点，避免 Inspector 标号与位索引混淆。
 - `WorldCollision` 用于角色与场景的实体碰撞；Pushbox 用于角色之间的战斗推挤检测，不是替代场景碰撞的实体形状。
 - 图像和判定按同一朝向制作。换向由 VisualRoot 或统一的镜像逻辑处理，别只改 Sprite 的 `flip_h` 而忘记框，也别重复镜像。
 - `FrayState` 是资源对象，不是 Godot 场景节点。Idle、LightPunch 等行为状态通过代码构建，无需在 StateMachine 下堆同名 Node。
@@ -136,7 +125,7 @@ HitStateManager (FrayHitStateManager2D，仍是原来的唯一管理器)
 - `HurtHead` 等只是节点名称；每个受击框都要配置 HURT 属性和 Hurt 碰撞层，每个攻击框都要配置 ATTACK 属性以及检测 Hurt 的 Mask（见第 4 节）。不要靠节点名字推断类别。
 - 每个独立框都占一个 `active_hitboxes` 位，可分别启停、移动和配置属性；同类别、同规则的多个框可以共享属性资源，但命中记录仍保存在游戏层。
 - 不要建成 `HeavySlash/Hurtboxes/HurtHead` 或 `HeavySlash/Attackboxes/AttackTip`。中间的 Node2D 分组会使框脱离当前状态的直接子节点管理范围，包括位掩码控制、source 传播和信号转发。
-- 上面的 StandComposite 是可选替代布局，不会自动替换主树的 Stand。如果实际替换，需同步修改第 5 节初始化常量以及 idle／walk 动画轨；不能继续使用原两框布局的 `3`。
+- 上面的 StandComposite 是可选替代布局，不会自动替换主树的 Stand。如果实际替换，需同步修改初始化常量与 idle／walk 的姿态掩码配置；不能继续使用原两框布局的 `3`。
 
 ### 另一种组合：一个逻辑框下挂多个形状
 
@@ -187,7 +176,7 @@ Idle、Walk 可以共用 Stand 判定；LightPunch 行为可以始终使用 Ligh
 | LightPunch：Hurtbox → Attackbox → Pushbox | Hurtbox：索引 0，位值 `1`；Attackbox：索引 1，位值 `2`；Pushbox：索引 2，位值 `4` | 前摇／后摇 `5`；普通有效段 `7` |
 | 任意布局 | — | `0` = 关闭该状态的所有框，不用于选中另一个状态 |
 
-因此不能跨状态共用固定的 `HURT = 1`、`ATTACK = 2`、`PUSH = 4` 作为类别位值。建议使用带布局／状态前缀的常量，动画轨的数值也按目标状态分别填写：
+因此不能跨状态共用固定的 `HURT = 1`、`ATTACK = 2`、`PUSH = 4` 作为类别位值。建议使用带布局／状态前缀的常量，逻辑时序中的掩码也按目标状态分别填写：
 
 ```gdscript
 # Stand：只有 Hurtbox、Pushbox。
@@ -358,233 +347,75 @@ func _get_color_impl() -> Color:
 
 ## 5. 初始化与动作播放入口
 
-本文采用第 6 节的方案：**招式内部的显示帧与判定开关交给 AnimationPlayer；脚本只负责初始化、动作开始／中断、命中结算和状态转换。** 不再由状态脚本逐帧写攻击框掩码。
+### 5.1 装配与运行分开
 
-下面是 Fighter 上的基础脚本。先按照第 6 节创建动画资源，再接入第 7 节的行为状态机。它不包含移动与完整伤害结算。
+当前 Demo 的 fighter.gd 通过 FighterSMBuilder 收集已选基础状态和招式叶子，注入 context，使用 MANUAL 推进。当前尚未有判定定义字段和绑定流程，本节为后续接口约定，不提供一套替换现有初始化的第二实现。
 
-```gdscript
-# res://fighters/common/fighter.gd
-extends CharacterBody2D
+1. 在 Manager ready 前，按最终 Loadout 解析依赖并实例化根为 FrayHitState2D 的 PackedScene，所有框初始关闭。
+2. Manager ready 连接完整子节点的掩码与接触信号，建立 source。
+3. Fighter ready 绑定状态定义、判定运行实例与角色组件，再进入真实初始状态。
+4. 后续进入行为仅选择已有完整姿态；退出清理旧攻击段，不反复创建节点。
 
-# 仅适用于 Stand 的 Hurtbox → Pushbox 布局。
-const STAND_HURT := 1 << 0
-const STAND_PUSH := 1 << 1
+当前 Manager 没有完整运行时热注册 API；在其 ready 后 add_child 不保证接线，不能把编辑器 ChildChangeDetector 当作运行期注册器。
 
-@onready var hit_manager: FrayHitStateManager2D = $VisualRoot/HitStateManager
-@onready var sprite: AnimatedSprite2D = $VisualRoot/Sprite
-@onready var animation_player: AnimationPlayer = $AnimationPlayer
+### 5.2 唯一的显示入口与判定写入者
 
-var attack_instance_id: int = 0
-var attack_segment_id: int = 0
-var action_generation: int = 0
-var _action_name: StringName = &""
-var _action_finished: bool = false
+当前实际显示入口保持：
 
-func _ready() -> void:
-    hit_manager.source = self
-    for child in hit_manager.get_children():
-        if child is FrayHitState2D:
-            child.active_hitboxes = 0
-    apply_hit_pose(&"Stand", STAND_HURT | STAND_PUSH)  # 3：无动作时的初始化姿态
+    func play_animation(animation_key: StringName) -> void:
+        sprite.play(animation_key)
 
-    sprite.autoplay = ""
-    sprite.stop()
-    animation_player.autoplay = ""
-    animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
-    animation_player.playback_default_blend_time = 0.0
-    animation_player.animation_finished.connect(_on_action_animation_finished)
-    # 接好第 7 节后，在这里调用 _initialize_behavior()。
+待机／行走可自主播放。招式专用叶子通过未来的判定运行绑定选择姿态并写 active_hitboxes；资源中保存 PackedScene 或只读定义，不保存已实例化节点。不要直接从招式 ID 猜动态场景节点名。
 
-# 仅供初始化、紧急切换等生命周期操作使用；动作内部由动画属性轨写掩码。
-func apply_hit_pose(state_name: StringName, mask: int) -> void:
-    var state := hit_manager.get_node_or_null(NodePath(state_name)) as FrayHitState2D
-    if state == null:
-        push_error("Unknown hit state: %s" % state_name)
-        return
-    if mask == 0 and hit_manager.get_current_state() != state_name:
-        push_error("A zero mask cannot select a different hit state.")
-        return
-    state.active_hitboxes = mask
+状态内部的计时与命中记录独立于显示。结束条件来自逻辑帧，不连接图像结束来代替恢复帧结束。若将来需要延迟表现事件，携带动作代次并在结果应用前核验。
 
-# 本例约定 AnimationPlayer 默认库中的动作名与 SpriteFrames 动画组名相同。
-# 返回动作代号，供行为状态辨认本次播放是否正常完成。
-func begin_action(action_name: StringName) -> int:
-    if not animation_player.has_animation(action_name):
-        push_error("Missing action animation: %s" % action_name)
-        return -1
-    if sprite.sprite_frames == null or not sprite.sprite_frames.has_animation(action_name):
-        push_error("Missing sprite frames: %s" % action_name)
-        return -1
+## 6. 动画与判定：逻辑帧主控，AnimatedSprite2D 显示
 
-    end_action()
-    _action_name = action_name
-    _action_finished = false
-    # 先选择图片组，之后动画轨只需要驱动 frame，避免两条轨的赋值顺序歧义。
-    sprite.stop()
-    sprite.animation = action_name
-    sprite.frame = 0
-    sprite.frame_progress = 0.0
-    animation_player.speed_scale = 1.0
-    animation_player.play(action_name, 0.0)  # 不混合两套战斗判定
-    animation_player.advance(0.0)            # 立即应用 t=0 的画面和完整判定
-    return action_generation
+### 6.1 不沿用 Godot 3 Demo 的判定轨
 
-func end_action() -> void:
-    action_generation += 1
-    _action_name = &""
-    _action_finished = false
-    animation_player.clear_queue()
-    animation_player.stop(true)
-    sprite.stop()
-    # stop 不代表清理框；取消和受击也会走这里，不依赖动画结尾关键帧。
-    var current := hit_manager.get_current_state_obj()
-    if current != null:
-        current.active_hitboxes = 0
+本地参考 player.tscn 有 HitStates/HitState2D:active_hitboxes 属性轨，说明动画轨方案可行；但本项目已明确不采用它。当前角色不需要 AnimationPlayer 节点，也不建设动态动画轨路径绑定。
 
-func is_action_finished(generation: int) -> bool:
-    return generation >= 0 and generation == action_generation and _action_finished
+插件的 AnimationPlayer／AnimationTree tracker 是通用可选支持，保留其源码不意味着必须在角色场景创建节点。本项目不将其完成预测作为战斗时钟。
 
-func _on_action_animation_finished(animation_name: StringName) -> void:
-    if animation_name == _action_name:
-        _action_finished = true  # 只记结果，由行为状态在自己的更新阶段决定下一步
-```
+### 6.2 每招一套明确规则，不按按钮自动变体
 
-关键约定：
+每个特殊技使用作者固定方向序列与一个指定攻击按钮；同一招式 ID 不因换轻中重按钮自动得到三套帧数／伤害。每招默认独立路径和脚本，不按类别进入通用 Attack 叶子。
 
-- `idle`、`light_punch` 等 AnimationPlayer 资源必须存在，SpriteFrames 中也要有对应组名。
-- 每个动作 **t=0 必须包含自己的 frame 和完整非零掩码关键帧**，否则播放后可能只有图片而没有正确判定。
-- 在 Inspector 中也关闭两个节点的 Autoplay，避免角色 `_ready()` 之前就开始播放。
-- `apply_hit_pose()` 不是第二套逐帧控制系统。正常攻击的 5 → 7 → 5 只出现在动画轨上。
-- 例子直接监听当前 AnimationPlayer 的完成信号，未使用异步等待；若项目增加延迟方法、协程或排队事件，必须附带并检查 `action_generation`。
-- `begin_action()`、`end_action()` 只能在初始化或安全的逻辑更新阶段调用。碰撞回调先收集事件，不要在那里切换动画／改区域监测状态。
-- 当前实现主要在 `_ready()` 建立状态与框的连接，初版预建全部 HitState；动态新增时另行完成 source 和信号接入。
-## 6. 动画方案：AnimationPlayer 主控，AnimatedSprite2D 显示
+这属于本项目可读性与内容维护选择，不是其他输入体系必然不可预测的结论。脚本复用本身不会自动产生数值变体；公共计时、Movement 与清理工具仍可共享。
 
-### 6.1 是否采用 Demo 的做法
+### 6.3 普通三阶段在一个叶子内推进
 
-**建议采用“AnimationPlayer 时间轴统一控制画面和判定”的思路。** 本地参考场景为 `addons/fray_demo/demos/example/2d/player/player.tscn`，其中能看到精灵 `frame`、`animation` 属性轨，以及 `HitStates/HitState2D:active_hitboxes` 属性轨；角色脚本也通过播放动作动画响应行为切换。
+以固定 60 Hz、起手 5 帧、有效 3 帧、恢复 12 帧为例：
 
-但要准确区分“参考思路”和“已经完成的战斗实现”：当前 Demo 中检索到的 `active_hitboxes` 轨位于 RESET 动画，并不能证明所有招式都已配置了完整的攻击有效帧。我们应自行给**每个动作**配置所需判定框和相应的 0 时刻／有效段／结束段关键帧，不照搬 RESET 的判定值、框顺序或 Demo 的节点组织。
-
-### 6.2 两个节点不是二选一
-
-Godot 的 AnimationPlayer 可驱动节点属性，也可以与 AnimatedSprite2D 组合使用；AnimatedSprite2D 通过 SpriteFrames 管理帧图。下面是本项目基于这一能力作出的分工，而不是引擎强制规定。参见第 13.2 节资料 G1、G2。
-
-| 方案 | 适合情况 | 本项目结论 |
+| 动作帧索引 | 阶段 | LightPunch 掩码示例 |
 | --- | --- | --- |
-| AnimatedSprite2D 自行播放 | 纯画面循环、无精确战斗判定的装饰动画 | 可用于独立特效，不作为主角色战斗时序 |
-| AnimationPlayer + Sprite2D | 素材统一为规则图集，愿意维护 texture／hframes／vframes／frame | 完全可行，作为图集规范统一后的替代方案 |
-| **AnimationPlayer + AnimatedSprite2D** | 角色帧图分组多，需要方便组织动作素材，并在同一时间轴编辑判定 | **本项目默认方案** |
+| [0, 5) | startup | 5：Hurt 与 Push |
+| [5, 8) | active | 7：Hurt、Attack 与 Push |
+| [8, 20) | recovery | 5：关闭 Attack，保留身体 |
+| 完成最后一帧后 | done | 允许正常退出，进入目标完整姿态 |
 
-这里不是认为 AnimatedSprite2D 画质更好或 AnimationPlayer 性能必然更好。选择依据是素材组织和战斗时序维护：
+5／7 是 Hurt→Attack→Push 三框布局的局部示例，不是全局类别常量。六框 HeavySlash 可以用 39→47→63→55→39 表达近端／两框／尖端有效变化，仍然只是同一招式内部时序，不必增加五个行为状态。
 
-- **AnimatedSprite2D**：保存动作图片组并显示指定 `frame`，运行时不调用它的 `play()`。
-- **AnimationPlayer**：决定何时显示哪张图，何时开启／关闭三类判定，必要时驱动局部框位置和表现事件。
-- **FrayStateMachine**：决定能否开始、取消或结束动作，以及下一状态是什么。
-- **对战逻辑**：处理伤害、防御、命中停顿、推挤、连段与资源消耗。
+动作索引从 0 开始，明确应用、推进、接触汇总与安全结算顺序；首帧不能在应用前先自增。物理查询不是任意时刻立即刷新，要用日志验证真实有效采样数，不以计数表替代运行验证。
 
-禁止“AnimatedSprite2D 自行播放图片，同时 AnimationPlayer 只播放判定轨”。那样同一个动作有两套独立时间进度，变速、暂停或中断时容易不同步。
+FrayState 默认完成返回 true，专用招式叶子必须覆盖 _is_done_processing_impl()，恢复结束才返回 true。父组 AT_END 不会自动递归等待深层叶子，需要明确完成条件。
 
-### 6.3 节点与轨道配置
+### 6.4 显示不反向控制战斗
 
-按第 2 节节点树，设置 `AnimationPlayer.root_node = NodePath("..")`，下列路径都相对于 Fighter：
+基础移动继续使用 AnimatedSprite2D.play()。后续若攻击必须精确同步，可用同一动作逻辑进度映射 SpriteFrames 的 animation／frame，并关闭该次显示的自主播放；这是待实现适配，不需要 AnimationPlayer。
 
-| 轨道目标 | 用途 | 设置 |
-| --- | --- | --- |
-| `VisualRoot/Sprite:frame` | 显示哪个帧图 | Value 属性轨，Update Mode = Discrete，Interpolation = Nearest |
-| `VisualRoot/HitStateManager/LightPunch:active_hitboxes` | 整套框启用位掩码 | Value 属性轨，Discrete，Nearest |
-| `VisualRoot/HitStateManager/LightPunch/Attackbox:position` | 攻击框随姿势变化（需要时） | 通常 Discrete，Nearest |
-| `VisualRoot/HitStateManager/LightPunch/Hurtbox:position` | 受击轮廓变化（需要时） | 通常 Discrete，Nearest |
-| `VisualRoot/HitStateManager/LightPunch/Pushbox:position` | 推挤轮廓变化（需要时） | 通常 Discrete，Nearest |
-| 局部视觉偏移、特效或声音 | 表现 | 按需要，不能反过来决定伤害 |
+不使用 frame_changed／animation_finished、渲染帧率或图片数量决定判定、取消和恢复。换素材不能意外改变招式战斗数值。角色实际移动仍只通过 Movement，每个物理帧提交一次，不直接修改 CharacterBody2D.position 模拟攻击位移。
 
-Discrete 使属性在关键帧更新；位掩码与帧索引不能按连续数值插值。平滑表现轨可以连续插值，但不要让这种设置扩散到判定掩码上。参见资料 G3。
+### 6.5 中断、清理与 Hitstop
 
-本方案由 `begin_action()` 先指定 SpriteFrames 动画组，时间轴只写 `frame`。若改成像 Demo 一样也加 `Sprite:animation` 轨，需要明确动画组赋值早于 frame；改变动画组会重置其帧进度，不能依赖未知的轨道顺序。
+- 正常完成、被打断、取消、自重入和销毁都有明确清理路径，不依赖动画末帧。
+- 关闭攻击段一般只清掉 Attack 位；完整姿态还需要保留 Hurt／Push，目标状态进入时选择它的完整姿态。
+- 不在碰撞信号回调中直接切换监测属性或递归转状态；记录接触与请求，在安全结算阶段处理。
+- Hitstop 要明确冻结逻辑帧、图像推进、移动及结算的范围，并约定输入收集／过期策略；不能只停图像或只暂停计时器。
+- 旧动作的延迟事件必须验证动作代次；新发动重置计时、命中列表、窗口和生成标记。
 
-形状变化优先通过分段 HitState 或独立 Shape2D 资源实现。若关键帧直接修改 `CollisionShape2D.shape` 内部尺寸，确保每个角色实例资源独立。不要同时 key `active_hitboxes`、`monitoring`、`monitorable`、`CollisionShape2D.disabled` 四套开关，否则管理器与形状实际状态容易互相矛盾。
+判定、取消、生成事件只允许一个逻辑写入者，不保留“动画轨辅助开框”的双写方案。本次仅移除空节点和统一文档，尚未实现攻击时序、精确帧映射或 Hitstop。
 
-**不把 CharacterBody2D 的全局 position 交给动画轨处理战斗移动。** 前进、击退、冲刺位移由物理逻辑执行；AnimationPlayer 可驱动专用“期望速度／位移数据”，再由角色移动逻辑消费。视觉后仰和残影可以只操作显示子树。
-
-### 6.4 编辑一个完整轻拳
-
-下面是 60 Hz 下的**动作时间轴设计**：前摇 5 帧，有效 3 帧，后摇 12 帧，共 20 帧。图片帧不等于逻辑帧，一张图可保持多个逻辑帧。
-
-1. 在 SpriteFrames 中创建 `light_punch` 图片组，本例至少有索引 0–4 的五张图。
-2. 在 AnimationPlayer 的默认 AnimationLibrary 中创建同名 `light_punch` 动画。
-3. 关闭该动作的循环；Length 设为 `20.0 / 60.0` 秒。
-4. 时间轴吸附步长设为 `1.0 / 60.0` 秒。吸附只是编辑辅助，不会自动保证引擎物理检测的采样顺序。
-5. 给 `Sprite:frame` 和 `LightPunch:active_hitboxes` 添加下面的离散关键帧。
-6. 编辑器预览时，先手动将 Sprite 的 animation 选为 light_punch，再拖动 AnimationPlayer 时间轴；运行时这一步由 begin_action 完成。单纯选中时间轴动画不会自动执行角色脚本的图片组选取。
-
-| 时间（秒） | 对应段起点 | frame（示例画面索引） | active_hitboxes |
-| --- | --- | --- | --- |
-| `0` | 动作第 1 帧开始 | 0 | 5 |
-| `3 / 60` | 第 4 帧开始，继续前摇 | 1 | 保持 5，无需额外关键帧 |
-| `5 / 60` | 第 6 帧开始，有效段开始 | 2 | 7 |
-| `8 / 60` | 第 9 帧开始，后摇开始 | 3 | 5 |
-| `14 / 60` | 第 15 帧开始，继续后摇 | 4 | 保持 5 |
-| `20 / 60` | 动作时间轴结束 | 保持最后画面 | 保持 5；行为状态负责退出 |
-
-于是三段区间是 `[0, 5/60)`、`[5/60, 8/60)`、`[8/60, 20/60)`。不要把“第 6 帧开始”写成 `6/60`，否则时间轴设计就多了一帧前摇。
-
-表格是制作数据的约定，**不声称未经运行验证就一定恰好产生 3 次 Area2D 有效采样**。首帧应用、物理查询更新和节点处理顺序可能影响采样边界，需用实际日志确认并固定工程执行顺序，不能通过随意改关键帧时间掩盖问题。
-
-另建循环动画 `idle`：t=0 写 `Stand.active_hitboxes = 3` 和 `Sprite.frame = 0`，之后仅切换待机图片；其他动作同理。每个动画只写自己要使用的 HitState；交接时由管理器关闭其他状态。
-
-**循环仅用于待机／持续移动等持续动作。** 普通攻击、受击、倒地过渡等按设计使用非循环动画；循环动画不发出正常结束信号，不能用它等待轻拳结束。参见资料 G4。
-
-#### 多框招式的动画轨扩展
-
-对于第 2、3.4 节的六框 HeavySlash，仍只有一条整组启停轨：
-
-```text
-VisualRoot/HitStateManager/HeavySlash:active_hitboxes
-```
-
-使用 Value／Discrete／Nearest，按招式阶段打入 `39 → 47 → 63 → 55 → 39`（前摇 → 近端有效 → 两框有效 → 尖端有效 → 后摇）；若两个攻击框始终同时开关，则简化为 `39 → 63 → 39`。这些都是布局相关的示例，不规定招式必须有几个有效阶段。
-
-需要改变轮廓时，再分别添加 `HeavySlash/HurtHead:position`、`HeavySlash/AttackNear:position`、`HeavySlash/AttackTip:position` 等属性轨（前缀同上）。不同位置轨不意味着不同管理器或不同伤害段。若使用一个逻辑框下多个形状的版本，则可以驱动 `HeavySlash/Attackbox/TipShape:position`，但仍用三框布局的 `5 → 7 → 5` 控制区域启停。
-
-继续遵守本节的单时间轴约定：脚本只负责动作开始／中断等边界，不逐帧与动画争写掩码。初帧、RESET 和中断清理应覆盖新增状态及必要的姿态属性，增删／重排独立框后重新计算全部掩码键值。
-
-### 6.5 物理节拍、停止与首帧
-
-本项目初版使用 AnimationPlayer 的 **Physics** 更新方式，与状态机、输入推进器都工作在物理节拍。`play()` 后调用 `advance(0)` 可立即应用当前时刻属性，但它不是一次额外的物理步进。参考资料 G1、G4、G5。
-
-- 不要同时启用 Physics 自动更新，又每帧调用一次 `advance(delta)`；这会重复推进。
-- 不要用 `_process()`／渲染帧数决定攻击有效段。
-- 不要每个物理帧重复 stop／play 同一动作，否则会不断重启；只在状态进入或明确重启动作时播放。动作资源不配置自动 Next，不通过 queue 接连招；统一由行为状态选择下一动作。
-- 不给战斗动画设置淡入淡出、Capture 或跨动作混合。当前方案一个动作一条权威时间轴，不让两套判定参与混合。
-- 在统一的物理逻辑中安排动画更新、状态转换、输入消费、移动、碰撞采样和结算；验证完成信号在预期更新点被消费，而非无意多停留一帧。
-
-后续若需要严格逐帧回放或回滚，可把 AnimationPlayer 改为 **Manual**，由唯一战斗时钟逐步调用 `advance(1.0 / 60.0)`；同时统一 Fray 状态更新与输入时钟。那是完整调度方案的变更，不能只切一个属性，也不能因为时间轴能手动推进就认为物理结果自动可确定重放。
-
-### 6.6 正常结束、中断和 RESET
-
-正常结束：AnimationPlayer 发出 `animation_finished` → 角色只记录完成标志 → FrayState 判断本次动作是否完成 → 进入下一合法状态。
-
-被打断：安全结算阶段请求 Hurt／Guard／Knockdown → 当前状态退出时 `end_action()` 停止时间轴并清空当前框 → 目标状态 `begin_action()` → t=0 立即设置新动作完整判定。
-
-必须同时处理这两条路径。**不能只在动画最后放一个“关攻击框”关键帧**，因为受击或取消会提前终止播放；也不要只 `stop()` 而假设 Area2D 自动恢复默认。停播不会代替游戏的判定清理。
-
-RESET 用于编辑器基准姿态，不作为每次攻击结束时的游戏动作。若保留判定轨，把其基准值设为全部关闭；运行时由 idle 的 t=0 选择 Stand。不要从 RESET 开启某个攻击框，也不要让普通招式动画给所有其他 HitState 逐一写 0。
-
-动画方法轨可通知表现事件，但伤害、防御、扣资源和投技锁定仍由游戏逻辑判定。若方法轨请求状态切换，记录请求、带动作代号，在安全阶段处理，避免正在更新动画轨时递归切换动画或生成碰撞修改。
-
-### 6.7 命中停顿与取消窗口
-
-命中停顿时要同时冻结动作时间轴、角色位移与需要冻结的状态逻辑。**只设置 `state_machine.active = false` 不会停止独立 AnimationPlayer。**
-
-可在统一停顿控制器保存并设置 `animation_player.speed_scale = 0.0`，冻结时间进度，结束后恢复原值；不要用 stop 代替暂停，更不要在停顿中反复清空判定。推进器是否继续收集、何时消费、缓冲是否随真实时间过期，仍按第 7.3 节决定。停顿期间的重复接触由命中去重处理。
-
-时间轴可维护一个游戏自定义的 `cancel_window_open` 属性，但它只表示“时间窗口打开”。是否真正取消还要判断当前动作、命中确认、目标类型和资源条件。进入／退出动作时显式恢复窗口默认值；不要让动画轨和状态脚本同时争写 `input_advancer.paused`。本指南最小轻拳示例不支持中途取消，因此只由状态脚本控制 paused。
-
-### 6.8 为什么不只用 frame_changed 驱动框
-
-画面可能一张图保持 4 个逻辑帧，其中只有最后 2 帧有攻击判定。以图片 `frame_changed` 作为唯一时钟就无法清楚表达这一情况；重用素材、追加无敌窗口也会把游戏规则绑死在图片索引上。
-
-因此美术帧数和战斗帧数分开：SpriteFrames 管理“有哪些图”，AnimationPlayer 决定“图和判定分别在何时变化”。单独播放的火花、烟雾等非权威特效仍可使用独立 AnimatedSprite2D，不影响主角色动作时钟。
 ## 7. 输入与行为状态机
 
 ### 7.1 基础输入：项目设置配置按键，脚本桥接 Fray
@@ -652,102 +483,27 @@ func register_p1_inputs() -> void:
 
 前进、后退、防御方向由实际左右输入与角色朝向换算。定义左右同时按下的规则，以及指令识别期间换边时方向如何解释，不要让插件猜测角色面向。
 
-### 7.2 最小 Idle → LightPunch → Idle 示例
+### 7.2 当前 Demo 的基础状态与招式入口
 
-以下脚本依赖第 5 节的播放入口，以及第 6 节建好的 `idle`／`light_punch` 动画和帧图组。**状态不再计数到第 6 帧才开框；掩码关键帧只维护在 AnimationPlayer 中。**
+当前接入以 module_codes/my fray demo/scripts/fighter/fighter.gd 为准：
 
-```gdscript
-# res://fighters/common/idle_state.gd
-extends FrayState
-
-var actor
-
-func _ready_impl(context: Dictionary) -> void:
-    actor = context["actor"]
-
-func _enter_impl(_args: Dictionary) -> void:
-    actor.begin_action(&"idle")
-
-func _exit_impl() -> void:
-    actor.end_action()
-```
-
-```gdscript
-# res://fighters/common/light_punch_state.gd
-extends FrayState
-
-var actor
-var input_advancer: FrayBufferedInputAdvancer
-var action_token: int = -1
-
-func _ready_impl(context: Dictionary) -> void:
-    actor = context["actor"]
-    input_advancer = context["input_advancer"]
-
-func _enter_impl(_args: Dictionary) -> void:
-    actor.attack_instance_id += 1
-    actor.attack_segment_id = 0
-    input_advancer.paused = true  # 本例不开放中途取消
-    action_token = actor.begin_action(&"light_punch")
-
-func _is_done_processing_impl() -> bool:
-    return actor.is_action_finished(action_token)
-
-func _exit_impl() -> void:
-    actor.end_action()           # 正常结束、受击、取消都要清理
-    input_advancer.paused = false
-```
-
-把下面的成员和方法加入第 5 节角色脚本，并在该脚本 `_ready()` 最后调用 `_initialize_behavior()`。不要再定义第二个 `_ready()`。如果素材缺失导致 begin_action 返回 -1，应在开发阶段修复资源配置；示例不把播放失败当作攻击完成。
-
-```gdscript
-const IdleStateScript = preload("res://fighters/common/idle_state.gd")
-const LightPunchStateScript = preload("res://fighters/common/light_punch_state.gd")
-
-@export var punch_input: StringName = &"p1_punch"
-@onready var controller: FrayController = $Controller
-@onready var state_machine: FrayStateMachine = $StateMachine
-@onready var input_advancer: FrayBufferedInputAdvancer = $StateMachine/InputAdvancer
-
-func _initialize_behavior() -> void:
-    state_machine.advance_mode = FrayStateMachine.AdvanceMode.PHYSICS
-    input_advancer.advance_mode = FrayBufferedInputAdvancer.AdvanceMode.PHYSICS
-    input_advancer.max_buffer_time = 5.0 / 60.0  # 秒，约 5 个 60 Hz 帧
-    input_advancer.paused = false
-
-    var root := (FrayCompoundState.builder()
-        .add_state(&"Boot", FrayState.new())
-        .start_at(&"Boot")
-        .add_state(&"Idle", IdleStateScript.new())
-        .add_state(&"LightPunch", LightPunchStateScript.new())
-        .transition_press(&"Idle", &"LightPunch", {"input": &"punch"})
-        .transition(&"LightPunch", &"Idle", {
-            "auto_advance": true,
-            "switch_mode": FrayStateMachineTransition.SwitchMode.AT_END,
-        })
-        .build()
-    )
-    state_machine.initialize({"actor": self, "input_advancer": input_advancer}, root)
+    var root := FighterSMBuilder.new().build(self, loadout)
+    fighter_input.configure(controller, loadout.selected_moves)
+    state_machine.initialize(context, root, loadout.entry_path)
+    state_machine.advance_mode = FrayStateMachine.AdvanceMode.MANUAL
     state_machine.active = true
-    state_machine.goto(&"Idle")  # Boot → Idle，显式执行初始待机的进入逻辑。
-    FrayInput.input_detected.connect(_on_input_detected)
 
-func _on_input_detected(event: FrayInputEvent) -> void:
-    if controller.disabled or event.device != controller.device:
-        return
-    if event.input == punch_input and event.is_just_pressed():
-        input_advancer.buffer_press(&"punch")
-```
+上面 context 是概念占位，实际代码注入 fighter、controller、fighter_input、movement 与 hit_state_manager。初始真实路径直接由 initialize 第三个参数进入，不新增 Boot，不额外 goto，不手工补调用进入回调。
 
-`Boot` 是一次性的空启动状态；当前初始化路径不会对普通初始叶状态调用进入逻辑，所以通过公开 `goto()` 从 Boot 进入 Idle，见第 11.8 节。这不是每帧强制切换。
+- 基础输入产生 neutral/idle、fwalk、bwalk、crouch 的持续条件，不伪造每帧 Move。
+- selected_moves 默认空；后续每个招式引用自己的叶子定义与脚本，entry_path 指向具体叶子。
+- FighterInput 只识别固定 command、维护候选；Fighter._try_move() 检查来源、前置条件及完成条件后才 external 转移，成功后消费输入。
+- 普通三阶段在叶子内部用逻辑帧控制；Fray.advance() 负责必要行为转换，不负责自动生成 startup／active／recovery 三个状态。
+- 同一招式允许再发动时，测试 external 自转移退出与重入；不把复用脚本与输入强度版本绑定。
+- 强制受击由战斗规则在统一安全入口处理，不能等待普通恢复完成；先关闭旧攻击段再进入新姿态。
 
-`initialize(context, root)` 会把 context 字典设为只读，但其中的 actor 引用仍可用于调用角色行为。每个角色创建自己的运行状态实例，不共享 actor、动作代号等可变状态。
+本节替代旧“AnimationPlayer 完成信号＋Boot＋自动 PHYSICS Advancer”的最小示例。第 7.3 节起的原生 Advancer、标签与候选仲裁属于插件接入备选／历史机制说明，不是让当前 Demo 重新启用暂停的推进器，也不替换现有固定指令候选规则。数值优先级示例不是当前输入模块的实现。
 
-若素材使用命名 AnimationLibrary，播放键会形如 movement/walk；应在 begin_action 增加播放键到 SpriteFrames 组名的映射，不能直接假设两个名称相同。
-
-上例把物理输入名 `p1_punch` 映射为语义名 `punch`。`transition_press()` 不会自动监听键盘，必须转发输入。一次物理更新可能同时发生动画结束、自动返回待机和消费下一次攻击输入；正式对战应统一转换顺序和每帧转换次数。
-
-受击状态也应在进入时播放自己的 `hurt` 动画、退出时执行 end_action。强制受击由结算逻辑请求 `state_machine.goto()`；不要让受击等待攻击的正常动画结束。`AT_END` 仅用于正常完成路线，不是强制打断机制。
 ### 7.3 缓冲不是永久保存失败输入
 
 `FrayBufferedInputAdvancer` 的当前实现会取出队头输入并尝试推进，失败后也不会放回队列。
@@ -841,7 +597,7 @@ var pressed_in_window := input_buffer.is_press_in_window(&"p1_up")
 
 ### 7.6 本项目的缓冲选择
 
-- **先实现最小战斗闭环：**使用第 7.2 节的 `FrayBufferedInputAdvancer`，按第 7.3 节控制消费窗口，不必再串联 `FrayInputBuffer`，避免同一次输入被重复投递或消费。 动作增加后改用第 7.8 节的输入映射表与转移规则表，不必扩展成长串状态判断。
+- **先实现最小战斗闭环：**沿用第 7.2／7.8 节当前 Demo 的 FighterInput 候选与 MANUAL 统一推进；不重新启用暂停的 Advancer，也不再串联另一套 FrayInputBuffer。
 - **只做简单单机跳跃原型：**可以在明确上述限制后试用 Buffer；Window 建议修正并测试后再使用。即使输入来源改成项目设置的 action，也不会自动修复该节点内部的问题。
 - **正式格斗规则需要精确预输入：**建议游戏层保存“请求类型、产生帧、有效帧数、消费状态”，明确失败是否保留、招式优先级和命中停顿是否扣除有效帧，执行成功后消费。Fray 可继续承担输入查询、指令识别或状态机职责，不必为此放弃整套插件。
 
@@ -861,480 +617,39 @@ var pressed_in_window := input_buffer.is_press_in_window(&"p1_up")
 
 专项指南也列出直接 Fray 手柄绑定的限制：当前 `FrayInputBind.get_strength(device)` 未将 device 传给实现方法，设备非 0 时强度可能与按下检测不一致。因此不要未经修复／测试就把直接绑定路线当成完整的双手柄设置方案；本文推荐 action 桥接。
 
-### 7.8 基本输入与序列招式：分开识别、统一仲裁、统一推进
-
-**不需要把角色脚本写成一长串状态名 `if/elif`，也不需要为普通攻击和必杀技分别建一个 Advancer。** 本节采用“分开识别、统一仲裁、统一推进；持续输入保留状态查询”的方案，使用游戏层脚本扩展，不修改 `addons/fray/src/`。
-
-```text
-键盘／手柄 → Godot action → Fray 输入状态
-                  ↓ 每玩家筛选、方向归一化
-     ┌────────────┼──────────────────┐
- 普通按下／释放候选  FraySequenceMatcher    持续方向／防御状态
-     └────────────┬──────────┘              ↓
-           同次触发的候选组               移动与状态条件查询
-                  ↓ 原始时间戳、窗口、合法性、候选优先级
-           游戏层统一仲裁（每组最多选择一个）
-                  ↓ buffer_press() 或 buffer_sequence()
-           唯一 FrayBufferedInputAdvancer
-                  ↓ advance(输入字典)
-           转移规则表 + prereqs → 目标 FrayState
-```
-
-普通输入和序列输入**分开识别**，因为前者是按下／释放边沿，后者需要方向历史和时间窗口；但是两者必须**统一仲裁和消费**，否则最后一次 P 可能既触发普通拳又触发 236P。Advancer 的两个接口共用一个队列，不等于插件会自动解决这个竞争。
+### 7.8 基本输入与序列招式：固定指令候选与专用叶子
 
-本节代码的明确策略：
+#### 7.8.1 内容资源
 
-| 输入／情况 | 处理方式 |
-| --- | --- |
-| 轻拳、重拳的按下／释放 | 生成一次动作候选，不在按住期间重复入队 |
-| 236P 的最后一次 P | 将序列候选与这次 P 的普通拳候选放进同一组 |
-| 指令合法且资源足够 | 序列候选优先，整组消费，普通拳不残留 |
-| 指令不合法／气量不足 | 尝试该组普通拳；普通拳也不合法则丢弃该组 |
-| 消费窗口关闭 | 保留整组直到窗口开放或按原始时间过期 |
-| 左右移动、按住下、按住防御 | 查询持续状态；方向变化也可供 matcher 观察，但不每帧生成移动请求 |
+当前 Demo 使用 FighterCommandDefinition 和 FighterMoveDefinition。每个特殊技一套固定方向序列＋一个指定逻辑攻击按钮；例如 fireball 只使用 236＋light_attack，不自动将 236＋medium_attack／heavy_attack 解释为同招强度版本。帧数、伤害和判定配置有明确的唯一来源。
 
-这里采用**消费时判断合法性**，不是输入发生时立即丢掉暂时不能执行的必杀技。已匹配的候选不会因为排队而重新匹配；状态、蹲姿、气量和取消窗口则在消费时查询。如果项目需要按下瞬间的姿态快照，需另加请求上下文，不能从当前状态反推。
-
-#### 7.8.1 接入范围与准备
-
-下面是一套**替换第 7.2 节行为接入代码**的扩展示例，而不是在旧 `_initialize_behavior()`／旧信号连接之外再加一套。保留第 5 节角色动画入口；保留第 7.2 节的 `punch_input`、`controller`、`state_machine` 成员；`input_advancer` 改用下方游戏子类的类型声明。原 Idle／LightPunch 专用脚本不再用于本例，改用下方的可配置动作状态。
-
-- 节点结构仍是 `Fighter/StateMachine/InputAdvancer`，推进器必须是状态机的直接子节点。给原 InputAdvancer 换挂第 7.8.2 节的游戏子类脚本，它仍继承 FrayBufferedInputAdvancer；不额外创建第二个推进器。
-- 预先准备 `idle`、`light_punch`、`crouch_punch`、`heavy_punch`、`special` 的 AnimationPlayer 动画、同名 SpriteFrames 组及完整 HitState；后四个是非循环攻击。表中的名称不是插件自带资源。
-- 按第 7.1 节桥接 `p1_left`、`p1_right`、`p1_up`、`p1_down`、`p1_punch` 和新增的 `p1_heavy`；P2 使用对应 `p2_*`。Controller.device 按第 7.7 节选定有效轮询通道。改键不改变这些逻辑名称。
-- 示例包含站立／蹲姿轻拳、重拳、236P 和简单气量消耗，不包含完整移动、跳跃或命中结算。`grounded` 依赖实际移动／地面检测；`facing_sign` 必须由角色朝向系统更新为 +1（朝右）或 -1（朝左），不是插件自动提供的值。
-- 使用平铺的根状态图，不同时执行 travel，也不在输入分发到推进器之间切换状态。候选预检调用公开 `root.get_next_state()`；嵌套状态机需要另行实现沿活动状态链的合法性查询，不能原样套用。
-- 暂未制作新增动作时，从定义表和规则表同时删去相应行，不要用空白 FrayState 假装已经实现招式。
-
-#### 7.8.2 可复用动作状态：不用每个招式复制生命周期代码
-
-新建**游戏脚本** `res://fighters/common/timeline_action_state.gd`：
-
-```gdscript
-extends FrayState
-
-var actor
-var animation_name: StringName
-var is_attack: bool
-var meter_cost: int
-var action_token: int = -1
-
-func _init(animation: StringName = &"idle", attack: bool = false, cost: int = 0) -> void:
-    animation_name = animation
-    is_attack = attack
-    meter_cost = cost
-
-func _ready_impl(context: Dictionary) -> void:
-    actor = context["actor"]
-
-func _enter_impl(_args: Dictionary) -> void:
-    actor.special_cancel_open = false
-    actor.hit_confirmed = false
-    actor.set_input_window(not is_attack)
-    # 只有真实进入才扣气；条件查询和候选预检都不扣气。
-    actor.special_meter -= meter_cost
-    if is_attack:
-        actor.attack_instance_id += 1
-        actor.attack_segment_id = 0
-    action_token = actor.begin_action(animation_name)
-
-func _is_done_processing_impl() -> bool:
-    # Idle 可以随时接受输入；攻击只在对应动作确实结束后完成。
-    return not is_attack or actor.is_action_finished(action_token)
-
-func _exit_impl() -> void:
-    actor.set_input_window(false)
-    actor.special_cancel_open = false
-    actor.hit_confirmed = false
-    actor.end_action()
-```
-
-进入攻击时关闭消费窗口；普通输入和指令候选仍被识别并保存在游戏层候选组队列，正常结束回到 Idle 后再选择一个请求交给推进器。气量下限由对应转移的 prereqs 保证；外部强制 goto 到付费招式必须自行检查资源，不应绕过这一约定。每个状态、每个角色都分别 `.new()`，不共享可变状态资源。蹲拳只是攻击动画不同，其待机蹲姿与移动仍需独立完善。
-
-再新建游戏脚本 `res://fighters/common/empty_tick_transition.gd`，用于不吞掉玩家输入的自动完成边：
-
-```gdscript
-extends FrayStateMachineTransition
-
-func _accepts_impl(sm_input: Dictionary) -> bool:
-    return sm_input.is_empty()
-```
-
-这是继承插件公开基类的**游戏扩展**，不是修改插件。当前基础 `FrayStateMachineTransition` 默认接受所有字典；若把它用于“攻击结束 → Idle”，它也可能把 Advancer 传来的攻击请求当成这条边已成功消费。这里限定为状态机自动更新传入的空字典，玩家按键／序列字典不能借这条边返回 Idle。
-
-还需新建游戏脚本 `res://fighters/common/coordinated_input_advancer.gd`：
-
-```gdscript
-extends FrayBufferedInputAdvancer
-
-var before_advance: Callable
-
-func _physics_process(delta: float) -> void:
-    if advance_mode != AdvanceMode.PHYSICS:
-        return
-    if before_advance.is_valid():
-        before_advance.call()
-    super(delta)
-```
-
-它只在原推进器的 Physics 回调前增加一个游戏层钩子，然后调用父类原逻辑；不调用私有 `_advance()`，也不另建一套状态推进逻辑。钩子在消费前完成识别、候选选择与唯一入队，避免选择后又等到另一个异步回调才消费。不要再从其他脚本直接调用该推进器的 buffer 方法。
-
-#### 7.8.3 角色接入：一张输入映射表、一张转移规则表
-
-以下成员与方法加入 Fighter，并**替换**第 7.2 节同名初始化和输入回调；不要重复声明前述已有成员。第 5 节 `_ready()` 最后仍只调用一次 `_initialize_behavior()`。
-
-```gdscript
-const TimelineActionStateScript = preload("res://fighters/common/timeline_action_state.gd")
-const EmptyTickTransitionScript = preload("res://fighters/common/empty_tick_transition.gd")
-const CoordinatedAdvancerScript = preload("res://fighters/common/coordinated_input_advancer.gd")
-const UnifiedInputScript = preload("res://fighters/common/unified_fighter_input.gd")
-
-# 替换旧的 input_advancer 声明，不要重复定义。
-@onready var input_advancer: CoordinatedAdvancerScript = $StateMachine/InputAdvancer
-
-@export var left_input: StringName = &"p1_left"
-@export var right_input: StringName = &"p1_right"
-@export var up_input: StringName = &"p1_up"
-@export var down_input: StringName = &"p1_down"
-@export var heavy_input: StringName = &"p1_heavy"
-
-var facing_sign: int = 1  # 由实际朝向系统维护。
-var special_meter: int = 100
-const SPECIAL_COST := 50
-
-var accept_gameplay_input: bool = true
-var special_cancel_open: bool = false
-var hit_confirmed: bool = false
-var _input_window_open: bool = true
-var _unified_input: UnifiedInputScript
-
-func _initialize_behavior() -> void:
-    state_machine.active = false
-    state_machine.advance_mode = FrayStateMachine.AdvanceMode.PHYSICS
-    input_advancer.advance_mode = FrayBufferedInputAdvancer.AdvanceMode.PHYSICS
-    input_advancer.max_buffer_time = 5.0 / 60.0
-    input_advancer.clear_buffer()
-    input_advancer.paused = true
-
-    var definitions: Array[Dictionary] = [
-        {"state": &"Idle", "animation": &"idle", "attack": false},
-        {"state": &"LightPunch", "animation": &"light_punch", "attack": true},
-        {"state": &"CrouchPunch", "animation": &"crouch_punch", "attack": true},
-        {"state": &"HeavyPunch", "animation": &"heavy_punch", "attack": true},
-        {"state": &"Special", "animation": &"special", "attack": true, "cost": SPECIAL_COST},
-    ]
-    var builder := FrayCompoundState.builder()
-    # 当前 initialize 不保证调用初始叶状态的进入逻辑；用空 Boot 再显式进入 Idle。
-    builder.add_state(&"Boot", FrayState.new()).start_at(&"Boot")
-    for definition in definitions:
-        builder.add_state(definition["state"], TimelineActionStateScript.new(
-            definition["animation"], definition["attack"], definition.get("cost", 0)))
-
-    builder.register_conditions({
-        "grounded": func() -> bool: return is_on_floor(),
-        "crouching": func() -> bool: return controller.is_pressed(down_input),
-        "has_special_meter": func() -> bool: return special_meter >= SPECIAL_COST,
-        "can_special_cancel": func() -> bool:
-            return special_cancel_open and hit_confirmed,
-    })
-
-    # 同一 punch 请求由条件选择蹲拳或站拳；无需在输入回调里判断状态。
-    var rules: Array[Dictionary] = [
-        {"from": &"Idle", "to": &"CrouchPunch", "kind": "press",
-            "config": {"input": &"punch", "prereqs": PackedStringArray(["grounded", "crouching"])}},
-        {"from": &"Idle", "to": &"LightPunch", "kind": "press",
-            "config": {"input": &"punch", "prereqs": PackedStringArray(["grounded", "!crouching"])}},
-        {"from": &"Idle", "to": &"HeavyPunch", "kind": "press",
-            "config": {"input": &"heavy", "prereqs": PackedStringArray(["grounded"])}},
-        {"from": &"Idle", "to": &"Special", "kind": "sequence",
-            "config": {"sequence": &"236P", "prereqs": PackedStringArray(["grounded", "has_special_meter"])}},
-        {"from": &"LightPunch", "to": &"Special", "kind": "sequence",
-            "config": {"sequence": &"236P", "prereqs": PackedStringArray(["grounded", "has_special_meter", "can_special_cancel"])}},
-    ]
-    for rule in rules:
-        var config: Dictionary = rule["config"].duplicate(true)
-        config["switch_mode"] = FrayStateMachineTransition.SwitchMode.IMMEDIATE
-        match rule["kind"]:
-            "press":
-                builder.transition_press(rule["from"], rule["to"], config)
-            "sequence":
-                builder.transition_sequence(rule["from"], rule["to"], config)
-
-    for definition in definitions:
-        if definition["attack"]:
-            builder.transition(definition["state"], &"Idle", {
-                "auto_advance": true,
-                "switch_mode": FrayStateMachineTransition.SwitchMode.AT_END,
-            }, EmptyTickTransitionScript.new())
-
-    state_machine.initialize({"actor": self, "input_advancer": input_advancer}, builder.build())
-    state_machine.active = true
-    state_machine.goto(&"Idle")  # Boot → Idle：执行真正的进入逻辑，开始待机动画。
-    _unified_input = UnifiedInputScript.new(self)
-    input_advancer.before_advance = _unified_input.step
-    if not FrayInput.input_detected.is_connected(_on_input_detected):
-        FrayInput.input_detected.connect(_on_input_detected)
-
-# 全局事件只进这个入口；此处不直接向 Advancer 投递，也不直接 matcher.read()。
-func _on_input_detected(event: FrayInputEvent) -> void:
-    _unified_input.capture(event)
-
-func set_input_window(open: bool) -> void:
-    _input_window_open = open
-    input_advancer.paused = not open or not accept_gameplay_input or controller.disabled
-
-# 动画中的取消窗口方法轨调用；命中结算层负责设置 hit_confirmed。
-func set_special_cancel_window(open: bool) -> void:
-    special_cancel_open = open
-    set_input_window(open)
-
-# 设置菜单／断线时先关闭入口；恢复前仍须执行 7.7 节的中立等待与历史清理。
-func set_gameplay_input_enabled(enabled: bool) -> void:
-    accept_gameplay_input = enabled
-    input_advancer.clear_buffer()
-    if _unified_input != null:
-        _unified_input.reset_history()
-    set_input_window(_input_window_open)
-```
-
-这里的 `match kind` 只是规则类型的固定分派，不会随着新增 20 个招式而增长。新增普通招式通常只增加状态定义、输入映射和规则行；同输入的站／蹲／空中版本使用不同 `prereqs`。规则很多时可把表移到游戏层 Resource 或独立构建器脚本，Fray 接口不变。
-
-条件 Callable 必须**无参数、返回 bool、无副作用**：只查询地面、资源、窗口等状态，不在条件中扣气、播放动画或切换状态。资源消耗应由成功进入目标状态后的游戏逻辑执行一次。`prereqs` 全部为真才允许转移；同一根状态注册的 `!crouching` 是已注册条件的取反，不是另建一个带感叹号的条件名称。
-
-统一入口同时识别按下和释放；释放只会进入设置了 `is_triggered_on_release = true` 的按键规则，其他情况下候选预检不通过，不向推进器投递。不要把 Advancer 生成的 `time_held` 当成真实长按时长，见第 11.4 节。
-
-本例在**消费请求时**查询当前蹲姿，而不是保存按下瞬间的蹲姿快照。若玩法要求“蹲下时预输入的拳始终是蹲拳”，应在游戏输入适配层将它归一为独立语义请求，或实现带上下文快照的自定义请求层；不要误以为改用规则表就自动保存了输入上下文。
-
-#### 7.8.4 游戏层统一入口：识别分开、同次触发归组、消费时仲裁
-
-新建 `res://fighters/common/unified_fighter_input.gd`。它是每个角色独立持有的 RefCounted，不需要再加场景节点。下面的 236P 示例采用“每物理步先采样一个八方向状态，再处理本步按钮边沿”的固定规则；左右／上下同时按下均中立。不要再额外把 Fray 的斜方向复合事件喂给它，否则会重复计数。
-
-```gdscript
-extends RefCounted
-
-const DIRECTION_NAMES := {
-    Vector2i(-1, -1): &"up_back", Vector2i(0, -1): &"up", Vector2i(1, -1): &"up_forward",
-    Vector2i(-1, 0): &"back", Vector2i(0, 0): &"", Vector2i(1, 0): &"forward",
-    Vector2i(-1, 1): &"down_back", Vector2i(0, 1): &"down", Vector2i(1, 1): &"down_forward",
-}
-
-var actor
-var _press_routes: Dictionary
-# rank 是游戏层候选优先级，数值越小越先尝试，不是 Fray 转移的 priority。
-var _sequence_specs: Dictionary = {&"236P": {"rank": 0, "trigger": &"punch"}}
-var _tree: FraySequenceTree
-var _matcher: FraySequenceMatcher
-var _events: Array[FrayInputEvent] = []
-var _groups: Array[Dictionary] = []
-var _matched: Array[StringName] = []
-var _direction: StringName = &""
-var _direction_started: int = 0
-var _last_facing: int = 0
-
-func _init(fighter) -> void:
-    actor = fighter
-    _press_routes = {actor.punch_input: &"punch", actor.heavy_input: &"heavy"}
-    _tree = FraySequenceTree.new()
-    _tree.add(&"236P", FraySequenceBranch.builder()
-        .first(&"down").then(&"down_forward", 200)
-        .then(&"forward", 200).then(&"punch", 200).build())
-    reset_history()
-
-func _enabled() -> bool:
-    return actor.accept_gameplay_input and not actor.controller.disabled
-
-func capture(raw: FrayInputEvent) -> void:
-    if not _enabled() or raw.device != actor.controller.device:
-        return
-    if raw.is_echo() or raw.is_virtually_pressed():
-        return
-    var name := StringName(_press_routes.get(raw.input, &""))
-    if name.is_empty():
-        return  # 方向不从全局回调逐个转发，而在 step() 统一采样。
-    var event := SemanticEvent.new(name, raw.is_pressed(), raw.time_pressed, raw.time_detected)
-    event.device = raw.device
-    event.physics_frame = raw.physics_frame
-    event.process_frame = raw.process_frame
-    _events.append(event)
-
-func _new_matcher() -> void:
-    _matcher = FraySequenceMatcher.new()
-    _matcher.initialize(_tree)
-    _matcher.match_found.connect(_on_match_found)
-    _matched.clear()
-
-func reset_history() -> void:
-    _events.clear()
-    _groups.clear()
-    _direction = &""
-    _last_facing = 0
-    _new_matcher()  # 不依赖旧 matcher.initialize() 完整清除历史。
-
-func _on_match_found(name: StringName) -> void:
-    if _sequence_specs.has(name) and not _matched.has(name):
-        _matched.append(name)  # 这里只收集结果，不能直接 buffer_sequence()。
-
-func _sample_direction(now: int) -> void:
-    var facing: int = 1 if actor.facing_sign >= 0 else -1
-    if facing != _last_facing:
-        # 本例换边就中断未完成指令；已形成的候选组保持原有生命周期。
-        _new_matcher()
-        _direction = &""
-        _last_facing = facing
-    var x := int(actor.controller.is_pressed(actor.right_input)) - int(actor.controller.is_pressed(actor.left_input))
-    var y := int(actor.controller.is_pressed(actor.down_input)) - int(actor.controller.is_pressed(actor.up_input))
-    var next_direction := StringName(DIRECTION_NAMES[Vector2i(x * facing, y)])
-    if next_direction == _direction:
-        return
-    if not _direction.is_empty():
-        _matcher.read(SemanticEvent.new(_direction, false, _direction_started, now))
-    _direction = next_direction
-    _direction_started = now
-    if not _direction.is_empty():
-        _matcher.read(SemanticEvent.new(_direction, true, now, now))
-    # 本例只支持以按钮结尾的指令；方向变化本身不生成动作请求。
-    _matched.clear()
-
-func _collect_group(event: FrayInputEvent) -> void:
-    _matched.clear()
-    _matcher.read(event)  # read() 同步触发 match_found，先收集指令再生成普通候选。
-    var candidates: Array[Dictionary] = []
-    for name in _matched:
-        var spec: Dictionary = _sequence_specs[name]
-        if spec["trigger"] == event.input:
-            candidates.append({"kind": "sequence", "name": name, "rank": spec["rank"]})
-    candidates.append({"kind": "press", "name": event.input,
-        "pressed": event.is_pressed(), "rank": 100})
-    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        if a["rank"] != b["rank"]:
-            return a["rank"] < b["rank"]
-        return String(a["name"]) < String(b["name"]))
-    _groups.append({"time_stamp": event.time_detected, "candidates": candidates})
-
-func _request(candidate: Dictionary) -> Dictionary:
-    if candidate["kind"] == "sequence":
-        return {"sequence": candidate["name"]}
-    return {"input": candidate["name"], "is_pressed": candidate["pressed"]}
-
-func step() -> void:
-    if not _enabled():
-        reset_history()
-        actor.input_advancer.clear_buffer()
-        actor.input_advancer.paused = true
-        return
-    var now := Time.get_ticks_msec()
-    _sample_direction(now)
-    # 同时按钮采用时间戳、语义名、按下先于释放的稳定顺序，不依赖信号连接顺序。
-    _events.sort_custom(func(a: FrayInputEvent, b: FrayInputEvent) -> bool:
-        if a.time_detected != b.time_detected:
-            return a.time_detected < b.time_detected
-        if a.input != b.input:
-            return String(a.input) < String(b.input)
-        return a.is_pressed() and not b.is_pressed())
-    for event in _events:
-        _collect_group(event)
-    _events.clear()
-
-    var ttl_msec: float = actor.input_advancer.max_buffer_time * 1000.0
-    # 即使窗口关闭也回收过期组，不无限积累；原始时间从未因换队列而刷新。
-    for i in range(_groups.size() - 1, -1, -1):
-        if now - int(_groups[i]["time_stamp"]) > ttl_msec:
-            _groups.remove_at(i)
-    if not actor.state_machine.active or actor.input_advancer.paused:
-        return
-    if not actor.input_advancer.get_buffer().is_empty():
-        push_error("统一入口之外发生了重复入队，请移除其他 buffer 调用")
-        actor.input_advancer.paused = true
-        return
-
-    while not _groups.is_empty():
-        var group: Dictionary = _groups.pop_front()
-        for candidate in group["candidates"]:
-            # 无副作用预检；使用同一状态图，而不是另写一套状态名 if/elif。
-            var target: StringName = actor.state_machine.get_root().get_next_state(_request(candidate))
-            if target.is_empty():
-                continue
-            _dispatch(candidate, int(group["time_stamp"]))
-            return  # 整组已移除，失败／低优先候选不会遗留到后续动作。
-        # 窗口已开放但该组没有合法候选：丢弃并尝试下一组。
-
-func _dispatch(candidate: Dictionary, original_stamp: int) -> void:
-    var advancer: FrayBufferedInputAdvancer = actor.input_advancer
-    if candidate["kind"] == "sequence":
-        advancer.buffer_sequence(candidate["name"])
-    else:
-        advancer.buffer_press(candidate["name"], candidate["pressed"])
-    # 当前 get_buffer() 返回浅拷贝，BufferedInput.time_stamp 是公开字段。
-    # 修改该对象的时间戳保留原始缓冲年龄，不操作插件的私有队列。
-    var queued := advancer.get_buffer()
-    queued[0].time_stamp = original_stamp
-
-class SemanticEvent:
-    extends FrayInputEvent
-
-    var pressed: bool
-
-    func _init(name: StringName, down: bool, started: int, detected: int) -> void:
-        input = name
-        pressed = down
-        time_pressed = started
-        time_detected = detected
-        physics_frame = Engine.get_physics_frames()
-        process_frame = Engine.get_process_frames()
-
-    func is_pressed() -> bool:
-        return pressed
-
-    func is_distinct() -> bool:
-        return true  # 这是已经归一化的独立语义流，不混入原始复合输入。
-```
-
-`SemanticEvent` 是游戏侧事件对象，复用 FrayInputEvent 的公开时间字段并覆写查询方法，不修改全局广播事件或插件的私有标记。持续方向只在改变时生成 matcher 事件；角色运动依然通过 Controller 查询左右状态，防御同理，**不会因为某条指令获胜而清掉按住方向的状态**。 跳跃、投技等需要缓冲的动作请求可增加独立 action／`_press_routes` 和转移规则；如果复用 up 作为跳跃键，也只把其按下边沿列入映射，不把每帧保持 up 都当成新请求。
-
-候选分组以一次按钮边沿为边界，不是把同帧所有输入合成一组：同一次 P 的 `236P` 与 `punch` 互斥，另一次重拳请求仍是独立组。相同时间戳的不同按钮按语义名排序是本例的确定性约定；如果玩法要求同帧按键组合优先，应先识别组合、建立输入归属关系，再扩展仲裁，不能只修改这一排序函数。
-
-**合法性与回退例子：**Idle 收到同组 `[236P, punch]` 时，有气则选择 Special；没气则尝试当前姿态对应的普通拳；LightPunch 取消窗口中如果指令不合法且没有普通拳取消边，则整组丢弃。候选优先级只在同组内比较；组之间按已收集的时间顺序消费，不让新必杀技无条件插队到旧请求之前。
-
-#### 本例的适用边界
-
-- 预检与真正消费使用同一根状态图、同一批无副作用条件，且在同一个推进器回调中连续执行。规则未配置 `min_input_delay`／按住时长限制；若加入这些依赖 Advancer 内部计时的条件，必须让预检与真实请求的时间字段一致，不能原样使用 `_request()`。
-- 当前 `get_next_state()` 只检查所在层；本例不覆盖层级状态图或正在 travel 的状态机。自动返回边必须继续使用 EmptyTickTransition，避免预检把返回 Idle 当成“攻击请求合法”。
-- 游戏层只长时间保存候选组；Advancer 每次只接收一个已经选好的请求并立即尝试，不形成两套各自续时的缓冲。原始时间戳仍传给推进器；到期边界若在调用间跨过，允许该请求过期丢弃，不重新生成它。
-- 本例仅注册一个以 P 结尾的 236P。新增序列要同时配置树、`_sequence_specs` 和转移规则。单个 FraySequenceMatcher 未必会同时报告所有共享前缀／同叶冲突序列；需要多个独立识别器时可以在**同一次事件**处理期间汇总结果，再统一排序，不让识别器直接入队。
-- 八方向逐步采样适用于本例搓招；没有覆盖单物理步内多个方向变化、复杂蓄力、按键和释放共享消费资格等全部规则。蓄力需另外保留其定义要求的持续分量／真实按住时刻；不要使用 Advancer 的 time_held 代替它。
-- 本例按“消费时资源不足就退回普通拳”设计。若游戏要求识别到指令后即禁止普通拳回退，应在构造组时移除该普通候选，而不是让它以另一个队列项残留。
-
-#### 7.8.5 物理顺序、缓冲与暂停：保证只有一个消费入口
-
-统一入口每个物理步执行一次。工程必须固定并验证：**FrayInput 更新 → 本角色的动画／运动／朝向与状态机自动完成检查 → InputAdvancer 的 step 钩子 → 父类推进器消费**。 `step()` 应在本物理步的 Fray 事件全部收集后执行；否则方向快照与按钮事件可能来自不同步，不能靠候选排序补救。相关节点处于同一物理处理链时，按工程实际使用的 Godot 版本配置处理优先级／节点顺序，并记录日志验证；不要仅因为都选了 Physics 就认为顺序已保证。不得手动再调用 step 或私有 `_advance()` 形成第二次更新。
-
-- Idle 打开消费窗口，攻击进入关闭。关闭期间仍识别基本输入与指令并保留候选组，按 `max_buffer_time`（秒、真实时间）过期；窗口开放后再决定序列优先还是普通拳回退。
-- 在 LightPunch 动画合法帧用方法轨调用 `set_special_cancel_window(true)`，结束时调用 false；结算层维护 `hit_confirmed`。候选预检与状态机使用同一个 `can_special_cancel`，不用重复手写状态名判断。
-- 窗口开放且所有候选均不合法时整组丢弃，不会继续等未来条件变化。若要求等待命中确认，先保持窗口关闭；若要求“开放时也保留失败候选”，需另行规定重试与阻塞后续请求的策略。
-- 菜单／改键／断线时调用 `set_gameplay_input_enabled(false)`，清理候选组、按钮暂存、matcher 和 Advancer；恢复前按第 7.7 节等待中立及 Fray 完成采样，再调用 true。只清 Advancer 而不清候选组，会在恢复时出旧招。
-- 外部改变 Controller.disabled／轮询 device 时也要走同一关闭、清理和恢复流程；不得只改 device 让旧通道的序列历史继续使用。暂停 SceneTree 时同样不能让全局输入持续收集而 step 停止回收。
-- 各组保留最初的时间，不因窗口关闭／重新进入 Idle／提交给 Advancer 而续期。本例仍是毫秒时钟，命中停顿不冻结过期时间；动作帧缓冲需另外换成游戏时钟方案。
-- 一个 step 最多投递一个获胜请求，但同物理帧中状态机可能先完成一次自动返回，再执行一次输入转移；本例不声称全系统每帧只能切换一次。
-
-#### 7.8.6 大量相似取消边：可选的标签与全局转移
-
-如果多个普通技共享同一取消规则，可在构建期间用标签声明，代替逐一添加“普通技 → Special”边。例如把上方 LightPunch → Special 的本地规则删掉，在 `builder.build()` 之前添加：
-
-```gdscript
-builder.tag_multi(PackedStringArray(["LightPunch", "CrouchPunch", "HeavyPunch"]),
-    PackedStringArray(["normal_attack"]))
-builder.tag(&"Special", PackedStringArray(["special_attack"]))
-builder.add_rule(&"normal_attack", &"special_attack")
-builder.transition_sequence_global(&"Special", {
-    "sequence": &"236P",
-    "prereqs": PackedStringArray(["grounded", "has_special_meter", "can_special_cancel"]),
-    "switch_mode": FrayStateMachineTransition.SwitchMode.IMMEDIATE,
-})
-```
-
-这不是“任意状态都可出必杀”：必须有源／目标标签和规则匹配，且满足 prereqs。给希望允许取消的各招式配置自己的窗口；不要给 Hurt／Knockdown 等强制状态随意加普通技标签。局部边与全局边有不同候选顺序，具体限制见第 11.8 节。
-
-**结论：基本输入与序列招式分开识别、同次触发统一仲裁、胜出请求统一交给 Advancer；持续输入提供状态查询。用规则表表达合法转移，不用把状态机再手写成一份 if/elif 状态机。** 角色运动、战斗结算、输入仲裁与时钟控制仍属于游戏逻辑，不应靠不断增加转移分支混在同一个回调里。
+#### 7.8.2 每招专用行为
+
+每个招式的 states 引用专属叶子定义，state_script 指向其专用脚本；entry_path 指向具体完整路径。普通三阶段在叶子内部推进。公共 Movement、基类和计时／清理工具仍可复用，输入版本并不决定脚本是否能够复用。
+
+不再提供“一个可配置动作状态执行全部招式”的默认示例，也不将 AnimationPlayer 动画名作为动作完成依据。当前 Builder 只创建叶子实例，后续判定定义／数值绑定需要明确实现。
+
+#### 7.8.3 输入识别
+
+FighterInput 为 selected_moves 建立识别，按设备过滤并清洗相对方向。序列由 FraySequenceMatcher 识别，候选记录 move、来源、创建／就绪／过期帧。普通按钮、方向别名与特殊序列不重复计入同一输入。
+
+#### 7.8.4 唯一提交入口
+
+当前 Fighter.advance_commands() 依次尝试就绪候选。_try_move() 验证 allowed_from_paths、prereqs 与 AT_END 完成要求，再由经来源检查的 external 执行器进入具体叶子；接受后才消费，且本帧不再普通推进一次。
+
+序列确认先于普通单键，同源组合键可在等待窗接管。按键周期已经归属特殊指令后，即使暂不能发动也不回退普通攻击。完全重复模式与严格前缀等冲突由作者避免；本项目不新增数值优先级评分或另一套通用 _dispatch 调度器。
+
+#### 7.8.5 物理节拍与暂停
+
+保持现有 FrayInput(-100) → FighterInput(-50) → 状态物理更新(0) → Fighter 普通／指令推进(50) 的顺序，状态机为 MANUAL，已有 FrayBufferedInputAdvancer 保持 paused。MANUAL 不表示状态叶子不再物理更新。
+
+后续加入判定、命中停顿与接触结算时，必须明确各阶段顺序、同帧转换上限、输入缓冲过期策略和延迟动作代次；不以删除动画播放器推断已具备确定性模拟。
+
+#### 7.8.6 普通连接与组级规则
+
+move.transitions 和公共转换库只提供必要行为连接，端点是所属组直接子状态。不同招式的专属路径不能靠同路径后写覆盖。全局受击／标签规则仍需战斗前置条件，不能把同一攻击组内所有动作无条件视为可打断。
+
+资源例子、当前限制和完整调用边界见 [固定招式输入接入说明](../../module_codes/my%20fray%20demo/docs/固定招式输入接入说明.md)。本节替代旧自动 Advancer＋通用动画动作状态方案，不表示攻击内容已经实现。
 
 ## 8. 指令识别与取消
 
@@ -1360,7 +675,7 @@ matcher.match_found.connect(input_advancer.buffer_sequence)
 # matcher.read(semantic_event)
 ```
 
-上面的 `match_found → buffer_sequence` 直接连线只展示最小接入。采用第 7.8 节时，识别结果只由统一入口收集进候选组，最终通过其唯一 `_dispatch()` 投递；不要再保留这条直接连线或旧的 `submit_sequence()` 外部入队入口。
+上面的 `match_found → buffer_sequence` 只展示插件原生接口，不用于当前 Demo。当前识别结果进入 FighterInput 候选，由第 7.8 节的 Fighter.advance_commands() 唯一提交；不再并联直接入队或额外 submit_sequence 入口。
 
 这里的 `semantic_event` 是游戏层完成玩家筛选、方向归一化后的 `FrayInputEvent`，不是插件自动生成的角色前后方向。不要原地修改广播给其他监听器的同一个输入事件。`down_forward` 需要注册复合输入或由适配层生成；字符串 `236P` 只是序列名。
 
@@ -1497,11 +812,11 @@ func set_hitbox_active(index: int, enabled: bool) -> void:
         active_hitboxes &= ~flag
 ```
 
-计数必须只包含直接子 `FrayHitbox2D`，与第 3 节的实际位索引保持一致；不要用全部子节点数量代替。`is_hitbox_active(index)` 也建议采用相同的合法索引检查。整值赋值 `active_hitboxes = mask` 本身同样没有过滤不存在的位，因此动画轨仍必须按实际布局填写，不是任意非零数都合法。
+计数必须只包含直接子 `FrayHitbox2D`，与第 3 节的实际位索引保持一致；不要用全部子节点数量代替。`is_hitbox_active(index)` 也建议采用相同的合法索引检查。整值赋值 `active_hitboxes = mask` 本身同样没有过滤不存在的位，因此逻辑时序掩码仍必须按实际布局填写，不是任意非零数都合法。
 
 另外，本文件的 `get_hitboxes() -> Array[FrayHitbox2D]` 内部仍声明 `var array: Array`，与返回类型不一致；建议改成 `var array: Array[FrayHitbox2D] = []`，避免返回未类型化数组的类型问题。不要把 FrayInputMap 的数组修正当作所有同类返回值都已修好。
 
-本文继续用 `state.active_hitboxes = mask` 表达整套姿态；辅助方法补齐检查后，可用于明确的单框操作，但不能与动画轨同时争写同一个状态。
+本文继续用 `state.active_hitboxes = mask` 表达整套姿态；辅助方法补齐检查后，可用于明确的单框操作，同一属性仍只有招式执行逻辑这一处写入者。
 
 ### 11.2 活动标记与实际监测不是同一件事
 
@@ -1561,18 +876,18 @@ func emit_anim_finished(animation: StringName) -> void:
 
 此处通用 `animation_finished` 携带动画名，按动画命名的 `_<动画名>_finished` 信号不带参数，与注册和 `AnimationObserver.usignal_finished()` 的约定一致；不会错误地检查或发送 started 信号。**这项转发修正是正确的，但此函数不负责判断结束时机，也不负责防止调用方重复报告。**
 
-当前 `FrayAnimatorTrackerAnimationPlayer._process_impl(delta)` 仍通过 `current_animation_position + delta >= current_animation_length` 预测结束，尚未直接转发播放器的原生完成信号。它使用渲染更新的 delta，与本文 Physics 动画时间轴不一定同步，也未处理实际播放速度、倒放、循环和每次播放的去重。因此可能提前、重复或漏报结束，不能用这项基类修正证明它已经适合作为 60 Hz 战斗动作的结束依据。
+当前 `FrayAnimatorTrackerAnimationPlayer._process_impl(delta)` 仍通过 `current_animation_position + delta >= current_animation_length` 预测结束，尚未直接转发播放器的原生完成信号。它使用渲染更新的 delta，与本项目动作逻辑帧不一定同步，也未处理实际播放速度、倒放、循环和每次播放的去重。因此可能提前、重复或漏报结束，不能用这项基类修正证明它已经适合作为 60 Hz 战斗动作的结束依据。
 
-第 5 节继续直接连接 `AnimationPlayer.animation_finished`，只记录完成标志，由行为状态消费；不改成依赖上述预测。如果以后完善 tracker，建议明确使用原生事件的转发与连接／释放生命周期，并验证循环、中断、重启动作、变速、暂停恢复和倒放。运行时添加动画库时，按动画命名的用户信号也需要额外注册；当前只在 tracker 的 `ready()` 中注册当时的动画列表。
+当前 Demo 不使用 AnimationPlayer 节点，也不连接其完成信号决定战斗阶段；完成条件由招式逻辑帧给出。此处仅说明插件通用 tracker 的边界。如果以后完善 tracker，建议明确使用原生事件的转发与连接／释放生命周期，并验证循环、中断、重启动作、变速、暂停恢复和倒放。运行时添加动画库时，按动画命名的用户信号也需要额外注册；当前只在 tracker 的 `ready()` 中注册当时的动画列表。
 
 ### 11.8 状态转移与 Advancer：候选顺序、自动边与初始进入
 
-第 7.8 节的表驱动示例已针对以下当前源码行为作出约束，不能只依据类注释或字段名称推断：
+以下为原生转换与当前 Demo 接入边界，不能只依据类注释或字段名称推断：
 
 - **`priority` 不控制 `advance()` 的候选排序。** `get_next_transitions()` 先收集本地边，再追加可用全局边；`get_next_state()` 按该顺序找到第一条可转移边即返回。`priority` 在 `_get_transition_priority()` 中用于寻路成本，不等于 Advancer 的输入队列优先级。相同输入的多条边优先设计为互斥条件；确实要竞争时明确构建顺序并测试，不能只改 priority 数字。
-- **`auto_advance = false` 不等于“自动更新绝不会走这条边”。** 状态机自动更新调用 `advance({})`，当前 `_can_advance()` 首先检查 `transition.accepts(input)`；auto_advance 为 true 时才额外检查 advance_conditions。基础转移默认接受所有字典，所以普通无条件边即使没有开启 auto_advance，也可能被空输入或玩家输入走通。必须正确配置 `prereqs`、转移类型与 accepts 语义；第 7.8 节用游戏层 EmptyTickTransition 限制自动完成边。
+- **`auto_advance = false` 不等于“自动更新绝不会走这条边”。** 状态机自动更新调用 `advance({})`，当前 `_can_advance()` 首先检查 `transition.accepts(input)`；auto_advance 为 true 时才额外检查 advance_conditions。基础转移默认接受所有字典，所以普通无条件边即使没有开启 auto_advance，也可能被空输入或玩家输入走通。必须正确配置 `prereqs`、转移类型与 accepts 语义；当前 Demo 的 MANUAL 模式集中控制普通 advance 调用，具体规则仍需按 accepts 与条件语义配置。
 - **空输入自动边与输入消费不是同一件事。** Advancer 以 `state_machine.advance(sm_input)` 返回 true 作为已消费依据，不知道实际走的是否为期望的按键边。不要把“走到 Idle”误认为“预输入的拳成功执行”；暂停消费与空字典专用完成边需一起设计。
-- **初始叶状态的进入逻辑需要核验。** `FrayStateMachine.initialize()` 调用根的 `_enter_impl()`，而当前根实现只递归进入复合子状态，没有对普通初始叶状态调用 `_enter_impl()`。对已经被设为当前的叶状态再 `goto()` 同一状态，也不保证重新进入。第 7.2／7.8 节用空 Boot 作为起点，再通过公开 `goto("Idle")` 触发实际进入，无需调用私有方法或修改插件。
+- **使用修复后的真实入口初始化。** 当前源码支持 initialize(context, root, entry_path)，先 ready 再按目标路径进入，最终叶子进入一次。当前 Demo 不再使用 Boot＋goto 的兼容方案。同招 external 重入仍要验证计时、命中记录与退出清理。
 - `register_conditions()` 设置的是整张条件表，多次调用会替换前一次注册内容；构建时合并一次传入。条件无副作用，资源消耗在进入目标状态后处理。
 - 不要在开启 Advancer 自动 Physics 更新的同时，又手动反复调用同一输入的 `state_machine.advance()`；这会形成两个消费入口。若需要严格单步调度或按动作帧保存失败请求，应在游戏层设计统一调度，不把默认组件当成已实现回滚或严格单帧单转移保证。
 
@@ -1583,7 +898,7 @@ func emit_anim_finished(animation: StringName) -> void:
 1. 安装插件并确认没有脚本解析错误，建立推荐节点树。
 2. 创建三类属性资源和碰撞层，初始化只启用 Stand 的受击／推挤。
 3. 在项目设置 → 输入映射中配置双方 action 和键位，初始化时用 `add_bind_action()` 桥接；再实现左右移动、蹲下、跳跃、朝向，检查框随姿势切换。
-4. 建好 idle／light_punch 的图片帧、完整判定属性轨，再接入 Idle → LightPunch → Idle，验证 Stand 的掩码为 3，LightPunch 时间轴的掩码为 5 → 7 → 5，返回 idle 后恢复 Stand 的 3。
+4. 建好 idle／punch 图片和完整判定场景，按 Loadout 装配；接入专用 PunchState，以逻辑帧驱动 5→7→5 掩码（对应三框布局），返回时选择 Stand 的 3，不制作判定属性轨。
 5. 连接管理器进入事件，先记录接触，再加入命中去重和统一结算。
 6. 实现持续推挤和墙角处理，避免角色互相穿透或重复分离。
 7. 增加防御、高低段、硬直、取消、倒地、起身和命中停顿。
@@ -1592,10 +907,10 @@ func emit_anim_finished(animation: StringName) -> void:
 ### 结构检查
 
 - [ ] 每个角色只有一个 FrayHitStateManager2D。
-- [ ] 每个 HitState 只包含所需的直接子框；非攻击姿态无需 Attackbox，掩码按各状态实际框顺序计算，增删／重排后已同步更新动画轨。
+- [ ] 每个 HitState 只包含所需的直接子框；非攻击姿态无需 Attackbox，掩码按各状态实际框顺序计算，增删／重排后已同步更新逻辑掩码配置。
 - [ ] 每个框都有有效形状、非空 attribute、正确 Layer／Mask。
 - [ ] 已明确选择独立多框还是单框多形状；独立框均为 HitState 直接子节点，子形状不计入 active_hitboxes 位数。
-- [ ] 多框布局的初始化、普通动画、RESET 与中断清理一致；六框 HeavySlash 的被动／全有效掩码为 39／63，未误用三框布局的 5／7。
+- [ ] 多框布局的初始化、阶段逻辑与中断清理一致；六框 HeavySlash 的被动／全有效掩码为 39／63，未误用三框布局的 5／7。
 - [ ] source 指向正确角色，双方没有误用同一个归属引用。
 - [ ] 初始化先关闭全部框，再选 Stand；非当前状态不存在残留监测。
 - [ ] 未用多个管理器分别维护受击、攻击、推挤。
@@ -1637,8 +952,8 @@ func emit_anim_finished(animation: StringName) -> void:
 
 ### Advancer 表驱动专项检查
 
-- [ ] 第 7.2 与第 7.8 节选择一套接入，事件只连接一次；没有同时从 Godot Input 和 Fray 重复入队。
-- [ ] Boot → Idle 确实调用进入逻辑并播放待机；每次重新进入 Idle 都恢复输入窗口。
+- [ ] 第 7.2／7.8 节沿用同一套 FighterInput 候选接入，事件只连接一次，不从另一入口重复入队。
+- [ ] initialize 的真实入口确实进入 neutral/idle 一次并播放待机，不保留 Boot 兼容步骤。
 - [ ] 相同 punch 请求根据地面／蹲姿条件只选一个目标；新增招式只扩展映射与规则，不新增状态名称分支链。
 - [ ] 攻击前摇不消费普通输入，合法窗口才尝试；失败请求会丢弃、暂停期间仍会过期的行为符合设计。
 - [ ] 自动完成边只接受空字典，不把待执行攻击请求当作返回 Idle 的输入吞掉。
@@ -1648,7 +963,7 @@ func emit_anim_finished(animation: StringName) -> void:
 - [ ] 持续移动／防御不逐帧入队；方向采样先于本步按钮、同时按键顺序与换边中断规则符合设计。
 - [ ] 未命中确认／窗口外不能取消；合法取消只进入目标一次，退出旧状态时清理判定与旧窗口。
 - [ ] 开启标签全局边后，仅允许被标记的源状态取消，受击／倒地不意外出招。
-- [ ] 已记录并验证动画、状态机自动更新、Advancer 的物理执行顺序及同帧完成／预输入边界。
+- [ ] 已记录并验证输入采样、叶子逻辑帧、MANUAL 转换与安全结算顺序，不启动第二个消费入口。
 
 ### 自定义按键专项检查
 
@@ -1657,19 +972,18 @@ func emit_anim_finished(animation: StringName) -> void:
 - [ ] 改键不删除其他绑定槽或重建 Fray 输入名称；重启加载与损坏配置回退正常。
 - [ ] 菜单输入不会进入战斗队列；应用或切换通道后已完成物理采样、清理历史并确认中立，恢复对战不误触发攻击／蓄力。
 
-### 动画专项检查
+### 动画与逻辑时间专项检查
 
-- [ ] 主角色采用 AnimationPlayer + AnimatedSprite2D；Sprite 不自行播放，两个 Autoplay 均关闭。
-- [ ] 每个动作 t=0 都有显示帧和目标 HitState 非零掩码，图片组名称与 begin_action 参数一致。
-- [ ] frame 和 active_hitboxes 轨均为 Discrete／Nearest；没有两套脚本逐帧争写判定。
-- [ ] 初版使用 Physics 自动推进，没有同时每帧手动 advance(delta)。
-- [ ] 轻拳时间轴在 0、5/60、8/60 设置 5、7、5，长度为 20/60，非循环。
-- [ ] 记录物理帧号、动画位置、Sprite.frame、管理器当前状态、掩码、接触事件与消费时刻，确认有效段实际采样次数及结束交接，无意外首帧偏移或多一帧后摇。
-- [ ] 30／60／144 渲染 FPS 下战斗时序一致，符合固定物理节拍的设计。
-- [ ] 在前摇、有效段和后摇分别强制受击，原攻击框都被清理，目标动作首帧立即生效。
-- [ ] 命中停顿同时冻结主时间轴和应冻结的逻辑，恢复时不从头播放、不跳过有效段。
-- [ ] RESET 不是运行时回待机路径；循环 idle 不依赖 animation_finished 退出。
-- [ ] 删除末尾清理事件后，中断清理仍有效，不把安全性建立在动画一定播完上。
+- [ ] 当前角色没有未使用的 AnimationPlayer 节点及业务节点引用。
+- [ ] 显示使用 AnimatedSprite2D；普通移动继续 sprite.play()，精确攻击显示适配若需要则明确实现。
+- [ ] 每招固定 command、专用叶子／脚本和一套明确基础数值，不自动创建轻中重版本。
+- [ ] 普通三阶段由单叶子逻辑帧推进，不依赖图片数或动画完成信号。
+- [ ] 起手／恢复保留 Hurt／Push，active 按实际布局打开 Attack 位。
+- [ ] 恢复结束前完成判定为 false；父组退出条件也已明确。
+- [ ] 正常结束、中断、取消、自重入清理完整，旧延迟结果不能写入新动作。
+- [ ] Hitstop 明确暂停逻辑与图像，并验证输入／接触策略。
+- [ ] 判定定义按 Loadout 装配；Manager 在 ready 时完成子姿态接线，或有明确注册 API。
+
 ### 常见问题速查
 
 | 症状 | 优先检查 |
@@ -1680,8 +994,8 @@ func emit_anim_finished(animation: StringName) -> void:
 | 写 0 后没切到新状态 | 零掩码不会选中目标，动作开头应写入该状态的非零掩码 |
 | 从全关状态无法逐个开启框 | 检查是否仍加载旧版边界判断；当前根目录已移除该判断，但仍需验证实际索引合法 |
 | 刚进入就收到 separated | 当前根目录接线已修正；检查运行副本、重复连接以及同帧停用／切换状态 |
-| 精灵跑得比判定快或被关键帧拉回 | 是否又调用了 AnimatedSprite2D.play，或者重复手动推进 AnimationPlayer |
-| 攻击被打断后判定残留 | 是否执行 end_action；不能只依赖末尾关键帧或 stop |
+| 精灵与判定不同步 | 是否把自主显示进度当作战斗时钟，Hitstop 是否只停一方，精确攻击是否已做逻辑帧映射 |
+| 攻击被打断后判定残留 | 是否在专用叶子退出关闭攻击段／窗口；不能依赖图片末帧或只停止显示 |
 | 动画正常但框反向或不翻转 | 是否只翻转图像、重复镜像或框不在统一变换子树 |
 | 缓冲输入没有等到取消窗口 | 是否提前消费后被丢弃，是否 paused 或超时 |
 | 编辑器里配了按键，但 Fray 查询无响应 | 是否用 add_bind_action 桥接、名称是否一致、初始化是否先于角色查询 |
@@ -1738,5 +1052,4 @@ G6 https://docs.godotengine.org/en/4.2/classes/class_area2d.html
 G7 https://docs.godotengine.org/en/4.2/classes/class_collisionshape2d.html
 ```
 
-**最终方案：Fray 行为状态选择动作，AnimationPlayer 统一控制画面帧和判定时序，AnimatedSprite2D 只显示帧图，唯一 HitStateManager 管理按需包含判定框的完整姿态，游戏层统一结算战斗结果。**
-
+**最终方案：每个招式固定输入与明确基础数值，默认专用行为叶子／脚本；叶子内部逻辑帧统一驱动阶段、判定与完成，AnimatedSprite2D 显示，唯一 HitStateManager 管理按 Loadout 装配的完整姿态，游戏层统一结算。当前 Demo 不使用 AnimationPlayer 节点。**

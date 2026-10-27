@@ -5,81 +5,113 @@
 
 [sub_resource type="Resource" id="Rule_idle_to_crouch"]
 script = ExtResource("2_47f6f")
-from_state = &"idle"
-to_state = &"crouch"
-advance_conditions = ["inputed_crouch"]
+transition_id = &"idle_to_crouch"
+from_state = &"neutral/idle"
+to_state = &"neutral/crouch"
 
 [sub_resource type="Resource" id="Rule_idle_to_fwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"idle"
-to_state = &"fwalk"
-advance_conditions = ["inputed_fwalk"]
+transition_id = &"idle_to_fwalk"
+from_state = &"neutral/idle"
+to_state = &"neutral/fwalk"
 
 [sub_resource type="Resource" id="Rule_idle_to_bwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"idle"
-to_state = &"bwalk"
-advance_conditions = ["inputed_bwalk"]
+transition_id = &"idle_to_bwalk"
+from_state = &"neutral/idle"
+to_state = &"neutral/bwalk"
 
 [sub_resource type="Resource" id="Rule_fwalk_to_crouch"]
 script = ExtResource("2_47f6f")
-from_state = &"fwalk"
-to_state = &"crouch"
-advance_conditions = ["inputed_crouch"]
+transition_id = &"fwalk_to_crouch"
+from_state = &"neutral/fwalk"
+to_state = &"neutral/crouch"
 
 [sub_resource type="Resource" id="Rule_fwalk_to_bwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"fwalk"
-to_state = &"bwalk"
-advance_conditions = ["inputed_bwalk"]
+transition_id = &"fwalk_to_bwalk"
+from_state = &"neutral/fwalk"
+to_state = &"neutral/bwalk"
 
 [sub_resource type="Resource" id="Rule_fwalk_to_idle"]
 script = ExtResource("2_47f6f")
-from_state = &"fwalk"
-to_state = &"idle"
-advance_conditions = ["!inputed_fwalk"]
+transition_id = &"fwalk_to_idle"
+from_state = &"neutral/fwalk"
+to_state = &"neutral/idle"
 
 [sub_resource type="Resource" id="Rule_bwalk_to_crouch"]
 script = ExtResource("2_47f6f")
-from_state = &"bwalk"
-to_state = &"crouch"
-advance_conditions = ["inputed_crouch"]
+transition_id = &"bwalk_to_crouch"
+from_state = &"neutral/bwalk"
+to_state = &"neutral/crouch"
 
 [sub_resource type="Resource" id="Rule_bwalk_to_fwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"bwalk"
-to_state = &"fwalk"
-advance_conditions = ["inputed_fwalk"]
+transition_id = &"bwalk_to_fwalk"
+from_state = &"neutral/bwalk"
+to_state = &"neutral/fwalk"
 
 [sub_resource type="Resource" id="Rule_bwalk_to_idle"]
 script = ExtResource("2_47f6f")
-from_state = &"bwalk"
-to_state = &"idle"
-advance_conditions = ["!inputed_bwalk"]
+transition_id = &"bwalk_to_idle"
+from_state = &"neutral/bwalk"
+to_state = &"neutral/idle"
 
 [sub_resource type="Resource" id="Rule_crouch_to_fwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"crouch"
-to_state = &"fwalk"
-advance_conditions = ["inputed_fwalk"]
+transition_id = &"crouch_to_fwalk"
+from_state = &"neutral/crouch"
+to_state = &"neutral/fwalk"
 
 [sub_resource type="Resource" id="Rule_crouch_to_bwalk"]
 script = ExtResource("2_47f6f")
-from_state = &"crouch"
-to_state = &"bwalk"
-advance_conditions = ["inputed_bwalk"]
+transition_id = &"crouch_to_bwalk"
+from_state = &"neutral/crouch"
+to_state = &"neutral/bwalk"
 
 [sub_resource type="Resource" id="Rule_crouch_to_idle"]
 script = ExtResource("2_47f6f")
-from_state = &"crouch"
-to_state = &"idle"
-advance_conditions = ["!inputed_crouch"]
+transition_id = &"crouch_to_idle"
+from_state = &"neutral/crouch"
+to_state = &"neutral/idle"
+
+[sub_resource type="Resource" id="Rule_action_to_neutral"]
+script = ExtResource("2_47f6f")
+transition_id = &"action_to_neutral"
+from_state = &"action"
+to_state = &"neutral"
+
+[sub_resource type="Resource" id="Rule_idle_to_light_attack"]
+script = ExtResource("2_47f6f")
+transition_id = &"idle_to_light_attack"
+move_id = &"01010001"
+from_state = &"neutral/idle"
+to_state = &"action/basic_attack/light_attack"
+auto_advance = false
+
+[sub_resource type="Resource" id="Rule_fwalk_to_light_attack"]
+script = ExtResource("2_47f6f")
+transition_id = &"fwalk_to_light_attack"
+move_id = &"01010001"
+from_state = &"neutral/fwalk"
+to_state = &"action/basic_attack/light_attack"
+auto_advance = false
+
+[sub_resource type="Resource" id="Rule_bwalk_to_light_attack"]
+script = ExtResource("2_47f6f")
+transition_id = &"bwalk_to_light_attack"
+move_id = &"01010001"
+from_state = &"neutral/bwalk"
+to_state = &"action/basic_attack/light_attack"
+auto_advance = false
 
 [resource]
 script = ExtResource("1_f82ra")
+transitions = Array[ExtResource("2_47f6f")]([SubResource("Rule_idle_to_crouch"), SubResource("Rule_idle_to_fwalk"), SubResource("Rule_idle_to_bwalk"), SubResource("Rule_fwalk_to_crouch"), SubResource("Rule_fwalk_to_bwalk"), SubResource("Rule_fwalk_to_idle"), SubResource("Rule_bwalk_to_crouch"), SubResource("Rule_bwalk_to_fwalk"), SubResource("Rule_bwalk_to_idle"), SubResource("Rule_crouch_to_fwalk"), SubResource("Rule_crouch_to_bwalk"), SubResource("Rule_crouch_to_idle"), SubResource("Rule_action_to_neutral"), SubResource("Rule_idle_to_light_attack"), SubResource("Rule_fwalk_to_light_attack"), SubResource("Rule_bwalk_to_light_attack")])
 condition_methods = Dictionary[StringName, StringName]({
+&"active_leaf_done": &"active_leaf_done",
+&"grounded": &"grounded",
 &"inputed_bwalk": &"inputed_bwalk",
 &"inputed_crouch": &"inputed_crouch",
 &"inputed_fwalk": &"inputed_fwalk"
 })
-transitions = Array[ExtResource("2_47f6f")]([SubResource("Rule_idle_to_crouch"), SubResource("Rule_idle_to_fwalk"), SubResource("Rule_idle_to_bwalk"), SubResource("Rule_fwalk_to_crouch"), SubResource("Rule_fwalk_to_bwalk"), SubResource("Rule_fwalk_to_idle"), SubResource("Rule_bwalk_to_crouch"), SubResource("Rule_bwalk_to_fwalk"), SubResource("Rule_bwalk_to_idle"), SubResource("Rule_crouch_to_fwalk"), SubResource("Rule_crouch_to_bwalk"), SubResource("Rule_crouch_to_idle")])

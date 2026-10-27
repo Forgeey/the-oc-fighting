@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="FighterMoveLibrary" format=3 uid="uid://bsacyplqllhg5"]
+
+[ext_resource type="Script" uid="uid://bepa3w6ckyhpo" path="res://scripts/moves/fighter_move_library.gd" id="1_library"]
+[ext_resource type="Script" uid="uid://bebwpygwc3lkw" path="res://scripts/moves/fighter_move_definition.gd" id="2_move_type"]
+[ext_resource type="Resource" uid="uid://gndqaj38moc7" path="res://resource/moves/01010001_move.tres" id="3_light"]
+
+[resource]
+script = ExtResource("1_library")
+moves = Array[ExtResource("2_move_type")]([ExtResource("3_light")])

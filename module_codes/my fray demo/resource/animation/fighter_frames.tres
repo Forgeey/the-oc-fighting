@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://banysxphaf1uo" path="res://sprites/fwalk.png" id="2_fwalk"]
 [ext_resource type="Texture2D" uid="uid://byjtdgauii876" path="res://sprites/bwalk.png" id="3_bwalk"]
 [ext_resource type="Texture2D" uid="uid://dd8m1acv4ni46" path="res://sprites/crouch.png" id="4_crouch"]
+[ext_resource type="Texture2D" uid="uid://d26gad8wraln" path="res://sprites/light_attack.png" id="5_light_attack"]
 
 [sub_resource type="AtlasTexture" id="Atlas_bwalk_0"]
 atlas = ExtResource("3_bwalk")
@@ -185,6 +186,102 @@ region = Rect2(6000, 0, 400, 270)
 atlas = ExtResource("1_idle")
 region = Rect2(6400, 0, 400, 270)
 
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_0"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(0, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_1"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_2"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_3"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(1200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_4"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(1600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_5"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(2000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_6"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(2400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_7"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(2800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_8"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(3200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_9"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(3600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_10"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(4000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_11"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(4400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_12"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(4800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_13"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(5200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_14"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(5600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_15"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(6000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_16"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(6400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_17"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(6800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_18"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(7200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_19"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(7600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_20"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(8000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_21"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(8400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_22"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(8800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="Atlas_light_attack_23"]
+atlas = ExtResource("5_light_attack")
+region = Rect2(9200, 0, 400, 270)
+
 [resource]
 animations = [{
 "frames": [{
@@ -344,4 +441,81 @@ animations = [{
 "loop": 1,
 "name": &"idle",
 "speed": 34.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_8")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_9")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_15")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_16")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_17")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_18")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_19")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_20")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_21")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_22")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_light_attack_23")
+}],
+"loop": 0,
+"name": &"light_attack",
+"speed": 60.0
 }]
