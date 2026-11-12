@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FighterStateDefinition" format=3 uid="uid://d2y3hyytvupaf"]
+
+[ext_resource type="Script" uid="uid://cobbicjisasmg" path="res://scripts/states/state_definition.gd" id="2_state"]
+[ext_resource type="Script" uid="uid://caf6hb6uisopv" path="res://scripts/states/fighterstates/bwalk_state.gd" id="5_bwalk"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/standing_hit_state.tres" id="8_standing_hit"]
+
+[resource]
+script = ExtResource("2_state")
+state_id = &"0001000300"
+state_name = &"bwalk"
+state_script = ExtResource("5_bwalk")
+animation_key = &"bwalk"
+hit_state_definition = ExtResource("8_standing_hit")

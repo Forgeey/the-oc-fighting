@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FighterStateDefinition" format=3 uid="uid://bd5c78o7tewpt"]
+
+[ext_resource type="Script" uid="uid://cobbicjisasmg" path="res://scripts/states/state_definition.gd" id="2_state"]
+[ext_resource type="Script" uid="uid://dkpqa6u0nspr8" path="res://scripts/states/fighterstates/basic_attack_state.gd" id="7_attack"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/01010001_hit_state.tres" id="10_attack_hit"]
+
+[resource]
+script = ExtResource("2_state")
+state_id = &"0101000100"
+state_name = &"light_attack"
+state_script = ExtResource("7_attack")
+animation_key = &"light_attack"
+hit_state_definition = ExtResource("10_attack_hit")

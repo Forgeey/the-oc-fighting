@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FighterStateDefinition" format=3 uid="uid://bttwpld8n1s1j"]
+
+[ext_resource type="Script" uid="uid://cobbicjisasmg" path="res://scripts/states/state_definition.gd" id="2_state"]
+[ext_resource type="Script" uid="uid://y4vreslewqa3" path="res://scripts/states/fighterstates/crouch_state.gd" id="6_crouch"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/crouch_hit_state.tres" id="9_crouch_hit"]
+
+[resource]
+script = ExtResource("2_state")
+state_id = &"0001000400"
+state_name = &"crouch"
+state_script = ExtResource("6_crouch")
+animation_key = &"crouch"
+hit_state_definition = ExtResource("9_crouch_hit")

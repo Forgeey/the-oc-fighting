@@ -104,6 +104,15 @@ func initialize(sequence_tree: FraySequenceTree) -> void:
 					)
 			branch_index += 1
 
+	_reset()
+
+
+## Clears recognition history while retaining the compiled tree and signal connections.
+## Call after initialize; this does not rebuild sequence nodes.
+func clear_history() -> void:
+	_reset()
+
+
 ## Used to feed next inputs to matcher.
 func read(input_event: FrayInputEvent) -> void:
 	if _root == null:

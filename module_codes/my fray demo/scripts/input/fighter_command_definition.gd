@@ -9,6 +9,9 @@ const BUTTONS: Array[StringName] = [
 	&"light_attack", &"medium_attack", &"heavy_attack", &"guard", &"jump", &"crouch",
 ]
 
+## 独立逻辑命令名；可被多个状态转换接受，不是 move_id。
+@export var command_id: StringName = &"light_attack"
+
 ## 选择单键、组合键或序列指令。
 @export var input_kind: InputKind = InputKind.SINGLE
 ## 指定单键由按下还是松开发动。
@@ -16,6 +19,8 @@ const BUTTONS: Array[StringName] = [
 
 ## 指定单键或组合键使用的逻辑按钮。
 @export var buttons: Array[StringName] = [&"light_attack"]
+## 按钮触发时要求的相对九宫格方向；0 表示不限。非序列指令使用。
+@export_range(0, 9) var required_direction: int = 0
 ## 设置组合键允许的按下间隔帧数。
 @export_range(0, 10) var combination_window_frames: int = 2
 
@@ -30,17 +35,20 @@ const BUTTONS: Array[StringName] = [
 
 ## 设置单键为等待组合输入保留的逻辑帧数。
 @export_range(0, 10) var resolve_delay_frames: int = 2
-## 设置输入候选可保留的逻辑帧数。
-@export_range(0, 60) var buffer_frames: int = 6
 
 
-## 按指令步骤构建指定招式的序列匹配树。
-func create_sequence(move_id: StringName) -> FraySequenceTree:
-	var tree := FraySequenceTree.new()
+## 配置角色时调用一次：相对步骤→世界步骤→原生分支；转向不重新编译。
+## 不注册 InputMap，不创建 Matcher。两个朝向的路径放进同一棵树。
+func create_branch(facing: int) -> FraySequenceBranch:
 	var branch := FraySequenceBranch.builder()
-	for i in steps.size():
-		branch.then(steps[i], max_step_delay_ms, min_charge_ms if i == 0 else 0)
+	for index in steps.size():
+		var input := steps[index]
+		if String(input).begins_with("dir_"):
+			var direction := int(String(input).trim_prefix("dir_"))
+			if facing < 0:
+				direction += 2 - 2 * ((direction - 1) % 3)
+			input = StringName("world_%d" % direction)
+		branch.then(input, max_step_delay_ms, min_charge_ms if index == 0 else 0)
 	if negative_edge:
 		branch.enable_negative_edge()
-	tree.add(move_id, branch.build())
-	return tree
+	return branch.build()

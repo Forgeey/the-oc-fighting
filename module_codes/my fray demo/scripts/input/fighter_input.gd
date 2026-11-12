@@ -1,305 +1,429 @@
 class_name FighterInput
 extends Node
-## 采样本角色输入并生成已装备招式的候选。
+## 将设备输入解释为移动意图和逻辑命令，交给 Fray 推进状态机。
 
+@export_range(0, 60) var buffer_frames: int = 6
 var controller: FrayController
+var advancer: FrayBufferedInputAdvancer
+## 由 Fighter 在帧末发布，采样期间保持不变。
 var facing_dir: int = 1
-var _moves: Array[FighterMoveDefinition] = []
-var _matchers: Dictionary = {}
-var _combination_names: Dictionary = {}
-var _combination_active: Dictionary = {}
-var _events: Array[FrayInputEvent] = []
-var _candidates: Array[Dictionary] = []
-var _press_frames: Dictionary = {}
-var _press_ids: Dictionary = {}
-var _consumed_ids: Dictionary = {}
-## 已确认特殊指令的按键周期；候选过期或暂不能执行也不回退普通攻击。
-var _special_ids: Dictionary = {}
-var _event_id := 0
-var _direction := 5
-var _direction_pressed_ms := 0
-var _facing_at_sample := 1
-var _horizontal_axis := 0.0
-var _crouch_pressed := false
-var _active_source_ids: Array[int] = []
 var _device := 0
 var _suspended := false
+var _commands: Array[FighterCommandDefinition] = []
+var _combination_names: Dictionary = {}
+var _combination_active: Dictionary = {}
+## 每个角色共用一个 Matcher，清历史时不重建。
+var matcher := FraySequenceMatcher.new()
+var _sequence_tree: FraySequenceTree
+var _routes: Dictionary = {}
+var _sequence_aliases: Array[StringName] = []
+var _events: Array[FrayInputEvent] = []
+var _held: Dictionary = {}
+var _press_ids: Dictionary = {}
+var _press_frames: Dictionary = {}
+var _claimed_ids: Dictionary = {}
+var _event_sources: Dictionary = {}
+var _event_serial := 0
+## 暂存等待组合判定的单键，不保存失败重试命令。
+var _pending_singles: Array[Dictionary] = []
+var _horizontal_axis := 0.0
+var _crouch_pressed := false
+var _forward_pressed := false
+var _backward_pressed := false
+var _direction := 5
+var _direction_pressed_ms := 0
+var _direction_sources: Array[int] = []
+var _vertical_input: StringName = &""
 
 
-## 设置输入采样顺序并连接 Fray 输入信号。
+#region 初始化与设备绑定
+
+## 设置采样顺序，并连接输入和匹配信号。
 func _ready() -> void:
 	process_physics_priority = -50
-	FrayInput.input_detected.connect(_on_fray_input_input_detected)
+	FrayInput.input_detected.connect(_collect_input_event)
+	matcher.match_found.connect(_on_world_route_match)
 
 
-## 按已装备招式配置输入识别并清空历史。
-func configure(input_controller: FrayController, moves: Array[FighterMoveDefinition]) -> void:
+## 绑定设备和依赖，并按已选招式编译输入指令。
+func configure(input_controller: FrayController, moves: Array[FighterMoveDefinition], input_advancer: FrayBufferedInputAdvancer) -> void:
+	FighterInputBindings.unbind_device(_device, self)
 	controller = input_controller
+	advancer = input_advancer
 	_device = controller.device
-	_moves.assign(moves)
-	_combination_names.clear()
-	for move in _moves:
-		if move.command.input_kind != FighterCommandDefinition.InputKind.COMBINATION:
-			continue
-		var buttons := move.command.buttons.duplicate()
-		buttons.sort()
-		var name := StringName("game_combo_" + "_".join(buttons))
-		if not FrayInputMap.has_input(name):
-			var combination := FrayCombinationInput.builder().mode_async()
-			for button in buttons:
-				combination.add_component_simple(button)
-			FrayInputMap.add_composite_input(name, combination.build())
-		_combination_names[move.move_id] = name
+	_commands.clear()
+	var command_ids := {}
+	for move in moves:
+		var command := move.command
+		if not command_ids.has(command.command_id):
+			command_ids[command.command_id] = true
+			_commands.append(command)
+	_combination_names = FighterInputBindings.register_inputs(FrayInputMap, _commands)
+	_compile_sequences()
+	matcher.can_ignore_indistinct_inputs = false
+	matcher.initialize(_sequence_tree)
+	advancer.max_buffer_time = frames_to_seconds(buffer_frames)
 	clear_history()
+	set_physics_process(FighterInputBindings.bind_device(_device, self))
 
+
+## 发布合法朝向，设备变化时换绑并清理历史。
+func publish_context(direction: int) -> void:
+	facing_dir = direction
+	if _device != controller.device:
+		FighterInputBindings.unbind_device(_device, self)
+		_device = controller.device
+		set_physics_process(FighterInputBindings.bind_device(_device, self))
+		clear_history()
+
+
+## 检查焦点、设备连接和当前角色的输入权限。
+func _can_receive_input() -> bool:
+	return not _suspended and not controller.disabled \
+		and _device == controller.device and controller.is_device_connected() \
+		and FighterInputBindings.get_device_input(_device) == self
+
+
+## 将物理帧数换算为小数秒。
+static func frames_to_seconds(frames: int) -> float:
+	# Fray.frame_to_sec 当前返回整数，短窗口不能直接用它。
+	return float(frames) / Engine.physics_ticks_per_second
+
+
+#endregion
+
+
+#region 输入采样
 
 ## 每个物理帧采样一次角色输入。
 func _physics_process(_delta: float) -> void:
 	sample()
 
 
-## 采样方向和按钮并更新招式候选。
-func sample() -> void:
-	var frame := Engine.get_physics_frames()
-	if _device != controller.device:
-		_device = controller.device
-		clear_history()
-	if _suspended or controller.disabled or not controller.is_device_connected():
-		clear_history()
+## 收集本设备的有效输入事件，留到采样时统一处理。
+func _collect_input_event(event: FrayInputEvent) -> void:
+	if not _can_receive_input():
 		return
-
-	var axis := controller.get_axis(&"move_left", &"move_right")
-	var vertical := controller.get_axis(&"move_down", &"move_up")
-	_horizontal_axis = axis
-	# 行为意图只读取 crouch；与默认同键的 move_down 方向保持解耦。
-	_crouch_pressed = controller.is_pressed(&"crouch")
-	var horizontal_dir := int(signf(axis)) * facing_dir
-	var vertical_dir := int(signf(vertical))
-	var direction := 5 + horizontal_dir + vertical_dir * 3
-	if _facing_at_sample != facing_dir:
-		# 换面向不凭空制造动作，也不保留跨朝向的半条指令。
-		_reset_matchers()
-		_direction = direction
-		_direction_pressed_ms = Time.get_ticks_msec()
-		_facing_at_sample = facing_dir
-	elif direction != _direction:
-		_feed_direction(_direction, false)
-		_direction = direction
-		_direction_pressed_ms = Time.get_ticks_msec()
-		_feed_direction(_direction, true)
-
-	for event in _events:
-		var ids: Array[int] = []
-		if event.is_pressed():
-			_event_id += 1
-			_press_ids[event.input] = _event_id
-			_press_frames[event.input] = frame
-		if _press_ids.has(event.input):
-			ids.append(_press_ids[event.input])
-		# 先让序列确认特殊指令；命中后，同源普通单键不会生成候选。
-		_feed_sequences(event, ids)
-		for move in _moves:
-			var command := move.command
-			if command.input_kind == FighterCommandDefinition.InputKind.SINGLE:
-				var pressed := command.trigger == FighterCommandDefinition.Trigger.PRESS
-				if event.input == command.buttons[0] and event.is_pressed() == pressed:
-					_add_candidate(move.move_id, ids)
-	_events.clear()
-	_sample_combinations()
-	_candidates = _candidates.filter(func(candidate: Dictionary) -> bool:
-		return frame <= candidate.expires_frame)
-	# 只保留仍与当前按键周期关联的消费标识，避免运行越久字典越大。
-	var retained: Dictionary = {}
-	var retained_special: Dictionary = {}
-	for id in _press_ids.values():
-		if _consumed_ids.has(id):
-			retained[id] = true
-		if _special_ids.has(id):
-			retained_special[id] = true
-	_consumed_ids = retained
-	_special_ids = retained_special
-
-
-## 返回本帧采样的水平输入轴。
-func get_horizontal_axis() -> float:
-	return _horizontal_axis
-
-
-## 判断是否有未被下蹲覆盖的前进输入。
-func inputed_fwalk() -> bool:
-	return not inputed_crouch() and _horizontal_axis * facing_dir > 0.1
-
-
-## 判断是否有未被下蹲覆盖的后退输入。
-func inputed_bwalk() -> bool:
-	return not inputed_crouch() and _horizontal_axis * facing_dir < -0.1
-
-
-## 返回本帧采样的下蹲意图。
-func inputed_crouch() -> bool:
-	return _crouch_pressed
-
-
-## 返回相对角色朝向的九宫格方向。
-func get_direction() -> int:
-	return _direction
-
-
-## 返回已结束等待期且尚未过期的输入候选。
-func get_candidates() -> Array[Dictionary]:
-	var frame := Engine.get_physics_frames()
-	var result: Array[Dictionary] = []
-	for candidate in _candidates:
-		if frame < candidate.ready_frame:
-			continue
-		result.append(candidate)
-	return result
-
-
-## 消费成功候选及与其共用按键来源的候选。
-func consume(candidate: Dictionary) -> void:
-	var ids: Array = candidate.source_ids
-	for id in ids:
-		_consumed_ids[id] = true
-	_candidates = _candidates.filter(func(other: Dictionary) -> bool:
-		return not _overlaps(other.source_ids, ids))
-	_reset_matchers()
-
-
-## 清空输入历史、候选和移动意图。
-func clear_history() -> void:
-	_events.clear()
-	_candidates.clear()
-	_press_frames.clear()
-	_press_ids.clear()
-	_consumed_ids.clear()
-	_special_ids.clear()
-	_combination_active.clear()
-	_horizontal_axis = 0.0
-	_crouch_pressed = false
-	_direction = 5
-	_direction_pressed_ms = Time.get_ticks_msec()
-	_facing_at_sample = facing_dir
-	_reset_matchers()
-
-
-## 重建已装备序列招式的匹配器。
-func _reset_matchers() -> void:
-	_matchers.clear()
-	for move in _moves:
-		if move.command.input_kind == FighterCommandDefinition.InputKind.SEQUENCE:
-			var matcher := FraySequenceMatcher.new()
-			# 游戏侧分流方向与按钮，特殊指令确认后才允许普通单键回退。
-			matcher.can_ignore_indistinct_inputs = false
-			matcher.initialize(move.command.create_sequence(move.move_id))
-			matcher.match_found.connect(_on_sequence_match_found)
-			_matchers[move.move_id] = matcher
-
-
-## 收集本角色设备的有效按钮事件。
-func _on_fray_input_input_detected(event: FrayInputEvent) -> void:
-	if _suspended or controller.disabled:
-		return
-	if event.device != controller.device or event.is_echo():
-		return
-	# 方向从同帧轴快照产生；别名 jump/crouch 不送入方向序列。
-	if event.input in FighterCommandDefinition.BUTTONS:
+	if event.device == _device and not event.is_echo() and event.input in FighterInputBindings.ACTIONS:
 		_events.append(event)
 
 
-## 将方向变化转换为序列输入事件。
-func _feed_direction(direction: int, pressed: bool) -> void:
+## 整理本帧事件，按序列、组合键、单键顺序识别并提交命令。
+func sample() -> void:
+	if not _can_receive_input():
+		clear_history()
+		return
+	_horizontal_axis = controller.get_axis(&"move_left", &"move_right")
+	_crouch_pressed = controller.is_pressed(&"crouch")
+	_forward_pressed = controller.is_pressed(FighterInputBindings.FORWARD)
+	_backward_pressed = controller.is_pressed(FighterInputBindings.BACKWARD)
+	var events: Array[FrayInputEvent] = []
+	for event in _events:
+		if bool(_held.get(event.input, false)) == event.is_pressed():
+			continue
+		_held[event.input] = event.is_pressed()
+		if event.is_pressed():
+			_event_serial += 1
+			_press_ids[event.input] = _event_serial
+			_press_frames[event.input] = Engine.get_physics_frames()
+		var ids: Array[int] = []
+		if _press_ids.has(event.input):
+			ids.append(_press_ids[event.input])
+		_remember_sources(event, ids)
+		events.append(event)
+	_events.clear()
+
+	# 全部序列使用同一规范方向流：斜方向一个步骤，上下重叠按新按下方向。
+	_sample_direction(events)
+	for event in events:
+		if not event.input in FighterCommandDefinition.BUTTONS:
+			continue
+		# 全角色统一规则：未在任何序列显式声明的方向行为别名不送 Matcher。
+		if event.input in [&"jump", &"crouch"] and not event.input in _sequence_aliases:
+			continue
+		matcher.read(event)
+
+	# 所有特殊序列先确认，再处理同时键和普通单键，入队后不再撤回。
+	_sample_combinations()
+	for event in events:
+		for command in _commands:
+			if command.input_kind != FighterCommandDefinition.InputKind.SINGLE:
+				continue
+			var pressed := command.trigger == FighterCommandDefinition.Trigger.PRESS
+			if event.input == command.buttons[0] and event.is_pressed() == pressed and _matches_direction(command):
+				var ids := _sources(event)
+				if not ids.is_empty() and not _is_claimed(ids):
+					_pending_singles.append({command = command, ids = ids,
+						ready = Engine.get_physics_frames() + command.resolve_delay_frames})
+	var waiting: Array[Dictionary] = []
+	for pending in _pending_singles:
+		if _is_claimed(pending.ids):
+			continue
+		if Engine.get_physics_frames() < pending.ready:
+			waiting.append(pending)
+		else:
+			_enqueue(pending.command, pending.ids)
+	_pending_singles = waiting
+	_prune_sources()
+
+
+#endregion
+
+
+#region 持续移动意图
+
+## 按蹲下优先、左右抵消的规则返回移动意图。
+func get_movement_intent() -> StringName:
+	if _crouch_pressed:
+		return &"crouch"
+	if _forward_pressed and not _backward_pressed:
+		return &"fwalk"
+	if _backward_pressed and not _forward_pressed:
+		return &"bwalk"
+	return &"idle"
+
+
+## 判断当前移动意图是否符合指定名称。
+func has_intent(intent: StringName) -> bool:
+	return get_movement_intent() == intent
+
+
+## 返回指定移动意图对应的水平输入量。
+func get_movement_axis(intent: StringName) -> float:
+	return _horizontal_axis if not _crouch_pressed and has_intent(intent) else 0.0
+
+
+#endregion
+
+
+#region 方向规范化
+
+## 合成统一方向，同帧上下输入按“下→上”处理。
+func _sample_direction(events: Array[FrayInputEvent]) -> void:
+	var horizontal := int(signf(_horizontal_axis))
+	var vertical_presses: Array[FrayInputEvent] = []
+	for event in events:
+		if event.is_pressed() and event.input in [&"move_down", &"move_up"]:
+			vertical_presses.append(event)
+	vertical_presses.sort_custom(func(a: FrayInputEvent, b: FrayInputEvent) -> bool:
+		if a.physics_frame != b.physics_frame:
+			return a.physics_frame < b.physics_frame
+		return a.input == &"move_down" and b.input == &"move_up")
+	for event in vertical_presses:
+		_vertical_input = event.input
+		var vertical := -1 if event.input == &"move_down" else 1
+		_change_direction(5 + horizontal + vertical * 3)
+	# 松开当前垂直方向后，回到仍按住的一侧；这不会新建物理来源周期。
+	if not _held.get(_vertical_input, false):
+		_vertical_input = &""
+		for input in [&"move_down", &"move_up"]:
+			if _held.get(input, false):
+				_vertical_input = input
+	var vertical := 0
+	if _vertical_input == &"move_down": vertical = -1
+	elif _vertical_input == &"move_up": vertical = 1
+	_change_direction(5 + horizontal + vertical * 3)
+
+
+## 方向变化时结束旧方向，并记录新方向及其按键来源。
+func _change_direction(direction: int) -> void:
+	if direction == _direction:
+		return
+	_feed_motion(_direction, false)
+	_direction = direction
+	_direction_pressed_ms = Time.get_ticks_msec()
+	_direction_sources.clear()
+	var horizontal := (direction - 1) % 3 - 1
+	var vertical := int((direction - 1) / 3.0) - 1
+	var components: Array[StringName] = []
+	if horizontal != 0: components.append(&"move_left" if horizontal < 0 else &"move_right")
+	if vertical != 0: components.append(&"move_down" if vertical < 0 else &"move_up")
+	for input in components:
+		if _press_ids.has(input): _direction_sources.append(_press_ids[input])
+	_feed_motion(_direction, true)
+
+
+## 生成世界方向事件并交给序列匹配器。
+func _feed_motion(direction: int, pressed: bool) -> void:
+	if direction == 5:
+		return
 	var event := FrayInputEvent.new()
-	event.input = StringName("dir_%d" % direction)
+	event.input = StringName("world_%d" % direction)
 	event.device = _device
 	event.physics_frame = Engine.get_physics_frames()
 	event.time_pressed = _direction_pressed_ms
 	event.time_detected = Time.get_ticks_msec()
 	event._is_pressed = pressed
 	event._is_distinct = true
-	_feed_sequences(event, [])
+	_remember_sources(event, _direction_sources)
+	matcher.read(event)
 
 
-## 把按钮或方向事件送入序列匹配器。
-func _feed_sequences(event: FrayInputEvent, ids: Array[int]) -> void:
-	_active_source_ids = ids
-	for move in _moves:
-		if move.command.input_kind != FighterCommandDefinition.InputKind.SEQUENCE:
+#endregion
+
+
+#region 指令识别
+
+## 将左右序列合入一棵树，共享路径保留各指令的精确条件。
+func _compile_sequences() -> void:
+	_sequence_tree = FraySequenceTree.new()
+	_routes.clear()
+	_sequence_aliases.clear()
+	var routes_by_path := {}
+	for command in _commands:
+		if command.input_kind != FighterCommandDefinition.InputKind.SEQUENCE:
 			continue
-		# jump/crouch 默认是方向别名；只有指令作者显式写入才发送。
-		if event.input in [&"jump", &"crouch"] and not event.input in move.command.steps:
+		for alias in [&"jump", &"crouch"]:
+			if alias in command.steps and not alias in _sequence_aliases:
+				_sequence_aliases.append(alias)
+		for facing in [1, -1]:
+			# 相同路径在原生树只注册一次；精确分支与共享包络独立持有。
+			var branch := command.create_branch(facing)
+			var path: Array[String] = []
+			for requirement in branch.input_requirements:
+				path.append("%s:%s" % [requirement.input, requirement.is_charge_input()])
+			var key := ",".join(path)
+			if not routes_by_path.has(key):
+				var route := StringName("route_%d" % routes_by_path.size())
+				routes_by_path[key] = route
+				var shared := command.create_branch(facing)  # 独立包络，不能修改精确校验分支。
+				_routes[route] = {branch = shared, entries = []}
+				_sequence_tree.add(route, shared)
+			var metadata: Dictionary = _routes[routes_by_path[key]]
+			# 同一原生终点只注册一次：识别用宽包络，命中后用原生 is_match
+			# 复核各命令的真实时限／蓄力，不因时间参数不同而创建第二 Matcher。
+			for index in branch.input_requirements.size():
+				var shared: FrayInputRequirement = metadata.branch.input_requirements[index]
+				var exact: FrayInputRequirement = branch.input_requirements[index]
+				shared.max_delay = maxi(shared.max_delay, exact.max_delay)
+				shared.min_time_held = mini(shared.min_time_held, exact.min_time_held)
+			metadata.branch.is_negative_edge_enabled = metadata.branch.is_negative_edge_enabled or branch.is_negative_edge_enabled
+			metadata.entries.append({command = command, facing = facing, branch = branch})
+
+
+## 按当前朝向和精确时限复核序列命中，再提交对应命令。
+func _on_world_route_match(route: StringName) -> void:
+	var events := matcher.get_match_branch().duplicate()
+	var ids: Array[int] = []
+	for event in events:
+		for id in _sources(event):
+			if not id in ids:
+				ids.append(id)
+	for entry in _routes[route].entries:
+		if entry.facing != facing_dir:
 			continue
-		_matchers[move.move_id].read(event)
-	_active_source_ids = []
+		if not events.back().is_pressed() and not entry.branch.is_negative_edge_enabled and not entry.branch.input_requirements.back().is_charge_input():
+			continue
+		if FraySequenceMatcher.is_match(events, entry.branch.input_requirements):
+			_enqueue(entry.command, ids)
+			return
 
 
-## 为匹配成功的序列创建招式候选。
-func _on_sequence_match_found(move_id: StringName) -> void:
-	_add_candidate(move_id, _active_source_ids)
-
-
-## 按按钮时间差识别组合键候选。
+## 检查多按钮组合的新触发、按下间隔和方向限制。
 func _sample_combinations() -> void:
-	var frame := Engine.get_physics_frames()
-	for move in _moves:
-		if move.command.input_kind != FighterCommandDefinition.InputKind.COMBINATION:
+	for command in _commands:
+		if command.input_kind != FighterCommandDefinition.InputKind.COMBINATION:
 			continue
-		var held := controller.is_pressed(_combination_names[move.move_id])
-		if held and not _combination_active.get(move.move_id, false):
-			var earliest := frame
+		var held := controller.is_pressed(_combination_names[command.command_id])
+		if held and not _combination_active.get(command.command_id, false) and _matches_direction(command):
+			var earliest := Engine.get_physics_frames()
 			var latest := -1
 			var ids: Array[int] = []
-			for button in move.command.buttons:
-				if not _press_frames.has(button):
-					ids.clear()
-					break
+			for button in command.buttons:
+				if not _press_frames.has(button): break
 				earliest = mini(earliest, _press_frames[button])
 				latest = maxi(latest, _press_frames[button])
 				ids.append(_press_ids[button])
-			if ids.size() == move.command.buttons.size() and latest - earliest <= move.command.combination_window_frames:
-				_add_candidate(move.move_id, ids)
-		_combination_active[move.move_id] = held
+			if ids.size() == command.buttons.size() and latest - earliest <= command.combination_window_frames:
+				_enqueue(command, ids)
+		_combination_active[command.command_id] = held
 
 
-## 登记候选并处理按键来源的归属。
-func _add_candidate(move_id: StringName, ids: Array[int]) -> void:
-	if ids.is_empty():
-		return
+## 检查按钮触发时的相对方向是否符合指令。
+func _matches_direction(command: FighterCommandDefinition) -> bool:
+	if command.required_direction == 0:
+		return true
+	var relative := _direction
+	if facing_dir < 0:
+		relative += 2 - 2 * ((relative - 1) % 3)
+	return relative == command.required_direction
+
+
+#endregion
+
+
+#region 按键来源与命令提交
+
+## 记录输入事件对应的物理按键来源。
+func _remember_sources(event: FrayInputEvent, ids: Array[int]) -> void:
+	_event_sources[event.get_instance_id()] = {event = weakref(event), ids = ids.duplicate()}
+
+
+## 读取输入事件已登记的按键来源。
+func _sources(event: FrayInputEvent) -> Array[int]:
+	var result: Array[int] = []
+	result.assign(_event_sources[event.get_instance_id()].ids)
+	return result
+
+
+## 检查来源中是否有按键已被其他命令消费。
+func _is_claimed(ids: Array) -> bool:
 	for id in ids:
-		if _consumed_ids.has(id) or _special_ids.has(id):
-			return
-	for candidate in _candidates:
-		if candidate.move.move_id == move_id and candidate.source_ids == ids:
-			return
-	var move: FighterMoveDefinition
-	for selected in _moves:
-		if selected.move_id == move_id:
-			move = selected
-			break
-	var frame := Engine.get_physics_frames()
-	var ready_frame := frame
-	if move.command.input_kind == FighterCommandDefinition.InputKind.SINGLE:
-		ready_frame += move.command.resolve_delay_frames
-	else:
-		# 特殊指令确定归属后，撤销仍在缓冲中的同源普通单键。
-		# 组合键可以在普通单键的等待窗口内接管首次按下的按钮。
-		for id in ids:
-			_special_ids[id] = true
-		_candidates = _candidates.filter(func(candidate: Dictionary) -> bool:
-			return not _overlaps(candidate.source_ids, ids))
-	_candidates.append({move = move, source_ids = ids.duplicate(), created_frame = frame,
-		ready_frame = ready_frame, expires_frame = frame + move.command.buffer_frames})
-
-
-## 判断两个按键来源列表是否有交集。
-func _overlaps(first: Array, second: Array) -> bool:
-	for id in first:
-		if id in second:
-			return true
+		if _claimed_ids.has(id): return true
 	return false
 
 
-## 在失去或恢复焦点时重置输入历史。
+## 认领未消费的按键，并将逻辑命令交给 Fray 推进器。
+func _enqueue(command: FighterCommandDefinition, ids: Array) -> void:
+	if ids.is_empty() or _is_claimed(ids):
+		return
+	for id in ids:
+		_claimed_ids[id] = true
+	advancer.buffer_sequence(command.command_id)
+
+
+## 回收失效事件及不再使用的按键认领记录。
+func _prune_sources() -> void:
+	var live_ids := {}
+	for id in _press_ids.values(): live_ids[id] = true
+	for key in _event_sources.keys():
+		var entry: Dictionary = _event_sources[key]
+		if entry.event.get_ref() == null:
+			_event_sources.erase(key)
+		else:
+			for id in entry.ids: live_ids[id] = true
+	for id in _claimed_ids.keys():
+		if not live_ids.has(id): _claimed_ids.erase(id)
+
+
+#endregion
+
+
+#region 历史清理与生命周期
+
+## 清空输入与缓冲记录，保留现有 Matcher 和匹配树。
+func clear_history() -> void:
+	_events.clear()
+	_pending_singles.clear()
+	_held.clear()
+	_press_ids.clear()
+	_press_frames.clear()
+	_claimed_ids.clear()
+	_event_sources.clear()
+	_combination_active.clear()
+	_horizontal_axis = 0.0
+	_forward_pressed = false
+	_backward_pressed = false
+	_crouch_pressed = false
+	_direction = 5
+	_direction_pressed_ms = Time.get_ticks_msec()
+	_direction_sources.clear()
+	_vertical_input = &""
+	matcher.clear_history()
+	advancer.clear_buffer()
+
+
+## 失焦时暂停收集输入，焦点变化时清理历史。
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_suspended = true
@@ -307,3 +431,12 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		_suspended = false
 		clear_history()
+
+
+## 离场时解除设备绑定并清理输入历史。
+func _exit_tree() -> void:
+	FighterInputBindings.unbind_device(_device, self)
+	clear_history()
+
+
+#endregion

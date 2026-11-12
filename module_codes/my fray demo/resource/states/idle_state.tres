@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FighterStateDefinition" format=3 uid="uid://dp3jslrs7d1hl"]
+
+[ext_resource type="Script" uid="uid://cobbicjisasmg" path="res://scripts/states/state_definition.gd" id="2_state"]
+[ext_resource type="Script" uid="uid://dt7d0hm6difda" path="res://scripts/states/fighterstates/idle_state.gd" id="3_idle"]
+[ext_resource type="Resource" path="res://resource/combat/hit_states/standing_hit_state.tres" id="8_standing_hit"]
+
+[resource]
+script = ExtResource("2_state")
+state_id = &"0001000100"
+state_name = &"idle"
+state_script = ExtResource("3_idle")
+animation_key = &"idle"
+hit_state_definition = ExtResource("8_standing_hit")

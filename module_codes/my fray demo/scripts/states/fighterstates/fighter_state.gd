@@ -20,17 +20,21 @@ func _ready_impl(context: Dictionary) -> void:
 	hit_state_manager = context["hit_state_manager"]
 
 
-## 在具体状态要求的时机播放其配置动画，空键表示本次不请求动画。
+## 直接播放状态定义中的必填动画，不提供空键跳过或备用动画。
 func play_state_animation() -> void:
-	if not state_definition.animation_key.is_empty():
-		fighter.play_animation(state_definition.animation_key)
+	fighter.play_animation(state_definition.animation_key)
 
 
-## 进入状态时通过 Fighter 选择本状态声明的完整判定姿态。
+## 每次进入状态都选择其判定姿态并切换到定义的动画。
 func _enter_impl(_args: Dictionary) -> void:
 	fighter.select_hit_state(state_definition.hit_state_definition)
+	play_state_animation()
 
 
 ## 退出状态时完全关闭旧姿态，防止中断或重入残留判定。
 func _exit_impl() -> void:
 	fighter.clear_hit_state()
+
+## 基础移动可转向，具体动作可覆盖权限；本方法不自行寻找对手。
+func can_update_facing() -> bool:
+	return true

@@ -26,7 +26,7 @@ func add(sequence_name: StringName, sequence_branch: FraySequenceBranch) -> void
 func remove_sequence_branch(sequence_name: StringName, branch_index: int) -> void:
 	if _sequence_branch_by_name.has(sequence_name):
 		var sequences: Array = _sequence_branch_by_name[sequence_name]
-		if sequences.size() < branch_index and branch_index >= 0:
+		if branch_index >= 0 and branch_index < sequences.size():
 			sequences.remove_at(branch_index)
 		else:
 			push_error("Index out of range")
@@ -45,7 +45,7 @@ func remove_sequence(sequence_name: StringName) -> void:
 func get_sequence_branch(sequence_name: StringName, branch_index: int = 0) -> FraySequenceBranch:
 	if _sequence_branch_by_name.has(sequence_name):
 		var sequences: Array = _sequence_branch_by_name[sequence_name]
-		if sequences.size() < branch_index and branch_index >= 0:
+		if branch_index >= 0 and branch_index < sequences.size():
 			return sequences[branch_index]
 		else:
 			push_error("Index out of range")

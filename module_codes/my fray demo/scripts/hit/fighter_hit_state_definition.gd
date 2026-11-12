@@ -4,5 +4,5 @@ extends Resource
 
 ## 场景根为 FrayHitState2D，框为它的直接子节点。
 @export var hit_state_scene: PackedScene
-## 按直接子 FrayHitbox2D 的顺序设置默认启用位。
-@export var default_active_hitboxes: int = 0
+## 按直接子 FrayHitbox2D 的顺序设置非零默认启用位。
+@export var default_active_hitboxes: int = 1

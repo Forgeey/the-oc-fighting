@@ -45,7 +45,8 @@ var start_state: StringName = "":
 			return
 		_start_state = state
 
-## The state machine's end state.
+## Optional final direct child. Completion also waits for that child to finish.
+## Without an end state, completion follows the current child recursively.
 var end_state: StringName = "":
 	get:
 		return _end_state
@@ -108,8 +109,12 @@ func _exit_impl() -> void:
 
 
 func _is_done_processing_impl() -> bool:
-	super()
-	return _end_state.is_empty() or _current_state == _end_state
+	var current := get_current_state()
+	return (
+		current != null
+		and (_end_state.is_empty() or _current_state == _end_state)
+		and current.is_done_processing()
+	)
 
 
 func get_node(path: NodePath) -> Node:
@@ -786,6 +791,7 @@ func _get_transition_priority(from: StringName, to: StringName) -> float:
 
 
 func _goto(path: StringName, args: Dictionary = {}) -> void:
+	# The shared lifecycle path exits the old active branch, never the target.
 	_transition_to(path, args)
 
 
@@ -898,7 +904,7 @@ func _can_switch(transition: FrayStateMachineTransition) -> bool:
 		transition.switch_mode == FrayStateMachineTransition.SwitchMode.IMMEDIATE
 		or (
 			transition.switch_mode == FrayStateMachineTransition.SwitchMode.AT_END
-			and get_current_state()._is_done_processing_impl()
+			and get_current_state().is_done_processing()
 		)
 	)
 
