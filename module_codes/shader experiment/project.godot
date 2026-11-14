@@ -11,19 +11,29 @@ config_version=5
 [application]
 
 config/name="shader experiment"
+run/main_scene="res://scenes/battle_map_reference.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
 [display]
 
-window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
+window/size/min_width=1280
+window/size/min_height=720
 
 [physics]
 
 3d/physics_engine="Jolt Physics"
 
 [rendering]
+
+environment/defaults/default_clear_color=Color(0.045, 0.06, 0.09, 1)
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"

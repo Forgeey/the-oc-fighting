@@ -5,7 +5,8 @@
 # folds ignore
 /addons/fray_demo
 /addons/fray_godot3
-#/module_codes/my fray demo/release
+/module_codes/my fray demo/release
+/module_codes/shader experiment/release
 
 # Godot 4+ specific ignores (the-oc-fighting project)
 /the-oc-fighting/**/.godot/

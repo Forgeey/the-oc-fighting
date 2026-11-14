@@ -1,0 +1,244 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://dkxj6hrkgxcaw" path="res://scripts/battle_map.gd" id="1_map"]
+[ext_resource type="Script" uid="uid://bhcji6e8bk62w" path="res://scripts/map_camera.gd" id="2_camera"]
+[ext_resource type="Shader" uid="uid://b5pkvstapjlkx" path="res://shaders/ground_projection.gdshader" id="3_ground"]
+[ext_resource type="Texture2D" uid="uid://bwix2sir7pgxt" path="res://sprites/floor.png" id="4_umtsg"]
+[ext_resource type="Script" path="res://scripts/reference_building.gd" id="5_building"]
+[ext_resource type="Shader" path="res://shaders/building_reference.gdshader" id="6_wall"]
+[ext_resource type="Texture2D" uid="uid://bbx67iv476wke" path="res://sprites/idle.png" id="7_idle"]
+[ext_resource type="Script" uid="uid://t134tgoef0gs" path="res://scripts/fighter_preview.gd" id="8_fighter"]
+
+[ext_resource type="Script" path="res://scripts/comparison_switch.gd" id="9_comparison"]
+
+[ext_resource type="Texture2D" path="res://sprites/wall1.png" id="10_front"]
+[ext_resource type="Texture2D" path="res://sprites/wall2.png" id="11_side"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_umtsg"]
+shader = ExtResource("3_ground")
+shader_parameter/ground_texture = ExtResource("4_umtsg")
+shader_parameter/ground_min = Vector2(-1260, -1000)
+shader_parameter/ground_max = Vector2(1260, 1100)
+shader_parameter/tile_size = 128.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tall"]
+shader = ExtResource("6_wall")
+shader_parameter/front_texture = ExtResource("10_front")
+shader_parameter/side_texture = ExtResource("11_side")
+shader_parameter/tint = Color(1, 1, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_front"]
+shader = ExtResource("6_wall")
+shader_parameter/front_texture = ExtResource("10_front")
+shader_parameter/side_texture = ExtResource("11_side")
+shader_parameter/tint = Color(1, 1, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_right"]
+shader = ExtResource("6_wall")
+shader_parameter/front_texture = ExtResource("10_front")
+shader_parameter/side_texture = ExtResource("11_side")
+shader_parameter/tint = Color(1, 1, 1, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_0"]
+atlas = ExtResource("7_idle")
+region = Rect2(0, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_1"]
+atlas = ExtResource("7_idle")
+region = Rect2(400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_2"]
+atlas = ExtResource("7_idle")
+region = Rect2(800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_3"]
+atlas = ExtResource("7_idle")
+region = Rect2(1200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_4"]
+atlas = ExtResource("7_idle")
+region = Rect2(1600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_5"]
+atlas = ExtResource("7_idle")
+region = Rect2(2000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_6"]
+atlas = ExtResource("7_idle")
+region = Rect2(2400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_7"]
+atlas = ExtResource("7_idle")
+region = Rect2(2800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_8"]
+atlas = ExtResource("7_idle")
+region = Rect2(3200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_9"]
+atlas = ExtResource("7_idle")
+region = Rect2(3600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_10"]
+atlas = ExtResource("7_idle")
+region = Rect2(4000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_11"]
+atlas = ExtResource("7_idle")
+region = Rect2(4400, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_12"]
+atlas = ExtResource("7_idle")
+region = Rect2(4800, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_13"]
+atlas = ExtResource("7_idle")
+region = Rect2(5200, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_14"]
+atlas = ExtResource("7_idle")
+region = Rect2(5600, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_15"]
+atlas = ExtResource("7_idle")
+region = Rect2(6000, 0, 400, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle_16"]
+atlas = ExtResource("7_idle")
+region = Rect2(6400, 0, 400, 270)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_idle"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_12")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_15")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle_16")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 10.0
+}]
+
+[node name="BattleMap" type="Node2D" unique_id=1267483738]
+texture_filter = 1
+script = ExtResource("1_map")
+
+[node name="MapCamera" type="Node" parent="." unique_id=802966644]
+script = ExtResource("2_camera")
+
+[node name="Floor" type="ColorRect" parent="." unique_id=1081557477]
+z_index = -4000
+material = SubResource("ShaderMaterial_umtsg")
+offset_right = 1280.0
+offset_bottom = 720.0
+mouse_filter = 2
+
+[node name="Buildings" type="Node2D" parent="." unique_id=175877466]
+
+[node name="LeftTall" type="ColorRect" parent="Buildings" unique_id=821538263]
+material = SubResource("ShaderMaterial_tall")
+mouse_filter = 2
+script = ExtResource("5_building")
+ground_position = Vector2(-360, 450)
+world_size = Vector3(240, 620, 400)
+
+[node name="LeftFront" type="ColorRect" parent="Buildings" unique_id=2144801699]
+material = SubResource("ShaderMaterial_front")
+mouse_filter = 2
+script = ExtResource("5_building")
+ground_position = Vector2(-310, 50)
+world_size = Vector3(260, 350, 320)
+
+[node name="Right" type="ColorRect" parent="Buildings" unique_id=1517098826]
+material = SubResource("ShaderMaterial_right")
+mouse_filter = 2
+script = ExtResource("5_building")
+ground_position = Vector2(330, 240)
+world_size = Vector3(280, 460, 380)
+
+[node name="Players" type="Node2D" parent="." unique_id=889192597]
+
+[node name="Player1" type="AnimatedSprite2D" parent="Players" unique_id=526401174]
+texture_filter = 1
+position = Vector2(1080, 600)
+sprite_frames = SubResource("SpriteFrames_idle")
+animation = &"idle"
+autoplay = "idle"
+offset = Vector2(0, -61)
+script = ExtResource("8_fighter")
+ground_position = Vector2(660, 0)
+
+[node name="Player2" type="AnimatedSprite2D" parent="Players" unique_id=1012212879]
+texture_filter = 1
+position = Vector2(200, 600)
+sprite_frames = SubResource("SpriteFrames_idle")
+animation = &"idle"
+autoplay = "idle"
+offset = Vector2(0, -61)
+flip_h = true
+script = ExtResource("8_fighter")
+ground_position = Vector2(-660, 0)
+
+[node name="ComparisonUI" type="CanvasLayer" parent="."]
+
+[node name="SwitchScene" type="Button" parent="ComparisonUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 68.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "Reference → Nearest"
+script = ExtResource("9_comparison")
+target_scene = "res://scenes/battle_map.tscn"
